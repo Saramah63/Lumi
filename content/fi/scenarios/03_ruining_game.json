@@ -1,0 +1,14 @@
+{
+  "id": "ruining_game",
+  "title": "Tornin kaataminen",
+  "durationTarget": "3-4min",
+  "steps": [
+    { "mode": "baseline", "text": "Hei. Olen Lumi. Täällä on turvallista.", "pauseMs": 400 },
+    { "mode": "listening", "text": "Joskus torni kaatuu. Se harmittaa.", "pauseMs": 500 },
+    { "mode": "listening", "text": "Miltä sinusta tuntuu nyt?", "pauseMs": 600, "teacherHint": "Emoji vote" },
+    { "mode": "regulation", "text": "Otetaan hengitys. Sisään… ja ulos.", "pauseMs": 800 },
+    { "mode": "warm", "text": "Minua harmittaa. Lopeta, kiitos. Voimmeko yrittää uudestaan?", "pauseMs": 500 },
+    { "mode": "baseline", "text": "Kädet rakentavat. Kädet auttavat. Ei työnnetä.", "pauseMs": 500 },
+    { "mode": "warm", "text": "Nyt korjaamme. Anteeksi. Rakennetaan yhdessä.", "pauseMs": 600 }
+  ]
+}

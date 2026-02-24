@@ -1,0 +1,14 @@
+{
+  "id": "mean_words",
+  "title": "Ilkeat sanat",
+  "durationTarget": "3-4min",
+  "steps": [
+    { "mode": "baseline", "text": "Hei. Olen Lumi. Tänään puhumme sanoista.", "pauseMs": 400 },
+    { "mode": "listening", "text": "Sanat voivat satuttaa. Sydän voi tuntua pieneltä.", "pauseMs": 500 },
+    { "mode": "firm", "text": "Pysähdy. Ei ilkeitä sanoja.", "pauseMs": 500 },
+    { "mode": "listening", "text": "Miltä sinusta tuntuu, kun kuulee ilkeitä sanoja?", "pauseMs": 600 },
+    { "mode": "regulation", "text": "Hengitä sisään… ja ulos.", "pauseMs": 800 },
+    { "mode": "baseline", "text": "Harjoitellaan: Lopeta, kiitos. En pidä tuosta. Kerro aikuiselle.", "pauseMs": 500 },
+    { "mode": "warm", "text": "Ystävälliset sanat rakentavat ryhmää. Kiitos.", "pauseMs": 500 }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "fear_safety",
+  "title": "Pelko ja ryhman turva",
+  "durationTarget": "3-4min",
+  "steps": [
+    { "mode": "baseline", "text": "Hei. Olen Lumi. Tänään puhumme pelosta.", "pauseMs": 400 },
+    { "mode": "listening", "text": "Pelko on tunne. Se voi olla iso tai pieni.", "pauseMs": 500 },
+    { "mode": "regulation", "text": "Otetaan kolme hengitystä. Sisään… ulos.", "pauseMs": 800 },
+    { "mode": "listening", "text": "Kun pelottaa, mitä tarvitset?", "pauseMs": 600 },
+    { "mode": "baseline", "text": "Aikuinen. Kaveri. Rauhallinen paikka.", "pauseMs": 500 },
+    { "mode": "warm", "text": "Voit sanoa: Minua pelottaa. Voitko olla lähellä?", "pauseMs": 500 },
+    { "mode": "baseline", "text": "Meidän ryhmässä autamme. Täällä on turvallista.", "pauseMs": 400 }
+  ]
+}

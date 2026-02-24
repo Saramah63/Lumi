@@ -1,0 +1,13 @@
+{
+  "id": "turn_taking",
+  "title": "Vuorottelu",
+  "durationTarget": "3-4min",
+  "steps": [
+    { "mode": "baseline", "text": "Hei. Olen Lumi. Tänään harjoittelemme vuoroa.", "pauseMs": 400 },
+    { "mode": "listening", "text": "Joskus haluan lelun heti. Ryhmässä odotamme vuoroa.", "pauseMs": 500 },
+    { "mode": "regulation", "text": "Hengitä sisään… ja ulos.", "pauseMs": 800 },
+    { "mode": "warm", "text": "Harjoitellaan: Saanko vuoron? Kun sinä olet valmis. Kiitos.", "pauseMs": 500 },
+    { "mode": "baseline", "text": "Jos kuulet ei: sano Okei, valitse toinen lelu, pyydä aikuista.", "pauseMs": 500 },
+    { "mode": "baseline", "text": "Vuoro tekee pelistä reilun. Kiitos.", "pauseMs": 400 }
+  ]
+}

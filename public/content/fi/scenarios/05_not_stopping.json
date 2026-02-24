@@ -1,0 +1,13 @@
+{
+  "id": "not_stopping",
+  "title": "Ei kuunnella",
+  "durationTarget": "3-4min",
+  "steps": [
+    { "mode": "baseline", "text": "Hei. Olen Lumi. Tänään harjoittelemme rajoja.", "pauseMs": 400 },
+    { "mode": "listening", "text": "Jos joku sanoo Lopeta ja toinen ei lopeta, se tuntuu pahalta.", "pauseMs": 500 },
+    { "mode": "firm", "text": "Pysähdy. Kun joku sanoo Lopeta, me lopetamme.", "pauseMs": 600 },
+    { "mode": "regulation", "text": "Sisään… ulos.", "pauseMs": 800 },
+    { "mode": "baseline", "text": "Kolme askelta: sano Lopeta, siirry pois, kerro aikuiselle.", "pauseMs": 500 },
+    { "mode": "warm", "text": "Kysy aina: Saanko? Jos vastaus on ei, sano Okei.", "pauseMs": 500 }
+  ]
+}

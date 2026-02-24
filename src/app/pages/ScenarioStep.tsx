@@ -9,29 +9,87 @@ import { TeacherHUD } from "../components/lumi/TeacherHUD";
 import { useSpeech } from "../hooks/useSpeech";
 import { fiPhrases } from "../../../lib/lumi/fiPhrases";
 
+type ScenarioMode = "baseline" | "listening" | "firm" | "warm";
+type ScenarioEmotion = "thinking" | "happy" | "calm";
+type ScenarioStepItem = {
+  text: string;
+  emotion: ScenarioEmotion;
+  mode: ScenarioMode;
+};
+
 export function ScenarioStep() {
   const navigate = useNavigate();
   const { speak, isSpeaking } = useSpeech();
   const [currentStep, setCurrentStep] = useState(0);
 
-  const scenarioSteps = [
+  const fallbackSteps: ScenarioStepItem[] = [
     {
       text: fiPhrases.scenarioLines.ruiningGame[0],
-      emotion: "thinking" as const,
+      emotion: "thinking",
+      mode: "listening",
     },
     {
       text: fiPhrases.scenarioLines.ruiningGame[1],
-      emotion: "happy" as const,
+      emotion: "happy",
+      mode: "baseline",
     },
     {
       text: fiPhrases.scenarioLines.ruiningGame[2],
-      emotion: "calm" as const,
+      emotion: "calm",
+      mode: "warm",
     },
   ];
+  const [scenarioSteps, setScenarioSteps] = useState<ScenarioStepItem[]>(fallbackSteps);
 
   useEffect(() => {
-    speak(scenarioSteps[currentStep].text, currentStep === 0 ? "listening" : "baseline");
-  }, [currentStep, speak]);
+    let active = true;
+
+    const loadScenario = async () => {
+      try {
+        const response = await fetch("/content/fi/scenarios/01_hitting.json");
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          steps?: Array<{ mode?: string; text?: string }>;
+        };
+
+        const mapped = (payload.steps ?? [])
+          .filter((step) => typeof step.text === "string" && step.text.trim().length > 0)
+          .map<ScenarioStepItem>((step) => {
+            const rawMode = step.mode ?? "baseline";
+            const mode: ScenarioMode =
+              rawMode === "listening" || rawMode === "firm" || rawMode === "warm"
+                ? rawMode
+                : "baseline";
+            const emotion: ScenarioEmotion =
+              mode === "listening" ? "thinking" : mode === "warm" ? "happy" : "calm";
+            return { text: step.text!.trim(), mode, emotion };
+          });
+
+        if (active && mapped.length > 0) {
+          setScenarioSteps(mapped);
+          setCurrentStep(0);
+        }
+      } catch {
+        // Keep fallback script if fetch fails.
+      }
+    };
+
+    void loadScenario();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const step = scenarioSteps[currentStep];
+    if (!step) {
+      return;
+    }
+    speak(step.text, step.mode);
+  }, [currentStep, scenarioSteps, speak]);
 
   const handleNext = async () => {
     if (currentStep < scenarioSteps.length - 1) {
@@ -87,7 +145,7 @@ export function ScenarioStep() {
             <div>
               <h3 className="text-[var(--lumi-text-primary)] font-semibold mb-1">Lelu halutaan samaan aikaan</h3>
               <p className="text-xs text-[var(--lumi-text-secondary)] uppercase tracking-wide">
-                Vaihe 2 / 4
+                Vaihe {Math.min(currentStep + 1, scenarioSteps.length)} / {scenarioSteps.length}
               </p>
             </div>
 

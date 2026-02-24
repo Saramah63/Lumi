@@ -1,0 +1,15 @@
+{
+  "id": "throwing",
+  "title": "Heittaminen",
+  "durationTarget": "3-4min",
+  "steps": [
+    { "mode": "baseline", "text": "Hei. Olen Lumi. Tänään harjoittelemme turvaa.", "pauseMs": 400 },
+    { "mode": "listening", "text": "Joskus käsi heittää jotain. Ehkä tunne on iso.", "pauseMs": 400 },
+    { "mode": "firm", "text": "Pysähdy. Ei heitetä. Se ei ole turvallista.", "pauseMs": 600 },
+    { "mode": "listening", "text": "Miltä sinusta tuntuu?", "pauseMs": 600, "teacherHint": "Emoji vote" },
+    { "mode": "regulation", "text": "Hengitä sisään… ja ulos. Katsotaan yhdessä.", "pauseMs": 800 },
+    { "mode": "listening", "text": "Kun haluat heittää, mitä voit tehdä?", "pauseMs": 600 },
+    { "mode": "baseline", "text": "Laske esine alas. Pyydä apua. Mene aikuisen luo.", "pauseMs": 500 },
+    { "mode": "warm", "text": "Sinä yritit. Me opimme yhdessä.", "pauseMs": 500 }
+  ]
+}
