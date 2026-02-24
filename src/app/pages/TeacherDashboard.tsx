@@ -27,11 +27,13 @@ export function TeacherDashboard() {
     { id: "5", title: "Oma idea hylätään", type: "quick" as const },
   ];
 
-  const handleStart = () => {
-    speak("Tervetuloa Lumin kanssa! Aloitetaan yhdessä.");
-    setTimeout(() => {
-      navigate("/check-in");
-    }, 2000);
+  const handleStart = async () => {
+    await speak("Tervetuloa Lumin kanssa! Aloitetaan yhdessä.", "normal");
+    navigate("/check-in");
+  };
+
+  const handleFirmCalm = async () => {
+    await speak("Pysähdytään hetkeksi. Hengitetään yhdessä rauhallisesti.", "firm");
   };
 
   const handleMuteToggle = () => {
@@ -42,6 +44,7 @@ export function TeacherDashboard() {
     <div className="min-h-screen bg-[var(--lumi-neutral-bg)] flex">
       {/* Left Side - Kid-Facing Stage (65%) */}
       <div className="w-[65%] flex items-center justify-center p-12 relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(135,206,235,0.18),transparent_38%),radial-gradient(circle_at_85%_15%,rgba(255,179,102,0.14),transparent_32%)] pointer-events-none" />
         <div className="flex flex-col items-center gap-8">
           <LumiAvatar size="xxl" emotion="happy" speaking={isSpeaking} />
           
@@ -60,13 +63,13 @@ export function TeacherDashboard() {
       </div>
 
       {/* Right Side - Teacher Control Panel (35%) */}
-      <div className="w-[35%] bg-white border-l border-[var(--lumi-border)] p-8 flex flex-col gap-6 overflow-y-auto">
+      <div className="w-[35%] bg-white/95 backdrop-blur-sm border-l border-[var(--lumi-border)] p-8 flex flex-col gap-6 overflow-y-auto shadow-[-8px_0_24px_rgba(43,58,74,0.08)]">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-[var(--lumi-text-primary)]">Opettajan ohjaus</h3>
+          <h3 className="text-[var(--lumi-text-primary)] font-semibold">Opettajan ohjaus</h3>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--lumi-neutral-bg)] transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-full border border-[var(--lumi-border)] hover:bg-[var(--lumi-neutral-bg)] transition-colors"
           >
             <Settings className="w-5 h-5 text-[var(--lumi-text-secondary)]" />
           </button>
@@ -79,7 +82,7 @@ export function TeacherDashboard() {
             <button
               onClick={() => setSelectedTheme("turvataidot")}
               className={`
-                h-12 px-4 rounded-[1rem] border-2 transition-all
+                h-12 px-4 rounded-[1rem] border-2 transition-all focus-visible:ring-4 focus-visible:ring-[#0a7ec2]/25
                 ${selectedTheme === "turvataidot" 
                   ? 'border-[var(--lumi-sky-blue)] bg-[var(--lumi-sky-blue)]/10' 
                   : 'border-[var(--lumi-border)] bg-white'
@@ -91,7 +94,7 @@ export function TeacherDashboard() {
             <button
               onClick={() => setSelectedTheme("toveri")}
               className={`
-                h-12 px-4 rounded-[1rem] border-2 transition-all
+                h-12 px-4 rounded-[1rem] border-2 transition-all focus-visible:ring-4 focus-visible:ring-[#0a7ec2]/25
                 ${selectedTheme === "toveri" 
                   ? 'border-[var(--lumi-sky-blue)] bg-[var(--lumi-sky-blue)]/10' 
                   : 'border-[var(--lumi-border)] bg-white'
@@ -106,7 +109,7 @@ export function TeacherDashboard() {
         {/* Scenario Selection Mode */}
         <div className="space-y-3">
           <label className="text-sm text-[var(--lumi-text-secondary)]">Skenaario</label>
-          <div className="flex items-center gap-3 p-4 bg-[var(--lumi-neutral-bg)] rounded-[1rem]">
+          <div className="flex items-center gap-3 p-4 bg-[var(--lumi-neutral-bg)] border border-[var(--lumi-border)] rounded-[1rem]">
             <span className="text-sm text-[var(--lumi-text-primary)]">Älykäs satunnainen</span>
             <Switch
               checked={scenarioMode === "manual"}
@@ -150,7 +153,7 @@ export function TeacherDashboard() {
             </div>
           </SecondaryButton>
 
-          <FirmCalmButton>
+          <FirmCalmButton onClick={handleFirmCalm}>
             Rauhallinen tuki
           </FirmCalmButton>
         </div>
@@ -159,7 +162,7 @@ export function TeacherDashboard() {
         <div className="flex items-center justify-between pt-4 border-t border-[var(--lumi-border)]">
           <button
             onClick={handleMuteToggle}
-            className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-[var(--lumi-neutral-bg)] transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--lumi-border)] hover:bg-[var(--lumi-neutral-bg)] transition-colors"
           >
             {isMuted ? (
               <VolumeX className="w-5 h-5 text-[var(--lumi-text-secondary)]" />

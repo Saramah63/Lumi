@@ -41,17 +41,16 @@ export function FeelingsCheckIn() {
     setSelectedFeeling(feeling);
   };
 
-  const handleContinue = () => {
-    speak("Kuulin erilaisia tunteita. Kaikki tunteet ovat ok.");
-    setTimeout(() => {
-      navigate("/breath");
-    }, 2000);
+  const handleContinue = async () => {
+    await speak("Kuulin erilaisia tunteita. Kaikki tunteet ovat ok.");
+    navigate("/breath");
   };
 
   return (
     <div className="min-h-screen bg-[var(--lumi-neutral-bg)] flex">
       {/* Left Side - Kid-Facing Stage (65%) */}
       <div className="w-[65%] flex flex-col items-center justify-center p-12 relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(135,206,235,0.18),transparent_38%),radial-gradient(circle_at_85%_15%,rgba(255,179,102,0.14),transparent_32%)] pointer-events-none" />
         {/* Teacher HUD */}
         <div className="absolute top-6 left-6">
           <TeacherHUD elapsed="1:24" step="Tunne-check-in" />
@@ -80,11 +79,11 @@ export function FeelingsCheckIn() {
       </div>
 
       {/* Right Side - Teacher Control Panel (35%) */}
-      <div className="w-[35%] bg-white border-l border-[var(--lumi-border)] p-8 flex flex-col gap-6">
+      <div className="w-[35%] bg-white/95 backdrop-blur-sm border-l border-[var(--lumi-border)] p-8 flex flex-col gap-6 shadow-[-8px_0_24px_rgba(43,58,74,0.08)]">
         <div className="flex-1 flex flex-col justify-between">
           <div className="space-y-6">
             <div>
-              <h3 className="text-[var(--lumi-text-primary)] mb-2">Tunne-check-in</h3>
+              <h3 className="text-[var(--lumi-text-primary)] font-semibold mb-2">Tunne-check-in</h3>
               <p className="text-sm text-[var(--lumi-text-secondary)]">
                 Lapset voivat ilmaista tuntemuksensa koskettamalla tuntomerkkiä.
               </p>
@@ -99,7 +98,7 @@ export function FeelingsCheckIn() {
                 votes[feeling.id] > 0 && (
                   <div
                     key={feeling.id}
-                    className="flex items-center justify-between p-3 bg-[var(--lumi-neutral-bg)] rounded-[1rem]"
+                    className="flex items-center justify-between p-3 bg-[var(--lumi-neutral-bg)] border border-[var(--lumi-border)] rounded-[1rem]"
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{feeling.emoji}</span>
@@ -107,7 +106,7 @@ export function FeelingsCheckIn() {
                         {feeling.label}
                       </span>
                     </div>
-                    <span className="text-[var(--lumi-sky-blue)]">
+                    <span className="text-[var(--lumi-sky-blue)] font-semibold">
                       {votes[feeling.id]}
                     </span>
                   </div>

@@ -20,15 +20,19 @@ export function PrimaryButton({
     <button
       className={`
         ${sizeClasses[size]}
-        bg-[var(--lumi-sky-blue)] 
-        text-white 
+        w-full
+        bg-[var(--lumi-sky-blue)]
+        text-white
         rounded-[1.5rem]
+        border-2 border-[var(--lumi-sky-blue-dark)]
         hover:bg-[var(--lumi-sky-blue-dark)]
+        hover:shadow-[0_10px_28px_rgba(58,124,168,0.28)]
         active:scale-[0.98]
         transition-all
+        focus-visible:ring-4 focus-visible:ring-[#0a7ec2]/30
         disabled:opacity-50 
         disabled:cursor-not-allowed
-        shadow-sm
+        shadow-md
         ${className}
       `}
       {...props}

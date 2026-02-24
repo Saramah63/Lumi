@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { motion } from "motion/react";
 import { LumiAvatar } from "../components/lumi/LumiAvatar";
 import { PrimaryButton } from "../components/lumi/PrimaryButton";
 import { TeacherHUD } from "../components/lumi/TeacherHUD";
@@ -8,7 +7,7 @@ import { useSpeech } from "../hooks/useSpeech";
 
 export function BreathSync() {
   const navigate = useNavigate();
-  const { speak, isSpeaking } = useSpeech();
+  const { speak } = useSpeech();
   const [cycles, setCycles] = useState(0);
   const targetCycles = 4;
 
@@ -38,6 +37,7 @@ export function BreathSync() {
     <div className="min-h-screen bg-[var(--lumi-neutral-bg)] flex">
       {/* Left Side - Kid-Facing Stage (65%) */}
       <div className="w-[65%] flex flex-col items-center justify-center p-12 relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(135,206,235,0.18),transparent_38%),radial-gradient(circle_at_85%_15%,rgba(255,179,102,0.14),transparent_32%)] pointer-events-none" />
         {/* Teacher HUD */}
         <div className="absolute top-6 left-6">
           <TeacherHUD elapsed="2:48" step="Hengityshetki" />
@@ -53,22 +53,29 @@ export function BreathSync() {
               {/* Voice guides breathing - minimal text */}
             </p>
           </div>
+
+          <div className="w-72 h-3 bg-white/80 border border-[var(--lumi-border)] rounded-full overflow-hidden shadow-sm">
+            <div
+              className="h-full bg-[var(--lumi-sky-blue)] transition-all duration-500"
+              style={{ width: `${Math.min((cycles / targetCycles) * 100, 100)}%` }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Right Side - Teacher Control Panel (35%) */}
-      <div className="w-[35%] bg-white border-l border-[var(--lumi-border)] p-8 flex flex-col gap-6">
+      <div className="w-[35%] bg-white/95 backdrop-blur-sm border-l border-[var(--lumi-border)] p-8 flex flex-col gap-6 shadow-[-8px_0_24px_rgba(43,58,74,0.08)]">
         <div className="flex-1 flex flex-col justify-between">
           <div className="space-y-6">
             <div>
-              <h3 className="text-[var(--lumi-text-primary)] mb-2">Hengityshetki</h3>
+              <h3 className="text-[var(--lumi-text-primary)] font-semibold mb-2">Hengityshetki</h3>
               <p className="text-sm text-[var(--lumi-text-secondary)]">
                 Lumi ohjaa rauhallista hengitystä. Seuraa Lumin hohdon rytmiä.
               </p>
             </div>
 
             {/* Breathing guidance for teacher */}
-            <div className="space-y-4 p-4 bg-[var(--lumi-neutral-bg)] rounded-[1.5rem]">
+            <div className="space-y-4 p-4 bg-[var(--lumi-neutral-bg)] border border-[var(--lumi-border)] rounded-[1.5rem]">
               <div className="space-y-2">
                 <p className="text-sm text-[var(--lumi-text-secondary)]">Ohje:</p>
                 <ul className="space-y-2 text-sm text-[var(--lumi-text-primary)]">
@@ -80,8 +87,8 @@ export function BreathSync() {
               </div>
             </div>
 
-            <div className="p-4 bg-blue-50 rounded-[1.5rem] border-2 border-blue-100">
-              <p className="text-xs text-blue-900">
+            <div className="p-4 bg-blue-50 rounded-[1.5rem] border-2 border-blue-200">
+              <p className="text-xs text-blue-950">
                 💡 Vinkki: Voit sanoa "Laitetaan käsi vatsalle ja tunnetaan miten ilma menee sisään ja ulos"
               </p>
             </div>

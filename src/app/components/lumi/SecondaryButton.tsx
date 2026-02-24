@@ -20,18 +20,20 @@ export function SecondaryButton({
     <button
       className={`
         ${sizeClasses[size]}
+        w-full
         bg-white
         text-[var(--lumi-text-primary)]
         border-2 
         border-[var(--lumi-border)]
         rounded-[1.5rem]
         hover:border-[var(--lumi-sky-blue)]
-        hover:bg-[var(--lumi-neutral-bg)]
+        hover:bg-[#f2faff]
         active:scale-[0.98]
         transition-all
+        focus-visible:ring-4 focus-visible:ring-[#0a7ec2]/25
         disabled:opacity-50 
         disabled:cursor-not-allowed
-        shadow-sm
+        shadow-md
         ${className}
       `}
       {...props}

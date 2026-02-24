@@ -1,53 +1,58 @@
-import { useState, useEffect, useCallback } from 'react';
-import { speechService } from '../services/speechService';
+import { useCallback, useState } from "react";
+import { lumiEngine, type LumiLanguage, type LumiSpeakMode } from "../engine/lumiEngine";
+import { useLumiEngineState } from "../engine/useLumiEngine";
+
+type SpeakOptions = {
+  lang?: LumiLanguage;
+  voice?: string;
+};
 
 export function useSpeech() {
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const state = useLumiEngineState();
+  const [isMuted, setIsMuted] = useState(lumiEngine.getMuted());
 
-  useEffect(() => {
-    // Register speaking state change callback
-    speechService.onSpeakingStateChange(setIsSpeaking);
+  const speak = useCallback(
+    async (text: string, mode: LumiSpeakMode = "normal", options?: SpeakOptions) => {
+      try {
+        await lumiEngine.speak(text, mode, options);
+      } catch (error) {
+        console.error("Lumi speak failed", error);
+      }
+    },
+    []
+  );
 
-    return () => {
-      speechService.cancel();
-    };
-  }, []);
+  const speakLines = useCallback(
+    async (lines: string[], mode: LumiSpeakMode = "normal", pauseDuration = 800) => {
+      try {
+        await lumiEngine.speakLines(lines, mode, pauseDuration);
+      } catch (error) {
+        console.error("Lumi speakLines failed", error);
+      }
+    },
+    []
+  );
 
-  const speak = useCallback((text: string, options?: {
-    rate?: number;
-    pitch?: number;
-    volume?: number;
-    onStart?: () => void;
-    onEnd?: () => void;
-  }) => {
-    speechService.speak(text, options);
-  }, []);
-
-  const speakLines = useCallback(async (lines: string[], pauseDuration?: number) => {
-    await speechService.speakWithPauses(lines, pauseDuration);
-  }, []);
-
-  const cancel = useCallback(() => {
-    speechService.cancel();
+  const cancel = useCallback(async () => {
+    await lumiEngine.stop();
   }, []);
 
   const pause = useCallback(() => {
-    speechService.pause();
+    // Audio element pause control can be added later if needed by ScenarioRunner.
   }, []);
 
   const resume = useCallback(() => {
-    speechService.resume();
+    // Audio element resume control can be added later if needed by ScenarioRunner.
   }, []);
 
   const toggleMute = useCallback(() => {
-    const newMutedState = speechService.toggleMute();
-    setIsMuted(newMutedState);
-    return newMutedState;
+    const next = lumiEngine.toggleMute();
+    setIsMuted(next);
+    return next;
   }, []);
 
   const setMute = useCallback((muted: boolean) => {
-    speechService.setMuted(muted);
+    lumiEngine.setMuted(muted);
     setIsMuted(muted);
   }, []);
 
@@ -59,7 +64,7 @@ export function useSpeech() {
     resume,
     toggleMute,
     setMute,
-    isSpeaking,
+    isSpeaking: state.isSpeaking,
     isMuted,
   };
 }

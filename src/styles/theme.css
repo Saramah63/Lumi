@@ -66,6 +66,17 @@
   --lumi-glow-sky: rgba(135, 206, 235, 0.3);
   --lumi-glow-warm: rgba(255, 179, 102, 0.25);
   --lumi-overlay: rgba(43, 58, 74, 0.6);
+  --lumi-stage-bg: radial-gradient(circle at 20% 20%, #f2fbff 0%, #e7f5ff 35%, #f6fbff 70%, #ffffff 100%);
+
+  /* Legacy aliases used across components */
+  --lumi-sky-blue: var(--lumi-sky-500);
+  --lumi-sky-blue-light: var(--lumi-sky-300);
+  --lumi-sky-blue-dark: var(--lumi-sky-600);
+  --lumi-neutral-bg: var(--lumi-neutral-50);
+  --lumi-border: var(--lumi-neutral-300);
+  --lumi-calm-orange: var(--lumi-warm-400);
+  --lumi-glow: var(--lumi-glow-sky);
+  --focus-ring: #0a7ec2;
   
   /* ========================================
      TYPOGRAPHY SCALE
@@ -391,6 +402,12 @@
   body {
     @apply bg-background text-foreground;
     transition: background-color var(--transition-base), color var(--transition-base);
+    background-image:
+      radial-gradient(circle at 10% 15%, rgba(135, 206, 235, 0.12), transparent 32%),
+      radial-gradient(circle at 88% 22%, rgba(255, 179, 102, 0.12), transparent 28%),
+      var(--lumi-stage-bg);
+    min-height: 100vh;
+    font-family: "Avenir Next", "Nunito", "Trebuchet MS", sans-serif;
   }
 
   /**
@@ -453,6 +470,25 @@
     transition: all var(--transition-base);
   }
 
+  button,
+  [role="button"],
+  a,
+  input,
+  textarea,
+  select {
+    outline: none;
+  }
+
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--focus-ring);
+    border-color: var(--focus-ring);
+  }
+
   input {
     font-size: var(--text-body);
     font-weight: var(--font-weight-normal);
@@ -462,5 +498,13 @@
   small {
     font-size: var(--text-small);
     line-height: var(--leading-normal);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }

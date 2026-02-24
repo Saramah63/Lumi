@@ -10,7 +10,7 @@ import { useSpeech } from "../hooks/useSpeech";
 
 export function ScenarioStep() {
   const navigate = useNavigate();
-  const { speak, speakLines, isSpeaking } = useSpeech();
+  const { speak, isSpeaking } = useSpeech();
   const [currentStep, setCurrentStep] = useState(0);
 
   const scenarioSteps = [
@@ -29,29 +29,31 @@ export function ScenarioStep() {
   ];
 
   useEffect(() => {
-    // Speak current step
-    speak(scenarioSteps[currentStep].text);
-  }, [currentStep]);
+    speak(scenarioSteps[currentStep].text, currentStep === 0 ? "listening" : "normal");
+  }, [currentStep, speak]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < scenarioSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      speak("Hienoa työtä! Siirrytään päätöshetkeen.");
-      setTimeout(() => {
-        navigate("/closing");
-      }, 2000);
+      await speak("Hienoa työtä! Siirrytään päätöshetkeen.", "repair");
+      navigate("/closing");
     }
   };
 
   const handleRepeat = () => {
-    speak(scenarioSteps[currentStep].text);
+    speak(scenarioSteps[currentStep].text, "normal");
+  };
+
+  const handleFirmCalm = () => {
+    speak("Pysähdytään ja rauhoitutaan. Olemme turvassa.", "firm");
   };
 
   return (
     <div className="min-h-screen bg-[var(--lumi-neutral-bg)] flex">
       {/* Left Side - Kid-Facing Stage (65%) */}
       <div className="w-[65%] flex flex-col items-center justify-center p-12 relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(135,206,235,0.18),transparent_38%),radial-gradient(circle_at_85%_15%,rgba(255,179,102,0.14),transparent_32%)] pointer-events-none" />
         {/* Teacher HUD - subtle, top-left */}
         <div className="absolute top-6 left-6">
           <TeacherHUD elapsed="4:32" step={`Skenaario ${currentStep + 1}/${scenarioSteps.length}`} />
@@ -65,7 +67,7 @@ export function ScenarioStep() {
 
           {/* Scenario Illustration Placeholder */}
           <div className="flex justify-center">
-            <div className="w-96 h-64 bg-white rounded-[1.5rem] border-2 border-[var(--lumi-border)] flex items-center justify-center shadow-sm">
+            <div className="w-96 h-64 bg-white rounded-[1.5rem] border-2 border-[var(--lumi-border)] flex items-center justify-center shadow-md">
               <div className="text-center space-y-4">
                 <div className="text-6xl">🧸</div>
                 <p className="text-[var(--lumi-text-secondary)] text-lg">
@@ -78,11 +80,11 @@ export function ScenarioStep() {
       </div>
 
       {/* Right Side - Teacher Control Panel (35%) */}
-      <div className="w-[35%] bg-white border-l border-[var(--lumi-border)] p-8 flex flex-col gap-6">
+      <div className="w-[35%] bg-white/95 backdrop-blur-sm border-l border-[var(--lumi-border)] p-8 flex flex-col gap-6 shadow-[-8px_0_24px_rgba(43,58,74,0.08)]">
         <div className="flex-1 flex flex-col justify-between">
           <div className="space-y-6">
             <div>
-              <h3 className="text-[var(--lumi-text-primary)] mb-1">Lelu halutaan samaan aikaan</h3>
+              <h3 className="text-[var(--lumi-text-primary)] font-semibold mb-1">Lelu halutaan samaan aikaan</h3>
               <p className="text-xs text-[var(--lumi-text-secondary)] uppercase tracking-wide">
                 Vaihe 2 / 4
               </p>
@@ -90,7 +92,7 @@ export function ScenarioStep() {
 
             {/* Scenario Content */}
             <div className="space-y-4">
-              <div className="p-4 bg-[var(--lumi-neutral-bg)] rounded-[1.5rem]">
+              <div className="p-4 bg-[var(--lumi-neutral-bg)] border border-[var(--lumi-border)] rounded-[1.5rem]">
                 <p className="text-sm text-[var(--lumi-text-primary)] mb-3">
                   Opetettava taito:
                 </p>
@@ -99,8 +101,8 @@ export function ScenarioStep() {
                 </p>
               </div>
 
-              <div className="p-4 bg-green-50 rounded-[1.5rem] border-2 border-green-100">
-                <p className="text-xs text-green-900">
+              <div className="p-4 bg-green-50 rounded-[1.5rem] border-2 border-green-200">
+                <p className="text-xs text-green-950">
                   🎯 Harjoitus: Lapset voivat näytellä tilannetta pareittain
                 </p>
               </div>
@@ -139,7 +141,7 @@ export function ScenarioStep() {
               </div>
             </SecondaryButton>
 
-            <FirmCalmButton>
+            <FirmCalmButton onClick={handleFirmCalm}>
               <div className="flex items-center justify-center gap-2">
                 <AlertCircle className="w-4 h-4" />
                 <span>Keskeytä ja rauhoita</span>

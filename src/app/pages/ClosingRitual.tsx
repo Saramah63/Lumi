@@ -19,7 +19,7 @@ export function ClosingRitual() {
       "Nähdään pian taas!"
     ];
     
-    speakLines(closingLines, 1000);
+    speakLines(closingLines, "normal", 1000);
   }, []);
 
   const handleFinish = () => {
@@ -30,6 +30,7 @@ export function ClosingRitual() {
     <div className="min-h-screen bg-[var(--lumi-neutral-bg)] flex">
       {/* Left Side - Kid-Facing Stage (65%) */}
       <div className="w-[65%] flex flex-col items-center justify-center p-12 relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(135,206,235,0.18),transparent_38%),radial-gradient(circle_at_85%_15%,rgba(255,179,102,0.14),transparent_32%)] pointer-events-none" />
         {/* Teacher HUD */}
         <div className="absolute top-6 left-6">
           <TeacherHUD elapsed="7:18" step="Päätösrituaali" />
@@ -71,11 +72,11 @@ export function ClosingRitual() {
       </div>
 
       {/* Right Side - Teacher Control Panel (35%) */}
-      <div className="w-[35%] bg-white border-l border-[var(--lumi-border)] p-8 flex flex-col gap-6">
+      <div className="w-[35%] bg-white/95 backdrop-blur-sm border-l border-[var(--lumi-border)] p-8 flex flex-col gap-6 shadow-[-8px_0_24px_rgba(43,58,74,0.08)]">
         <div className="flex-1 flex flex-col justify-between">
           <div className="space-y-6">
             <div>
-              <h3 className="text-[var(--lumi-text-primary)] mb-2">Päätösrituaali</h3>
+              <h3 className="text-[var(--lumi-text-primary)] font-semibold mb-2">Päätösrituaali</h3>
               <p className="text-sm text-[var(--lumi-text-secondary)]">
                 Kiitä lapsia osallistumisesta ja muistuta opittuja taitoja.
               </p>
@@ -83,7 +84,7 @@ export function ClosingRitual() {
 
             {/* Session Summary */}
             <div className="space-y-4">
-              <div className="p-4 bg-[var(--lumi-neutral-bg)] rounded-[1.5rem]">
+              <div className="p-4 bg-[var(--lumi-neutral-bg)] border border-[var(--lumi-border)] rounded-[1.5rem]">
                 <p className="text-xs text-[var(--lumi-text-secondary)] uppercase tracking-wide mb-3">
                   Istunnon yhteenveto
                 </p>
@@ -95,11 +96,11 @@ export function ClosingRitual() {
                 </ul>
               </div>
 
-              <div className="p-4 bg-blue-50 rounded-[1.5rem] border-2 border-blue-100">
-                <p className="text-xs text-blue-900 mb-2">
+              <div className="p-4 bg-blue-50 rounded-[1.5rem] border-2 border-blue-200">
+                <p className="text-xs text-blue-950 mb-2">
                   💡 Muistutus vanhemmille
                 </p>
-                <p className="text-xs text-blue-700">
+                <p className="text-xs text-blue-800">
                   Voit jakaa tämän päivän teeman vanhemmille päiväkirjassa tai viestillä.
                 </p>
               </div>

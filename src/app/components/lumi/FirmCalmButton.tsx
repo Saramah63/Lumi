@@ -12,16 +12,18 @@ export function FirmCalmButton({
   return (
     <button
       className={`
-        h-14 px-6
+        w-full h-14 px-6
         bg-[var(--lumi-calm-orange)]
-        text-white
+        text-[#1f2937]
         rounded-[1.5rem]
-        hover:bg-[#FF9E4D]
+        border-2 border-[#d97706]
+        hover:bg-[#ffc07a]
         active:scale-[0.98]
         transition-all
+        focus-visible:ring-4 focus-visible:ring-[#d97706]/30
         disabled:opacity-50 
         disabled:cursor-not-allowed
-        shadow-sm
+        shadow-md
         ${className}
       `}
       {...props}
