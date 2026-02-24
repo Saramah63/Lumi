@@ -31,32 +31,47 @@ export function LumiAvatarFallback({
     return 3.8 - normalized * 1.4;
   }, [floatAmount]);
 
+  const mouthScale = 0.2 + Math.max(0, Math.min(1, mouthOpen)) * 1.6;
+
   return (
     <div
-      className={`relative rounded-full bg-[#dff3ff] border-2 border-[#9dcced] overflow-hidden shadow-lg ${className}`}
+      className={`relative overflow-visible ${className}`}
       style={{
         animation: `lumi-float ${floatDuration}s ease-in-out infinite`,
-        boxShadow: `0 0 ${20 + lightIntensity * 22}px rgba(111, 187, 224, ${0.22 + lightIntensity * 0.2})`,
       }}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_28%,rgba(255,255,255,0.8),rgba(255,255,255,0.1)_52%,transparent_70%)]" />
-
-      <div className="absolute left-[23%] top-[33%] w-[18%] h-[10%] rounded-full bg-[#2d5676]" />
-      <div className="absolute right-[23%] top-[33%] w-[18%] h-[10%] rounded-full bg-[#2d5676]" />
-
       <div
-        className="absolute left-[23%] top-[33%] w-[18%] h-[10%] rounded-full bg-[#bfe6ff] origin-center transition-transform duration-100"
-        style={{ transform: `scaleY(${isBlinking ? 1 : 0})` }}
-      />
-      <div
-        className="absolute right-[23%] top-[33%] w-[18%] h-[10%] rounded-full bg-[#bfe6ff] origin-center transition-transform duration-100"
-        style={{ transform: `scaleY(${isBlinking ? 1 : 0})` }}
-      />
-
-      <div
-        className="absolute left-1/2 top-[60%] w-[22%] h-[9%] -translate-x-1/2 rounded-full bg-[#1f4562] origin-center transition-transform duration-75"
+        className="absolute inset-0 rounded-full blur-3xl"
         style={{
-          transform: `translateX(-50%) scaleY(${0.15 + Math.max(0, Math.min(1, mouthOpen)) * 1.5})`,
+          background: "radial-gradient(circle, rgba(111, 197, 236, 0.38) 0%, rgba(111, 197, 236, 0) 70%)",
+          opacity: 0.24 + lightIntensity * 0.44,
+          transform: "scale(1.08)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <img
+        src="/lumi-face.png"
+        alt="Lumi"
+        className="relative z-10 w-full h-full object-contain select-none"
+        draggable={false}
+      />
+
+      <div
+        className="absolute z-20 left-[30%] top-[43%] w-[14%] h-[7%] rounded-full bg-white/85 origin-center transition-transform duration-100"
+        style={{ transform: `scaleY(${isBlinking ? 1 : 0})` }}
+      />
+      <div
+        className="absolute z-20 right-[30%] top-[43%] w-[14%] h-[7%] rounded-full bg-white/85 origin-center transition-transform duration-100"
+        style={{ transform: `scaleY(${isBlinking ? 1 : 0})` }}
+      />
+
+      <div
+        className="absolute z-20 left-1/2 top-[55%] w-[12%] h-[8%] -translate-x-1/2 rounded-[999px] bg-[#8c1323] origin-center transition-transform duration-75"
+        style={{
+          transform: `translateX(-50%) scaleY(${mouthScale})`,
+          opacity: 0.35 + Math.max(0, Math.min(1, mouthOpen)) * 0.5,
+          filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.22))",
         }}
       />
     </div>
