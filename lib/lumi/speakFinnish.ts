@@ -162,7 +162,7 @@ export async function lumiSpeak(
       }
 
       const rms = Math.sqrt(sumSquares / amplitudeData.length);
-      const gained = Math.min(1, rms * 3.4);
+      const gained = Math.min(1, rms * 4.6);
       smoothedMouth = smoothedMouth * 0.72 + gained * 0.28;
 
       const elapsed = (performance.now() - startedAt) / 1000;
