@@ -29,20 +29,20 @@ export function ScenarioStep() {
   ];
 
   useEffect(() => {
-    speak(scenarioSteps[currentStep].text, currentStep === 0 ? "listening" : "normal");
+    speak(scenarioSteps[currentStep].text, currentStep === 0 ? "listening" : "baseline");
   }, [currentStep, speak]);
 
   const handleNext = async () => {
     if (currentStep < scenarioSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      await speak("Hienoa työtä! Siirrytään päätöshetkeen.", "repair");
+      await speak("Hienoa työtä! Siirrytään päätöshetkeen.", "warm");
       navigate("/closing");
     }
   };
 
   const handleRepeat = () => {
-    speak(scenarioSteps[currentStep].text, "normal");
+    speak(scenarioSteps[currentStep].text, "baseline");
   };
 
   const handleFirmCalm = () => {

@@ -12,7 +12,7 @@ export function useSpeech() {
   const [isMuted, setIsMuted] = useState(lumiEngine.getMuted());
 
   const speak = useCallback(
-    async (text: string, mode: LumiSpeakMode = "normal", options?: SpeakOptions) => {
+    async (text: string, mode: LumiSpeakMode = "baseline", options?: SpeakOptions) => {
       try {
         await lumiEngine.speak(text, mode, options);
       } catch (error) {
@@ -23,7 +23,7 @@ export function useSpeech() {
   );
 
   const speakLines = useCallback(
-    async (lines: string[], mode: LumiSpeakMode = "normal", pauseDuration = 800) => {
+    async (lines: string[], mode: LumiSpeakMode = "baseline", pauseDuration = 800) => {
       try {
         await lumiEngine.speakLines(lines, mode, pauseDuration);
       } catch (error) {

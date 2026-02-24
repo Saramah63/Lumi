@@ -1,5 +1,5 @@
-export type LumiLanguage = "fi-FI" | "en-US";
-export type LumiSpeakMode = "normal" | "listening" | "firm" | "repair";
+export type LumiLanguage = "fi-FI";
+export type LumiSpeakMode = "baseline" | "listening" | "firm" | "warm";
 
 export interface LumiSpeakOptions {
   lang?: LumiLanguage;
@@ -111,20 +111,20 @@ export class LumiEngine {
     return this.isMuted;
   }
 
-  async speak(text: string, mode: LumiSpeakMode = "normal", options: LumiSpeakOptions = {}): Promise<void> {
+  async speak(text: string, mode: LumiSpeakMode = "baseline", options: LumiSpeakOptions = {}): Promise<void> {
     if (!text.trim() || this.isMuted) {
       return;
     }
 
     await this.stop();
 
-    const lang = options.lang ?? "fi-FI";
+    const lang = "fi-FI";
     this.patch({
       isSpeaking: true,
       isListening: mode === "listening",
       isFirm: mode === "firm",
       mouthOpen: 0,
-      lightIntensity: mode === "firm" ? 0.6 : 0.45,
+      lightIntensity: mode === "firm" ? 0.65 : mode === "warm" ? 0.52 : mode === "listening" ? 0.4 : 0.46,
     });
 
     this.triggerSyncBreath();
@@ -139,6 +139,7 @@ export class LumiEngine {
         body: JSON.stringify({
           text,
           lang,
+          mode,
           voice: options.voice,
         }),
       });
@@ -161,7 +162,7 @@ export class LumiEngine {
     }
   }
 
-  async speakLines(lines: string[], mode: LumiSpeakMode = "normal", pauseMs = 800): Promise<void> {
+  async speakLines(lines: string[], mode: LumiSpeakMode = "baseline", pauseMs = 800): Promise<void> {
     for (const line of lines) {
       await this.speak(line, mode);
       await new Promise((resolve) => window.setTimeout(resolve, pauseMs));
@@ -217,7 +218,7 @@ export class LumiEngine {
     this.stopBlinkLoop();
     this.stopLipSyncLoop();
 
-    if (mode === "repair") {
+    if (mode === "warm") {
       this.triggerWarmGlow();
     }
 

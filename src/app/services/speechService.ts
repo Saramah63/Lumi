@@ -13,14 +13,14 @@ export class SpeechService {
     text: string,
     options?: {
       mode?: LumiSpeakMode;
-      lang?: "fi-FI" | "en-US";
+      lang?: "fi-FI";
       voice?: string;
       onStart?: () => void;
       onEnd?: () => void;
     }
   ): Promise<void> {
     options?.onStart?.();
-    await lumiEngine.speak(text, options?.mode ?? "normal", {
+    await lumiEngine.speak(text, options?.mode ?? "baseline", {
       lang: options?.lang,
       voice: options?.voice,
     });
@@ -28,7 +28,7 @@ export class SpeechService {
   }
 
   async speakWithPauses(lines: string[], pauseDuration = 800): Promise<void> {
-    await lumiEngine.speakLines(lines, "normal", pauseDuration);
+    await lumiEngine.speakLines(lines, "baseline", pauseDuration);
   }
 
   cancel(): void {

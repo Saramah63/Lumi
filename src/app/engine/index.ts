@@ -1,6 +1,6 @@
 import { lumiEngine, type LumiSpeakMode, type LumiSpeakOptions } from "./lumiEngine";
 
-export async function speak(text: string, mode: LumiSpeakMode = "normal", options?: LumiSpeakOptions) {
+export async function speak(text: string, mode: LumiSpeakMode = "baseline", options?: LumiSpeakOptions) {
   return lumiEngine.speak(text, mode, options);
 }
 

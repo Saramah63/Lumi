@@ -28,7 +28,7 @@ export function TeacherDashboard() {
   ];
 
   const handleStart = async () => {
-    await speak("Tervetuloa Lumin kanssa! Aloitetaan yhdessä.", "normal");
+    await speak("Tervetuloa Lumin kanssa! Aloitetaan yhdessä.", "baseline");
     navigate("/check-in");
   };
 

@@ -19,7 +19,7 @@ export function ClosingRitual() {
       "Nähdään pian taas!"
     ];
     
-    speakLines(closingLines, "normal", 1000);
+    speakLines(closingLines, "warm", 1000);
   }, []);
 
   const handleFinish = () => {
