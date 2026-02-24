@@ -32,8 +32,6 @@ export function LumiAvatarFallback({
   }, [floatAmount]);
 
   const mouthAmount = Math.max(0, Math.min(1, mouthOpen));
-  const mouthScale = 1 + mouthAmount * 0.55;
-  const blinkScale = isBlinking ? 1 : 0;
 
   return (
     <div
@@ -53,44 +51,38 @@ export function LumiAvatarFallback({
       />
 
       <img
-        src="/lumi-face.png"
+        src="/lumi-face-optimized.png"
         alt="Lumi"
         className="relative z-10 w-full h-full object-contain select-none"
         draggable={false}
       />
 
-      {/* Mouth motion from original texture (not synthetic mouth drawing) */}
-      <img
-        src="/lumi-face.png"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 z-20 w-full h-full object-contain pointer-events-none"
+      <div
+        className="absolute z-20 left-[27.8%] top-[42.2%] w-[14.4%] h-[9.2%] rounded-full bg-[#f4f0f7] pointer-events-none"
         style={{
-          clipPath: "ellipse(9% 7% at 50% 58%)",
-          transform: `scaleY(${mouthScale})`,
-          transformOrigin: "50% 58%",
+          transform: `scaleY(${isBlinking ? 1 : 0})`,
+          transformOrigin: "center",
           opacity: 0.9,
-          filter: "saturate(1.04)",
+          transition: "transform 80ms linear",
+        }}
+      />
+      <div
+        className="absolute z-20 right-[27.8%] top-[42.2%] w-[14.4%] h-[9.2%] rounded-full bg-[#f4f0f7] pointer-events-none"
+        style={{
+          transform: `scaleY(${isBlinking ? 1 : 0})`,
+          transformOrigin: "center",
+          opacity: 0.9,
+          transition: "transform 80ms linear",
         }}
       />
 
-      {/* Eyelid blink overlays (subtle, matching Lumi fur tone) */}
       <div
-        className="absolute z-20 left-[27.5%] top-[41.8%] w-[15%] h-[9.5%] rounded-full bg-[#f4f0f7] pointer-events-none"
+        className="absolute z-20 left-1/2 top-[56.5%] -translate-x-1/2 w-[11%] rounded-full bg-[#7f1020] pointer-events-none"
         style={{
-          transform: `scaleY(${blinkScale})`,
-          transformOrigin: "center",
-          opacity: 0.92,
-          transition: "transform 80ms linear",
-        }}
-      />
-      <div
-        className="absolute z-20 right-[27.5%] top-[41.8%] w-[15%] h-[9.5%] rounded-full bg-[#f4f0f7] pointer-events-none"
-        style={{
-          transform: `scaleY(${blinkScale})`,
-          transformOrigin: "center",
-          opacity: 0.92,
-          transition: "transform 80ms linear",
+          height: `${2 + mouthAmount * 9}%`,
+          opacity: 0.25 + mouthAmount * 0.6,
+          filter: "blur(0.2px)",
+          transition: "height 65ms linear, opacity 65ms linear",
         }}
       />
     </div>

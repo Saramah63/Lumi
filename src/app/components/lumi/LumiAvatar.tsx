@@ -23,7 +23,7 @@ export function LumiAvatar({
     md: "w-52 h-52",
     lg: "w-72 h-72",
     xl: "w-96 h-96",
-    xxl: "w-[34rem] h-[34rem]",
+    xxl: "w-[30rem] h-[30rem]",
   };
 
   const isSpeaking = speaking ?? engine.isSpeaking;

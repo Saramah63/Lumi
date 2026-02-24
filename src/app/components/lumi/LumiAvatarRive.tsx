@@ -44,6 +44,16 @@ export function LumiAvatarRive({
     }),
   });
 
+  useEffect(() => {
+    if (rive) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setLoadError(true);
+    }, 1400);
+    return () => window.clearTimeout(timer);
+  }, [rive]);
+
   const speakingInput = useStateMachineInput(rive, STATE_MACHINE, "isSpeaking");
   const listeningInput = useStateMachineInput(rive, STATE_MACHINE, "isListening");
   const firmInput = useStateMachineInput(rive, STATE_MACHINE, "isFirm");
