@@ -1,0 +1,466 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* ========================================
+     LUMI DESIGN SYSTEM TOKENS
+     ======================================== */
+  
+  /* Base Font Size */
+  --font-size: 16px;
+  
+  /* ========================================
+     COLOR SYSTEM
+     ======================================== */
+  
+  /* Primary Sky Blue Family */
+  --lumi-sky-50: #F0F9FF;
+  --lumi-sky-100: #E0F2FE;
+  --lumi-sky-200: #B0E0F5;
+  --lumi-sky-300: #87CEEB;
+  --lumi-sky-400: #6BB6D9;
+  --lumi-sky-500: #4F9EC7;
+  --lumi-sky-600: #3A7CA8;
+  
+  /* Neutral Backgrounds & Surfaces */
+  --lumi-neutral-0: #FFFFFF;
+  --lumi-neutral-50: #FAFBFC;
+  --lumi-neutral-100: #F5F7F9;
+  --lumi-neutral-200: #E5E9ED;
+  --lumi-neutral-300: #D1D7DD;
+  --lumi-neutral-400: #B8C1C9;
+  --lumi-neutral-500: #8A96A3;
+  
+  /* Text Colors */
+  --lumi-text-primary: #2B3A4A;
+  --lumi-text-secondary: #5F7082;
+  --lumi-text-tertiary: #8A96A3;
+  --lumi-text-disabled: #B8C1C9;
+  --lumi-text-inverse: #FFFFFF;
+  
+  /* Accent Warm Glow */
+  --lumi-warm-50: #FFF8F0;
+  --lumi-warm-100: #FFECD6;
+  --lumi-warm-200: #FFD6A5;
+  --lumi-warm-300: #FFB366;
+  --lumi-warm-400: #FF9E4D;
+  --lumi-warm-500: #F58A35;
+  
+  /* Semantic Colors */
+  --lumi-success-bg: #F0FDF4;
+  --lumi-success: #22C55E;
+  --lumi-success-dark: #16A34A;
+  
+  --lumi-warning-bg: #FFFBEB;
+  --lumi-warning: #F59E0B;
+  --lumi-warning-dark: #D97706;
+  
+  --lumi-error-bg: #FEF2F2;
+  --lumi-error: #EF4444;
+  --lumi-error-dark: #DC2626;
+  
+  --lumi-info-bg: #EFF6FF;
+  --lumi-info: #3B82F6;
+  --lumi-info-dark: #2563EB;
+  
+  /* Special Effects */
+  --lumi-glow-sky: rgba(135, 206, 235, 0.3);
+  --lumi-glow-warm: rgba(255, 179, 102, 0.25);
+  --lumi-overlay: rgba(43, 58, 74, 0.6);
+  
+  /* ========================================
+     TYPOGRAPHY SCALE
+     ======================================== */
+  
+  /* Font Sizes */
+  --text-h1: 2.5rem;      /* 40px */
+  --text-h2: 2rem;        /* 32px */
+  --text-h3: 1.5rem;      /* 24px */
+  --text-h4: 1.25rem;     /* 20px */
+  --text-body-lg: 1.125rem; /* 18px */
+  --text-body: 1rem;      /* 16px */
+  --text-body-sm: 0.875rem; /* 14px */
+  --text-small: 0.75rem;  /* 12px */
+  --text-tiny: 0.625rem;  /* 10px */
+  
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+  --leading-loose: 2;
+  
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Letter Spacing */
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  
+  /* ========================================
+     SPACING SCALE (8pt Grid)
+     ======================================== */
+  
+  --spacing-0: 0;
+  --spacing-0-5: 0.25rem;  /* 4px */
+  --spacing-1: 0.5rem;     /* 8px */
+  --spacing-2: 1rem;       /* 16px */
+  --spacing-3: 1.5rem;     /* 24px */
+  --spacing-4: 2rem;       /* 32px */
+  --spacing-5: 2.5rem;     /* 40px */
+  --spacing-6: 3rem;       /* 48px */
+  --spacing-7: 3.5rem;     /* 56px */
+  --spacing-8: 4rem;       /* 64px */
+  --spacing-9: 4.5rem;     /* 72px */
+  --spacing-10: 5rem;      /* 80px */
+  --spacing-12: 6rem;      /* 96px */
+  --spacing-16: 8rem;      /* 128px */
+  --spacing-20: 10rem;     /* 160px */
+  
+  /* ========================================
+     BORDER RADIUS
+     ======================================== */
+  
+  --radius-xs: 0.5rem;     /* 8px */
+  --radius-sm: 1rem;       /* 16px */
+  --radius-md: 1.5rem;     /* 24px */
+  --radius-lg: 2rem;       /* 32px */
+  --radius-xl: 2.5rem;     /* 40px */
+  --radius-full: 9999px;
+  
+  /* ========================================
+     ELEVATION SYSTEM (Shadows)
+     ======================================== */
+  
+  --shadow-xs: 0 1px 2px 0 rgba(43, 58, 74, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(43, 58, 74, 0.08),
+               0 1px 2px -1px rgba(43, 58, 74, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(43, 58, 74, 0.08),
+               0 2px 4px -2px rgba(43, 58, 74, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(43, 58, 74, 0.08),
+               0 4px 6px -4px rgba(43, 58, 74, 0.08);
+  --shadow-xl: 0 20px 25px -5px rgba(43, 58, 74, 0.08),
+               0 8px 10px -6px rgba(43, 58, 74, 0.08);
+  --shadow-2xl: 0 25px 50px -12px rgba(43, 58, 74, 0.15);
+  --shadow-glow: 0 0 20px rgba(135, 206, 235, 0.4);
+  --shadow-glow-warm: 0 0 20px rgba(255, 179, 102, 0.4);
+  
+  /* ========================================
+     STATE VARIATIONS
+     ======================================== */
+  
+  /* Opacity States */
+  --opacity-hover: 0.9;
+  --opacity-active: 0.8;
+  --opacity-disabled: 0.5;
+  --opacity-subtle: 0.6;
+  
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 200ms ease-in-out;
+  --transition-slow: 300ms ease-in-out;
+  
+  /* Scale States */
+  --scale-hover: 1.02;
+  --scale-active: 0.98;
+  
+  /* ========================================
+     COMPONENT-SPECIFIC TOKENS
+     ======================================== */
+  
+  /* Touch Targets */
+  --touch-target-min: 3.5rem;  /* 56px - minimum for iPad/smartboard */
+  --touch-target-comfortable: 4rem;  /* 64px - recommended */
+  
+  /* Borders */
+  --border-width-thin: 1px;
+  --border-width-medium: 2px;
+  --border-width-thick: 4px;
+  
+  /* Z-Index Scale */
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-fixed: 1200;
+  --z-modal-backdrop: 1300;
+  --z-modal: 1400;
+  --z-popover: 1500;
+  --z-tooltip: 1600;
+  
+  /* ========================================
+     COMPATIBILITY VARIABLES
+     ======================================== */
+  
+  /* Standard theme variables (for existing components) */
+  --background: var(--lumi-neutral-50);
+  --foreground: var(--lumi-text-primary);
+  --card: var(--lumi-neutral-0);
+  --card-foreground: var(--lumi-text-primary);
+  --popover: var(--lumi-neutral-0);
+  --popover-foreground: var(--lumi-text-primary);
+  --primary: var(--lumi-sky-300);
+  --primary-foreground: var(--lumi-text-inverse);
+  --secondary: var(--lumi-neutral-100);
+  --secondary-foreground: var(--lumi-text-primary);
+  --muted: var(--lumi-neutral-200);
+  --muted-foreground: var(--lumi-text-secondary);
+  --accent: var(--lumi-sky-300);
+  --accent-foreground: var(--lumi-text-inverse);
+  --destructive: var(--lumi-error);
+  --destructive-foreground: var(--lumi-text-inverse);
+  --border: var(--lumi-neutral-200);
+  --input: transparent;
+  --input-background: var(--lumi-neutral-0);
+  --switch-background: var(--lumi-neutral-200);
+  --ring: var(--lumi-sky-300);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: var(--lumi-neutral-0);
+  --sidebar-foreground: var(--lumi-text-primary);
+  --sidebar-primary: var(--lumi-sky-300);
+  --sidebar-primary-foreground: var(--lumi-text-inverse);
+  --sidebar-accent: var(--lumi-neutral-100);
+  --sidebar-accent-foreground: var(--lumi-text-primary);
+  --sidebar-border: var(--lumi-neutral-200);
+  --sidebar-ring: var(--lumi-sky-300);
+}
+
+/* ========================================
+   DARK MODE (Future Compatibility)
+   ======================================== */
+
+.dark {
+  /* Primary Sky Blue Family - adjusted for dark mode */
+  --lumi-sky-50: #1A2A3A;
+  --lumi-sky-100: #234152;
+  --lumi-sky-200: #3A7CA8;
+  --lumi-sky-300: #6BB6D9;
+  --lumi-sky-400: #87CEEB;
+  --lumi-sky-500: #B0E0F5;
+  --lumi-sky-600: #E0F2FE;
+  
+  /* Neutral Backgrounds & Surfaces - inverted */
+  --lumi-neutral-0: #1A2129;
+  --lumi-neutral-50: #222933;
+  --lumi-neutral-100: #2B3A4A;
+  --lumi-neutral-200: #3D4E5E;
+  --lumi-neutral-300: #5F7082;
+  --lumi-neutral-400: #8A96A3;
+  --lumi-neutral-500: #B8C1C9;
+  
+  /* Text Colors - inverted */
+  --lumi-text-primary: #F5F7F9;
+  --lumi-text-secondary: #D1D7DD;
+  --lumi-text-tertiary: #B8C1C9;
+  --lumi-text-disabled: #5F7082;
+  --lumi-text-inverse: #2B3A4A;
+  
+  /* Accent Warm Glow - adjusted for dark mode */
+  --lumi-warm-50: #3A2A1A;
+  --lumi-warm-100: #523A23;
+  --lumi-warm-200: #A85C3A;
+  --lumi-warm-300: #FFB366;
+  --lumi-warm-400: #FFD6A5;
+  --lumi-warm-500: #FFECD6;
+  
+  /* Semantic Colors - adjusted for dark mode */
+  --lumi-success-bg: #1A2A1F;
+  --lumi-success: #4ADE80;
+  --lumi-success-dark: #22C55E;
+  
+  --lumi-warning-bg: #2A2416;
+  --lumi-warning: #FBBF24;
+  --lumi-warning-dark: #F59E0B;
+  
+  --lumi-error-bg: #2A1A1A;
+  --lumi-error: #F87171;
+  --lumi-error-dark: #EF4444;
+  
+  --lumi-info-bg: #1A242A;
+  --lumi-info: #60A5FA;
+  --lumi-info-dark: #3B82F6;
+  
+  /* Special Effects - adjusted for dark mode */
+  --lumi-glow-sky: rgba(107, 182, 217, 0.4);
+  --lumi-glow-warm: rgba(255, 179, 102, 0.3);
+  --lumi-overlay: rgba(0, 0, 0, 0.7);
+  
+  /* Elevation System - stronger shadows for dark mode */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4),
+               0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4),
+               0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4),
+               0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4),
+               0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 25px rgba(107, 182, 217, 0.5);
+  --shadow-glow-warm: 0 0 25px rgba(255, 179, 102, 0.5);
+  
+  /* Compatibility variables for dark mode */
+  --background: var(--lumi-neutral-0);
+  --foreground: var(--lumi-text-primary);
+  --card: var(--lumi-neutral-100);
+  --card-foreground: var(--lumi-text-primary);
+  --popover: var(--lumi-neutral-100);
+  --popover-foreground: var(--lumi-text-primary);
+  --primary: var(--lumi-sky-400);
+  --primary-foreground: var(--lumi-neutral-0);
+  --secondary: var(--lumi-neutral-200);
+  --secondary-foreground: var(--lumi-text-primary);
+  --muted: var(--lumi-neutral-300);
+  --muted-foreground: var(--lumi-text-secondary);
+  --accent: var(--lumi-sky-400);
+  --accent-foreground: var(--lumi-neutral-0);
+  --destructive: var(--lumi-error);
+  --destructive-foreground: var(--lumi-text-primary);
+  --border: var(--lumi-neutral-300);
+  --input: transparent;
+  --input-background: var(--lumi-neutral-100);
+  --switch-background: var(--lumi-neutral-300);
+  --ring: var(--lumi-sky-400);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: var(--lumi-neutral-100);
+  --sidebar-foreground: var(--lumi-text-primary);
+  --sidebar-primary: var(--lumi-sky-400);
+  --sidebar-primary-foreground: var(--lumi-neutral-0);
+  --sidebar-accent: var(--lumi-neutral-200);
+  --sidebar-accent-foreground: var(--lumi-text-primary);
+  --sidebar-border: var(--lumi-neutral-300);
+  --sidebar-ring: var(--lumi-sky-400);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    transition: background-color var(--transition-base), color var(--transition-base);
+  }
+
+  /**
+  * Lumi Typography System
+  * These are in @layer base, so Tailwind utility classes automatically override them.
+  */
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: var(--text-h1);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--lumi-text-primary);
+  }
+
+  h2 {
+    font-size: var(--text-h2);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--lumi-text-primary);
+  }
+
+  h3 {
+    font-size: var(--text-h3);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--leading-normal);
+    color: var(--lumi-text-primary);
+  }
+
+  h4 {
+    font-size: var(--text-h4);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--leading-normal);
+    color: var(--lumi-text-primary);
+  }
+
+  p {
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--leading-relaxed);
+    color: var(--lumi-text-primary);
+  }
+
+  label {
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--leading-normal);
+    color: var(--lumi-text-primary);
+  }
+
+  button {
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--leading-normal);
+    transition: all var(--transition-base);
+  }
+
+  input {
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--leading-normal);
+  }
+
+  small {
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+  }
+}
