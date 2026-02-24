@@ -19,11 +19,11 @@ export function LumiAvatar({
   const engine = useLumiEngineState();
 
   const sizeMap = {
-    sm: "w-32 h-32",
-    md: "w-48 h-48",
-    lg: "w-64 h-64",
-    xl: "w-80 h-80",
-    xxl: "w-96 h-96",
+    sm: "w-36 h-36",
+    md: "w-52 h-52",
+    lg: "w-72 h-72",
+    xl: "w-96 h-96",
+    xxl: "w-[34rem] h-[34rem]",
   };
 
   const isSpeaking = speaking ?? engine.isSpeaking;
