@@ -61,7 +61,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     }
 
     const result = await prepareTTSAudio(parsed.data);
-    json(res, 200, { audioUrl: result.audioUrl, cached: result.cached });
+    json(res, 200, { audioUrl: result.audioUrl, cacheHit: result.cacheHit });
   } catch (error) {
     console.error("TTS endpoint error", error);
     json(res, 500, {

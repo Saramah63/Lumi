@@ -28,12 +28,12 @@ export function TeacherDashboard() {
   ];
 
   const handleStart = async () => {
-    await speak("Tervetuloa Lumin kanssa! Aloitetaan yhdessä.", "baseline");
+    await speak("Hei ystävä. Hengitä. Aloitetaan yhdessä.", "baseline");
     navigate("/check-in");
   };
 
   const handleFirmCalm = async () => {
-    await speak("Pysähdytään hetkeksi. Hengitetään yhdessä rauhallisesti.", "firm");
+    await speak("Pysähdy. Hengitä yhdessä. Tämä on turvallinen hetki.", "firm");
   };
 
   const handleMuteToggle = () => {

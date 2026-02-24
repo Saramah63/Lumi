@@ -57,8 +57,8 @@ function sha256(input: string): string {
 
 export function validateTTSInput(input: Partial<TTSInput>): { ok: true; data: Required<TTSInput> } | { ok: false; error: string } {
   const text = (input.text ?? "").trim();
-  const lang = input.lang ?? "fi-FI";
-  const mode = normalizeMode(input.mode);
+  const lang = input.lang;
+  const mode = input.mode;
   const voice = (input.voice ?? "").trim();
 
   if (!text) {
@@ -73,12 +73,16 @@ export function validateTTSInput(input: Partial<TTSInput>): { ok: true; data: Re
     return { ok: false, error: "lang must be fi-FI" };
   }
 
+  if (!mode || (mode !== "baseline" && mode !== "listening" && mode !== "firm" && mode !== "warm")) {
+    return { ok: false, error: "mode must be baseline, listening, firm, or warm" };
+  }
+
   return {
     ok: true,
     data: {
       text,
       lang,
-      mode,
+      mode: normalizeMode(mode),
       voice,
     },
   };
@@ -294,17 +298,17 @@ async function synthesize(input: Required<TTSInput>): Promise<CacheRecord> {
   return synthWithOpenAI(input);
 }
 
-export async function prepareTTSAudio(input: Required<TTSInput>): Promise<{ audioUrl: string; cached: boolean; cacheKey: string }> {
+export async function prepareTTSAudio(input: Required<TTSInput>): Promise<{ audioUrl: string; cacheHit: boolean; cacheKey: string }> {
   const cacheKey = buildCacheKey(input);
   const cachedAudio = await readCache(cacheKey);
 
   if (!cachedAudio) {
     const audio = await synthesize(input);
     await writeCache(cacheKey, audio);
-    return { audioUrl: `/api/tts?key=${cacheKey}`, cached: false, cacheKey };
+    return { audioUrl: `/api/tts/${cacheKey}`, cacheHit: false, cacheKey };
   }
 
-  return { audioUrl: `/api/tts?key=${cacheKey}`, cached: true, cacheKey };
+  return { audioUrl: `/api/tts/${cacheKey}`, cacheHit: true, cacheKey };
 }
 
 export async function resolveTTSAudioByKey(cacheKey: string): Promise<{ buffer: Buffer; mimeType: string } | null> {

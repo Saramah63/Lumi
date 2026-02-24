@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     }
 
     const result = await prepareTTSAudio(parsed.data);
-    return NextResponse.json({ audioUrl: result.audioUrl, cached: result.cached }, { status: 200 });
+    return NextResponse.json({ audioUrl: result.audioUrl, cacheHit: result.cacheHit }, { status: 200 });
   } catch (error) {
     console.error("Next TTS route error", error);
     return NextResponse.json(

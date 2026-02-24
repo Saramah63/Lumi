@@ -30,7 +30,7 @@ export function FeelingsCheckIn() {
 
   useEffect(() => {
     // Lumi speaks when entering this screen
-    speak("Miltä sinusta tuntuu tänään? Valitse tunne.");
+    speak("Miltä sinusta tuntuu? Kerro yhdessä meille.");
   }, []);
 
   const handleFeelingClick = (feeling: Feeling) => {
@@ -42,7 +42,7 @@ export function FeelingsCheckIn() {
   };
 
   const handleContinue = async () => {
-    await speak("Kuulin erilaisia tunteita. Kaikki tunteet ovat ok.");
+    await speak("Hyvä. Kaikki tunteet ovat turvallinen asia.");
     navigate("/breath");
   };
 

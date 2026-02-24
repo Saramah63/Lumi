@@ -1,5 +1,7 @@
+import { cancelLumiSpeak, lumiSpeak, type LumiMode } from "../../../lib/lumi/speakFinnish";
+
 export type LumiLanguage = "fi-FI";
-export type LumiSpeakMode = "baseline" | "listening" | "firm" | "warm";
+export type LumiSpeakMode = LumiMode;
 
 export interface LumiSpeakOptions {
   lang?: LumiLanguage;
@@ -35,16 +37,12 @@ const initialState: LumiEngineState = {
 export class LumiEngine {
   private state: LumiEngineState = { ...initialState };
   private listeners = new Set<StateListener>();
-  private audio: HTMLAudioElement | null = null;
-  private audioContext: AudioContext | null = null;
-  private analyser: AnalyserNode | null = null;
-  private mediaSource: MediaElementAudioSourceNode | null = null;
-  private amplitudeData: Uint8Array | null = null;
-  private rafId: number | null = null;
-  private blinkTimer: number | null = null;
   private isMuted = false;
+  private blinkTimer: number | null = null;
+  private blinkLoopStarted = false;
 
   subscribe(listener: StateListener): () => void {
+    this.ensureBlinkLoop();
     this.listeners.add(listener);
     listener(this.state);
     return () => {
@@ -98,7 +96,7 @@ export class LumiEngine {
   setMuted(isMuted: boolean): void {
     this.isMuted = isMuted;
     if (isMuted) {
-      this.stop();
+      void this.stop();
     }
   }
 
@@ -111,53 +109,60 @@ export class LumiEngine {
     return this.isMuted;
   }
 
-  async speak(text: string, mode: LumiSpeakMode = "baseline", options: LumiSpeakOptions = {}): Promise<void> {
+  async speak(text: string, mode: LumiSpeakMode = "baseline", _options: LumiSpeakOptions = {}): Promise<void> {
     if (!text.trim() || this.isMuted) {
       return;
     }
 
     await this.stop();
+    this.ensureBlinkLoop();
 
-    const lang = "fi-FI";
+    const asksQuestion = /\?$/.test(text.trim());
+    const isListening = mode === "listening" || asksQuestion;
+    const isFirm = mode === "firm";
+    const floatAmount = isFirm ? 0.15 : isListening ? 0.24 : mode === "warm" ? 0.32 : 0.4;
+    const baseLight = isFirm ? 0.54 : isListening ? 0.28 : mode === "warm" ? 0.42 : 0.4;
+
     this.patch({
       isSpeaking: true,
-      isListening: mode === "listening",
-      isFirm: mode === "firm",
+      isListening,
+      isFirm,
       mouthOpen: 0,
-      lightIntensity: mode === "firm" ? 0.65 : mode === "warm" ? 0.52 : mode === "listening" ? 0.4 : 0.46,
+      lightIntensity: baseLight,
+      floatAmount,
     });
 
     this.triggerSyncBreath();
-    this.startBlinkLoop();
 
     try {
-      const response = await fetch("/api/tts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      await lumiSpeak(text, mode, {
+        onFrame: (mouthOpen, lightIntensity) => {
+          this.patch({ mouthOpen, lightIntensity });
         },
-        body: JSON.stringify({
-          text,
-          lang,
-          mode,
-          voice: options.voice,
-        }),
+        onEnd: () => {
+          if (mode === "warm") {
+            this.triggerWarmGlow();
+          }
+
+          this.patch({
+            isSpeaking: false,
+            isListening: false,
+            isFirm: false,
+            mouthOpen: 0,
+            lightIntensity: 0.25,
+            floatAmount: 0.35,
+          });
+        },
       });
-
-      if (!response.ok) {
-        const detail = await response.text();
-        throw new Error(`TTS request failed (${response.status}): ${detail}`);
-      }
-
-      const payload = (await response.json()) as { audioUrl?: string };
-
-      if (!payload.audioUrl) {
-        throw new Error("TTS response missing audioUrl");
-      }
-
-      await this.playAudio(payload.audioUrl, mode);
     } catch (error) {
-      this.onPlaybackEnd(mode);
+      this.patch({
+        isSpeaking: false,
+        isListening: false,
+        isFirm: false,
+        mouthOpen: 0,
+        lightIntensity: 0.25,
+        floatAmount: 0.35,
+      });
       throw error;
     }
   }
@@ -170,151 +175,45 @@ export class LumiEngine {
   }
 
   async stop(): Promise<void> {
-    this.stopBlinkLoop();
-    this.stopLipSyncLoop();
-
-    if (this.audio) {
-      this.audio.pause();
-      this.audio.currentTime = 0;
-      this.audio.src = "";
-    }
-
+    cancelLumiSpeak();
     this.patch({
       isSpeaking: false,
+      isListening: false,
+      isFirm: false,
       mouthOpen: 0,
       lightIntensity: 0.25,
-      isFirm: false,
-      isListening: false,
+      floatAmount: 0.35,
     });
   }
 
-  private async playAudio(url: string, mode: LumiSpeakMode): Promise<void> {
-    if (!this.audio) {
-      this.audio = new Audio();
-      this.audio.preload = "auto";
-      this.audio.crossOrigin = "anonymous";
-      this.audio.onended = () => {
-        this.onPlaybackEnd(mode);
-      };
-      this.audio.onerror = () => {
-        this.onPlaybackEnd(mode);
-      };
-    }
-
-    this.audio.src = url;
-    this.audio.currentTime = 0;
-
-    await this.ensureAnalyser();
-
-    if (this.audioContext?.state === "suspended") {
-      await this.audioContext.resume();
-    }
-
-    await this.audio.play();
-    this.startLipSyncLoop();
-  }
-
-  private onPlaybackEnd(mode: LumiSpeakMode): void {
-    this.stopBlinkLoop();
-    this.stopLipSyncLoop();
-
-    if (mode === "warm") {
-      this.triggerWarmGlow();
-    }
-
-    this.patch({
-      isSpeaking: false,
-      mouthOpen: 0,
-      lightIntensity: 0.25,
-      isFirm: false,
-      isListening: false,
-    });
-  }
-
-  private async ensureAnalyser(): Promise<void> {
-    if (!this.audio || typeof window === "undefined") {
+  private ensureBlinkLoop(): void {
+    if (this.blinkLoopStarted || typeof window === "undefined") {
       return;
     }
 
-    if (!this.audioContext) {
-      const AudioContextCtor = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!AudioContextCtor) {
-        return;
-      }
-      this.audioContext = new AudioContextCtor();
-    }
-
-    if (!this.mediaSource) {
-      this.mediaSource = this.audioContext.createMediaElementSource(this.audio);
-      this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = 1024;
-      this.analyser.smoothingTimeConstant = 0.82;
-      this.mediaSource.connect(this.analyser);
-      this.analyser.connect(this.audioContext.destination);
-      this.amplitudeData = new Uint8Array(this.analyser.frequencyBinCount);
-    }
-  }
-
-  private startLipSyncLoop(): void {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const tick = () => {
-      if (!this.analyser || !this.amplitudeData || !this.state.isSpeaking) {
-        this.patch({ mouthOpen: 0 });
-        return;
-      }
-
-      this.analyser.getByteFrequencyData(this.amplitudeData);
-      let sum = 0;
-      for (let i = 0; i < this.amplitudeData.length; i += 1) {
-        sum += this.amplitudeData[i];
-      }
-      const amplitude = sum / this.amplitudeData.length / 255;
-      const mouthOpen = Math.max(0, Math.min(1, amplitude * 2.8));
-      const lightBase = this.state.isFirm ? 0.55 : 0.4;
-      const lightIntensity = Math.max(0, Math.min(1, lightBase + mouthOpen * 0.35));
-
-      this.patch({ mouthOpen, lightIntensity });
-      this.rafId = window.requestAnimationFrame(tick);
-    };
-
-    this.stopLipSyncLoop();
-    this.rafId = window.requestAnimationFrame(tick);
-  }
-
-  private stopLipSyncLoop(): void {
-    if (typeof window !== "undefined" && this.rafId !== null) {
-      window.cancelAnimationFrame(this.rafId);
-    }
-    this.rafId = null;
-  }
-
-  private startBlinkLoop(): void {
-    if (typeof window === "undefined") {
-      return;
-    }
+    this.blinkLoopStarted = true;
 
     const schedule = () => {
-      const delay = 2200 + Math.random() * 2400;
+      const nextDelay = this.state.isSpeaking
+        ? 6200 + Math.random() * 2600
+        : 4000 + Math.random() * 2000;
+
       this.blinkTimer = window.setTimeout(() => {
-        if (this.state.isSpeaking) {
-          this.triggerBlink();
-        }
+        this.triggerBlink();
         schedule();
-      }, delay);
+      }, nextDelay);
     };
 
-    this.stopBlinkLoop();
     schedule();
   }
 
-  private stopBlinkLoop(): void {
+  dispose(): void {
     if (typeof window !== "undefined" && this.blinkTimer !== null) {
       window.clearTimeout(this.blinkTimer);
     }
     this.blinkTimer = null;
+    this.blinkLoopStarted = false;
+    cancelLumiSpeak();
   }
 }
 

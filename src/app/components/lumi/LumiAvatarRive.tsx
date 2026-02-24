@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Alignment, Fit, Layout, useRive, useStateMachineInput } from "@rive-app/react-canvas";
+import { LumiAvatarFallback } from "./LumiAvatarFallback";
 
 interface LumiAvatarRiveProps {
   className?: string;
@@ -28,10 +29,15 @@ export function LumiAvatarRive({
   warmGlowTick = 0,
   syncBreathTick = 0,
 }: LumiAvatarRiveProps) {
+  const [loadError, setLoadError] = useState(false);
+
   const { rive, RiveComponent } = useRive({
     src: "/rive/Lumi.riv",
     stateMachines: STATE_MACHINE,
     autoplay: true,
+    onLoadError: () => {
+      setLoadError(true);
+    },
     layout: new Layout({
       fit: Fit.Contain,
       alignment: Alignment.Center,
@@ -101,6 +107,18 @@ export function LumiAvatarRive({
       syncBreathInput.fire();
     }
   }, [syncBreathTick, syncBreathInput]);
+
+  if (loadError) {
+    return (
+      <LumiAvatarFallback
+        className={className}
+        mouthOpen={mouthOpen}
+        blinkTick={blinkTick}
+        floatAmount={floatAmount}
+        lightIntensity={lightIntensity}
+      />
+    );
+  }
 
   return <RiveComponent className={className} />;
 }

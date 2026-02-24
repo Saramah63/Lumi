@@ -15,15 +15,15 @@ export function ScenarioStep() {
 
   const scenarioSteps = [
     {
-      text: "Kaksi lasta haluaa samaa lelua. Mitä voimme tehdä?",
+      text: "Pysähdy. Tämä lelu on tärkeä molemmille.",
       emotion: "thinking" as const,
     },
     {
-      text: "Voimme kysyä: Haluaisitko leikkiä yhdessä?",
+      text: "Voimme leikkiä yhdessä. Kysytään ensin nätisti.",
       emotion: "happy" as const,
     },
     {
-      text: "Tai voimme vuorotella. Ensin sinä, sitten minä.",
+      text: "Jos riita jatkuu, kerro aikuiselle heti.",
       emotion: "calm" as const,
     },
   ];
@@ -36,7 +36,7 @@ export function ScenarioStep() {
     if (currentStep < scenarioSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      await speak("Hienoa työtä! Siirrytään päätöshetkeen.", "warm");
+      await speak("Hienoa. Olet turvallinen. Kiitos yhteistyöstä.", "warm");
       navigate("/closing");
     }
   };
@@ -46,7 +46,7 @@ export function ScenarioStep() {
   };
 
   const handleFirmCalm = () => {
-    speak("Pysähdytään ja rauhoitutaan. Olemme turvassa.", "firm");
+    speak("Pysähdy. Tämä ei ole turvallista. Kerro aikuiselle.", "firm");
   };
 
   return (

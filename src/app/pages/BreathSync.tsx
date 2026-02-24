@@ -13,7 +13,7 @@ export function BreathSync() {
 
   useEffect(() => {
     // Lumi speaks instructions
-    speak("Hengitetään yhdessä rauhallisesti. Seuraa ympyrää.");
+    speak("Hengitä rauhassa. Tehdään tämä yhdessä.");
     
     // Breathing cycle timer (6 seconds per cycle: 3s in, 3s out)
     const interval = setInterval(() => {
