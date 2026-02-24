@@ -6,6 +6,7 @@ import { SecondaryButton } from "../components/lumi/SecondaryButton";
 import { TeacherHUD } from "../components/lumi/TeacherHUD";
 import { useSpeech } from "../hooks/useSpeech";
 import type { LumiSpeakMode } from "../engine/lumiEngine";
+import { fiPhrases } from "../../../lib/lumi/fiPhrases";
 
 const MODE_LABELS: Record<LumiSpeakMode, string> = {
   baseline: "Baseline",
@@ -15,10 +16,10 @@ const MODE_LABELS: Record<LumiSpeakMode, string> = {
 };
 
 const PRESET_TEXT: Record<LumiSpeakMode, string> = {
-  baseline: "Hei ystävä. Hengitä rauhassa. Tehdään tämä yhdessä.",
-  listening: "Kuulen sinut. Pysähdy hetkeksi. Kerro minulle lisää.",
-  firm: "Pysähdy. Tämä ei ole turvallista. Kerro aikuiselle.",
-  warm: "Hienoa työtä. Olet turvallinen. Kiitos, teit sen yhdessä.",
+  baseline: fiPhrases.baseline[1],
+  listening: fiPhrases.listening[5],
+  firm: `${fiPhrases.firm[0]} ${fiPhrases.firm[1]} ${fiPhrases.firm[5]}`,
+  warm: `${fiPhrases.warm[0]} ${fiPhrases.warm[2]} ${fiPhrases.warm[5]}`,
 };
 
 export function VoiceTest() {

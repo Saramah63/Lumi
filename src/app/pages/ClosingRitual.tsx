@@ -5,6 +5,7 @@ import { LumiAvatar } from "../components/lumi/LumiAvatar";
 import { PrimaryButton } from "../components/lumi/PrimaryButton";
 import { TeacherHUD } from "../components/lumi/TeacherHUD";
 import { useSpeech } from "../hooks/useSpeech";
+import { fiPhrases } from "../../../lib/lumi/fiPhrases";
 
 export function ClosingRitual() {
   const navigate = useNavigate();
@@ -13,9 +14,9 @@ export function ClosingRitual() {
   useEffect(() => {
     // Lumi speaks closing message
     const closingLines = [
-      "Hienoa työtä tänään, ystävät.",
-      "Hengitä rauhassa. Olet turvallinen.",
-      "Tarvittaessa kerro aikuiselle. Kiitos."
+      fiPhrases.warm[0],
+      fiPhrases.warm[1],
+      fiPhrases.warm[5],
     ];
     
     speakLines(closingLines, "warm", 1000);

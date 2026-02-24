@@ -4,6 +4,7 @@ import { LumiAvatar } from "../components/lumi/LumiAvatar";
 import { PrimaryButton } from "../components/lumi/PrimaryButton";
 import { TeacherHUD } from "../components/lumi/TeacherHUD";
 import { useSpeech } from "../hooks/useSpeech";
+import { fiPhrases } from "../../../lib/lumi/fiPhrases";
 
 export function BreathSync() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export function BreathSync() {
 
   useEffect(() => {
     // Lumi speaks instructions
-    speak("Hengitä rauhassa. Tehdään tämä yhdessä.");
+    speak(fiPhrases.regulation[0], "baseline");
     
     // Breathing cycle timer (6 seconds per cycle: 3s in, 3s out)
     const interval = setInterval(() => {

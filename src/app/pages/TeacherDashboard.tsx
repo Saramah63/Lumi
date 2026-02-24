@@ -10,6 +10,7 @@ import { TeacherHUD } from "../components/lumi/TeacherHUD";
 import { SettingsDrawer } from "../components/lumi/SettingsDrawer";
 import { Switch } from "../components/ui/switch";
 import { useSpeech } from "../hooks/useSpeech";
+import { fiPhrases } from "../../../lib/lumi/fiPhrases";
 
 export function TeacherDashboard() {
   const navigate = useNavigate();
@@ -28,12 +29,12 @@ export function TeacherDashboard() {
   ];
 
   const handleStart = async () => {
-    await speak("Hei ystävä. Hengitä. Aloitetaan yhdessä.", "baseline");
+    await speak(`${fiPhrases.baseline[0]} ${fiPhrases.baseline[1]}`, "baseline");
     navigate("/check-in");
   };
 
   const handleFirmCalm = async () => {
-    await speak("Pysähdy. Hengitä yhdessä. Tämä on turvallinen hetki.", "firm");
+    await speak(`${fiPhrases.firm[0]} ${fiPhrases.firm[1]} ${fiPhrases.firm[5]}`, "firm");
   };
 
   const handleMuteToggle = () => {

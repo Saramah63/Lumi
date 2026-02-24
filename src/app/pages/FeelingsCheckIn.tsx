@@ -5,6 +5,7 @@ import { FeelingButton } from "../components/lumi/FeelingButton";
 import { PrimaryButton } from "../components/lumi/PrimaryButton";
 import { TeacherHUD } from "../components/lumi/TeacherHUD";
 import { useSpeech } from "../hooks/useSpeech";
+import { fiPhrases } from "../../../lib/lumi/fiPhrases";
 
 type Feeling = "ilo" | "suru" | "viha" | "pelko" | "en-tieda";
 
@@ -30,7 +31,7 @@ export function FeelingsCheckIn() {
 
   useEffect(() => {
     // Lumi speaks when entering this screen
-    speak("Miltä sinusta tuntuu? Kerro yhdessä meille.");
+    speak(fiPhrases.listening[1], "listening");
   }, []);
 
   const handleFeelingClick = (feeling: Feeling) => {
@@ -42,7 +43,7 @@ export function FeelingsCheckIn() {
   };
 
   const handleContinue = async () => {
-    await speak("Hyvä. Kaikki tunteet ovat turvallinen asia.");
+    await speak(`${fiPhrases.warm[0]} ${fiPhrases.baseline[2]}`, "warm");
     navigate("/breath");
   };
 

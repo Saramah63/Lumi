@@ -7,6 +7,7 @@ import { SecondaryButton } from "../components/lumi/SecondaryButton";
 import { FirmCalmButton } from "../components/lumi/FirmCalmButton";
 import { TeacherHUD } from "../components/lumi/TeacherHUD";
 import { useSpeech } from "../hooks/useSpeech";
+import { fiPhrases } from "../../../lib/lumi/fiPhrases";
 
 export function ScenarioStep() {
   const navigate = useNavigate();
@@ -15,15 +16,15 @@ export function ScenarioStep() {
 
   const scenarioSteps = [
     {
-      text: "Pysähdy. Tämä lelu on tärkeä molemmille.",
+      text: fiPhrases.scenarioLines.ruiningGame[0],
       emotion: "thinking" as const,
     },
     {
-      text: "Voimme leikkiä yhdessä. Kysytään ensin nätisti.",
+      text: fiPhrases.scenarioLines.ruiningGame[1],
       emotion: "happy" as const,
     },
     {
-      text: "Jos riita jatkuu, kerro aikuiselle heti.",
+      text: fiPhrases.scenarioLines.ruiningGame[2],
       emotion: "calm" as const,
     },
   ];
@@ -36,7 +37,7 @@ export function ScenarioStep() {
     if (currentStep < scenarioSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      await speak("Hienoa. Olet turvallinen. Kiitos yhteistyöstä.", "warm");
+      await speak(`${fiPhrases.warm[0]} ${fiPhrases.warm[1]} ${fiPhrases.warm[5]}`, "warm");
       navigate("/closing");
     }
   };
@@ -46,7 +47,7 @@ export function ScenarioStep() {
   };
 
   const handleFirmCalm = () => {
-    speak("Pysähdy. Tämä ei ole turvallista. Kerro aikuiselle.", "firm");
+    speak(fiPhrases.scenarioLines.hitting[0], "firm");
   };
 
   return (
