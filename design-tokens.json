@@ -1,0 +1,376 @@
+{
+  "$schema": "https://json.schemastore.org/design-tokens.json",
+  "name": "Lumi Design System",
+  "version": "1.0.0",
+  "description": "Design tokens for Lumi teacher-led emotional skills training interface",
+  
+  "color": {
+    "primary": {
+      "sky": {
+        "50": { "value": "#F0F9FF", "type": "color" },
+        "100": { "value": "#E0F2FE", "type": "color" },
+        "200": { "value": "#B0E0F5", "type": "color" },
+        "300": { "value": "#87CEEB", "type": "color", "description": "Main primary color" },
+        "400": { "value": "#6BB6D9", "type": "color" },
+        "500": { "value": "#4F9EC7", "type": "color" },
+        "600": { "value": "#3A7CA8", "type": "color" }
+      }
+    },
+    
+    "neutral": {
+      "0": { "value": "#FFFFFF", "type": "color", "description": "Pure white" },
+      "50": { "value": "#FAFBFC", "type": "color", "description": "Main background" },
+      "100": { "value": "#F5F7F9", "type": "color" },
+      "200": { "value": "#E5E9ED", "type": "color", "description": "Borders" },
+      "300": { "value": "#D1D7DD", "type": "color" },
+      "400": { "value": "#B8C1C9", "type": "color" },
+      "500": { "value": "#8A96A3", "type": "color" }
+    },
+    
+    "text": {
+      "primary": { "value": "#2B3A4A", "type": "color" },
+      "secondary": { "value": "#5F7082", "type": "color" },
+      "tertiary": { "value": "#8A96A3", "type": "color" },
+      "disabled": { "value": "#B8C1C9", "type": "color" },
+      "inverse": { "value": "#FFFFFF", "type": "color" }
+    },
+    
+    "warm": {
+      "50": { "value": "#FFF8F0", "type": "color" },
+      "100": { "value": "#FFECD6", "type": "color" },
+      "200": { "value": "#FFD6A5", "type": "color" },
+      "300": { "value": "#FFB366", "type": "color", "description": "Main accent" },
+      "400": { "value": "#FF9E4D", "type": "color" },
+      "500": { "value": "#F58A35", "type": "color" }
+    },
+    
+    "firm": {
+      "calm": { "value": "#F4A6A6", "type": "color", "description": "Soft coral, not alarming" },
+      "background": { "value": "#FFF5F5", "type": "color" }
+    },
+    
+    "semantic": {
+      "success": {
+        "default": { "value": "#22C55E", "type": "color" },
+        "background": { "value": "#F0FDF4", "type": "color" },
+        "dark": { "value": "#16A34A", "type": "color" }
+      },
+      "warning": {
+        "default": { "value": "#F59E0B", "type": "color" },
+        "background": { "value": "#FFFBEB", "type": "color" },
+        "dark": { "value": "#D97706", "type": "color" }
+      },
+      "error": {
+        "default": { "value": "#EF4444", "type": "color" },
+        "background": { "value": "#FEF2F2", "type": "color" },
+        "dark": { "value": "#DC2626", "type": "color" }
+      },
+      "info": {
+        "default": { "value": "#3B82F6", "type": "color" },
+        "background": { "value": "#EFF6FF", "type": "color" },
+        "dark": { "value": "#2563EB", "type": "color" }
+      }
+    },
+    
+    "effects": {
+      "glow": {
+        "sky": { "value": "rgba(135, 206, 235, 0.3)", "type": "color" },
+        "warm": { "value": "rgba(255, 179, 102, 0.25)", "type": "color" }
+      },
+      "overlay": { "value": "rgba(43, 58, 74, 0.6)", "type": "color" }
+    }
+  },
+  
+  "typography": {
+    "fontFamily": {
+      "base": { "value": "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif", "type": "fontFamily" }
+    },
+    
+    "fontSize": {
+      "h1": { "value": "40px", "type": "dimension" },
+      "h2": { "value": "32px", "type": "dimension" },
+      "h3": { "value": "24px", "type": "dimension" },
+      "h4": { "value": "20px", "type": "dimension" },
+      "bodyLarge": { "value": "18px", "type": "dimension" },
+      "body": { "value": "16px", "type": "dimension" },
+      "bodySmall": { "value": "14px", "type": "dimension" },
+      "small": { "value": "12px", "type": "dimension" },
+      "tiny": { "value": "10px", "type": "dimension" }
+    },
+    
+    "fontWeight": {
+      "normal": { "value": "400", "type": "fontWeight" },
+      "medium": { "value": "500", "type": "fontWeight" },
+      "semibold": { "value": "600", "type": "fontWeight" },
+      "bold": { "value": "700", "type": "fontWeight" }
+    },
+    
+    "lineHeight": {
+      "tight": { "value": "1.25", "type": "number" },
+      "normal": { "value": "1.5", "type": "number" },
+      "relaxed": { "value": "1.75", "type": "number" },
+      "loose": { "value": "2", "type": "number" }
+    },
+    
+    "letterSpacing": {
+      "tight": { "value": "-0.025em", "type": "dimension" },
+      "normal": { "value": "0", "type": "dimension" },
+      "wide": { "value": "0.025em", "type": "dimension" },
+      "wider": { "value": "0.05em", "type": "dimension" }
+    }
+  },
+  
+  "spacing": {
+    "0": { "value": "0px", "type": "dimension" },
+    "0.5": { "value": "4px", "type": "dimension" },
+    "1": { "value": "8px", "type": "dimension" },
+    "2": { "value": "16px", "type": "dimension" },
+    "3": { "value": "24px", "type": "dimension" },
+    "4": { "value": "32px", "type": "dimension" },
+    "5": { "value": "40px", "type": "dimension" },
+    "6": { "value": "48px", "type": "dimension" },
+    "7": { "value": "56px", "type": "dimension", "description": "Minimum touch target" },
+    "8": { "value": "64px", "type": "dimension", "description": "Recommended touch target" },
+    "9": { "value": "72px", "type": "dimension" },
+    "10": { "value": "80px", "type": "dimension" },
+    "12": { "value": "96px", "type": "dimension" },
+    "16": { "value": "128px", "type": "dimension" },
+    "20": { "value": "160px", "type": "dimension" }
+  },
+  
+  "borderRadius": {
+    "xs": { "value": "8px", "type": "dimension" },
+    "sm": { "value": "16px", "type": "dimension", "description": "Buttons" },
+    "md": { "value": "24px", "type": "dimension", "description": "Cards" },
+    "lg": { "value": "32px", "type": "dimension" },
+    "xl": { "value": "40px", "type": "dimension" },
+    "full": { "value": "9999px", "type": "dimension", "description": "Pills" }
+  },
+  
+  "borderWidth": {
+    "thin": { "value": "1px", "type": "dimension" },
+    "medium": { "value": "2px", "type": "dimension" },
+    "thick": { "value": "4px", "type": "dimension" }
+  },
+  
+  "shadow": {
+    "xs": {
+      "value": {
+        "offsetX": "0",
+        "offsetY": "1px",
+        "blur": "2px",
+        "spread": "0",
+        "color": "rgba(43, 58, 74, 0.05)"
+      },
+      "type": "shadow"
+    },
+    "sm": {
+      "value": [
+        {
+          "offsetX": "0",
+          "offsetY": "1px",
+          "blur": "3px",
+          "spread": "0",
+          "color": "rgba(43, 58, 74, 0.08)"
+        },
+        {
+          "offsetX": "0",
+          "offsetY": "1px",
+          "blur": "2px",
+          "spread": "-1px",
+          "color": "rgba(43, 58, 74, 0.08)"
+        }
+      ],
+      "type": "shadow"
+    },
+    "md": {
+      "value": [
+        {
+          "offsetX": "0",
+          "offsetY": "4px",
+          "blur": "6px",
+          "spread": "-1px",
+          "color": "rgba(43, 58, 74, 0.08)"
+        },
+        {
+          "offsetX": "0",
+          "offsetY": "2px",
+          "blur": "4px",
+          "spread": "-2px",
+          "color": "rgba(43, 58, 74, 0.08)"
+        }
+      ],
+      "type": "shadow"
+    },
+    "lg": {
+      "value": [
+        {
+          "offsetX": "0",
+          "offsetY": "10px",
+          "blur": "15px",
+          "spread": "-3px",
+          "color": "rgba(43, 58, 74, 0.08)"
+        },
+        {
+          "offsetX": "0",
+          "offsetY": "4px",
+          "blur": "6px",
+          "spread": "-4px",
+          "color": "rgba(43, 58, 74, 0.08)"
+        }
+      ],
+      "type": "shadow"
+    },
+    "xl": {
+      "value": [
+        {
+          "offsetX": "0",
+          "offsetY": "20px",
+          "blur": "25px",
+          "spread": "-5px",
+          "color": "rgba(43, 58, 74, 0.08)"
+        },
+        {
+          "offsetX": "0",
+          "offsetY": "8px",
+          "blur": "10px",
+          "spread": "-6px",
+          "color": "rgba(43, 58, 74, 0.08)"
+        }
+      ],
+      "type": "shadow"
+    },
+    "2xl": {
+      "value": {
+        "offsetX": "0",
+        "offsetY": "25px",
+        "blur": "50px",
+        "spread": "-12px",
+        "color": "rgba(43, 58, 74, 0.15)"
+      },
+      "type": "shadow"
+    },
+    "glow": {
+      "value": {
+        "offsetX": "0",
+        "offsetY": "0",
+        "blur": "20px",
+        "spread": "0",
+        "color": "rgba(135, 206, 235, 0.4)"
+      },
+      "type": "shadow"
+    },
+    "glowWarm": {
+      "value": {
+        "offsetX": "0",
+        "offsetY": "0",
+        "blur": "20px",
+        "spread": "0",
+        "color": "rgba(255, 179, 102, 0.4)"
+      },
+      "type": "shadow"
+    }
+  },
+  
+  "opacity": {
+    "hover": { "value": "0.9", "type": "number" },
+    "active": { "value": "0.8", "type": "number" },
+    "disabled": { "value": "0.5", "type": "number" },
+    "subtle": { "value": "0.6", "type": "number" }
+  },
+  
+  "transition": {
+    "fast": { "value": "150ms", "type": "duration" },
+    "base": { "value": "200ms", "type": "duration" },
+    "slow": { "value": "300ms", "type": "duration" },
+    "easing": { "value": "ease-in-out", "type": "cubicBezier" }
+  },
+  
+  "scale": {
+    "hover": { "value": "1.02", "type": "number" },
+    "active": { "value": "0.98", "type": "number" }
+  },
+  
+  "touchTarget": {
+    "minimum": { "value": "56px", "type": "dimension", "description": "iPad/smartboard minimum" },
+    "comfortable": { "value": "64px", "type": "dimension", "description": "Recommended for primary actions" }
+  },
+  
+  "zIndex": {
+    "base": { "value": "0", "type": "number" },
+    "dropdown": { "value": "1000", "type": "number" },
+    "sticky": { "value": "1100", "type": "number" },
+    "fixed": { "value": "1200", "type": "number" },
+    "modalBackdrop": { "value": "1300", "type": "number" },
+    "modal": { "value": "1400", "type": "number" },
+    "popover": { "value": "1500", "type": "number" },
+    "tooltip": { "value": "1600", "type": "number" }
+  },
+  
+  "animation": {
+    "lumi": {
+      "float": {
+        "duration": { "value": "4000ms", "type": "duration" },
+        "distance": { "value": "8px", "type": "dimension" },
+        "easing": { "value": "ease-in-out", "type": "cubicBezier" },
+        "loop": { "value": "continuous", "type": "string" }
+      },
+      "lightPulse": {
+        "duration": { "value": "6000ms", "type": "duration", "description": "3s in, 3s out" },
+        "scaleFrom": { "value": "0.9", "type": "number" },
+        "scaleTo": { "value": "1.1", "type": "number" },
+        "easing": { "value": "ease-in-out", "type": "cubicBezier" }
+      },
+      "warmGlow": {
+        "duration": { "value": "2000ms", "type": "duration" },
+        "scaleTo": { "value": "1.25", "type": "number" },
+        "trigger": { "value": "manual", "type": "string" }
+      },
+      "headTilt": {
+        "angle": { "value": "6deg", "type": "dimension" },
+        "duration": { "value": "300ms", "type": "duration" },
+        "easing": { "value": "ease-out", "type": "cubicBezier" }
+      }
+    }
+  },
+  
+  "layout": {
+    "ipad": {
+      "width": { "value": "1024px", "type": "dimension" },
+      "height": { "value": "768px", "type": "dimension" },
+      "kidStage": { "value": "65%", "type": "percentage" },
+      "teacherPanel": { "value": "35%", "type": "percentage" }
+    }
+  },
+  
+  "component": {
+    "button": {
+      "large": {
+        "height": { "value": "64px", "type": "dimension" },
+        "paddingX": { "value": "24px", "type": "dimension" },
+        "minWidth": { "value": "160px", "type": "dimension" }
+      },
+      "medium": {
+        "height": { "value": "56px", "type": "dimension" },
+        "paddingX": { "value": "20px", "type": "dimension" },
+        "minWidth": { "value": "140px", "type": "dimension" }
+      }
+    },
+    "feelingButton": {
+      "width": { "value": "120px", "type": "dimension" },
+      "height": { "value": "140px", "type": "dimension" },
+      "padding": { "value": "16px", "type": "dimension" },
+      "emojiSize": { "value": "64px", "type": "dimension" },
+      "counterSize": { "value": "32px", "type": "dimension" }
+    },
+    "scenarioCard": {
+      "width": { "value": "400px", "type": "dimension" },
+      "padding": { "value": "24px", "type": "dimension" }
+    },
+    "lumiAvatar": {
+      "small": { "value": "200px", "type": "dimension" },
+      "medium": { "value": "300px", "type": "dimension" },
+      "large": { "value": "400px", "type": "dimension" }
+    }
+  }
+}
