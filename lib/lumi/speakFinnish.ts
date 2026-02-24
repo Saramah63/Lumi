@@ -8,6 +8,17 @@ export type LumiSpeakHooks = {
   onError?: (error: unknown) => void;
 };
 
+type VisemePoint = {
+  t: number;
+  v: string;
+};
+
+type TTSPayload = {
+  audioUrl?: string;
+  visemes?: VisemePoint[];
+  emotion?: string;
+};
+
 type ActivePlayback = {
   stop: () => void;
 };
@@ -37,7 +48,7 @@ function getLightIntensity(mode: LumiMode, mouthOpen: number, elapsedSeconds: nu
   return Math.max(0, Math.min(1, 0.4 + mouthOpen * 0.24 + pulse));
 }
 
-async function fetchAudioUrl(text: string, mode: LumiMode): Promise<string> {
+async function fetchTTSData(text: string, mode: LumiMode): Promise<TTSPayload> {
   const response = await fetch("/api/tts", {
     method: "POST",
     headers: {
@@ -51,16 +62,41 @@ async function fetchAudioUrl(text: string, mode: LumiMode): Promise<string> {
     throw new Error(`TTS request failed (${response.status}): ${detail}`);
   }
 
-  const payload = (await response.json()) as { audioUrl?: string };
+  const payload = (await response.json()) as TTSPayload;
   if (!payload.audioUrl) {
     throw new Error("Missing audioUrl in /api/tts response");
   }
 
-  return payload.audioUrl;
+  return payload;
 }
 
-async function playWithAudioElement(audioUrl: string, mode: LumiMode, hooks: LumiSpeakHooks): Promise<void> {
-  const audio = new Audio(audioUrl);
+function visemeToMouth(v: string): number {
+  const key = v.toUpperCase();
+  if (key === "AA") return 0.92;
+  if (key === "OH") return 0.78;
+  if (key === "EE") return 0.5;
+  if (key === "REST") return 0.1;
+  return 0.35;
+}
+
+function visemeMouthAtTime(visemes: VisemePoint[] | undefined, elapsedMs: number): number {
+  if (!visemes || visemes.length === 0) {
+    return 0;
+  }
+
+  let point = visemes[0];
+  for (let i = 1; i < visemes.length; i += 1) {
+    if (visemes[i].t > elapsedMs) break;
+    point = visemes[i];
+  }
+
+  return visemeToMouth(point.v);
+}
+
+async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: LumiSpeakHooks): Promise<void> {
+  const normalizedUrl =
+    tts.audioUrl && /^(https?:)?\//.test(tts.audioUrl) ? tts.audioUrl : `/${tts.audioUrl ?? ""}`;
+  const audio = new Audio(normalizedUrl);
   audio.preload = "auto";
   audio.crossOrigin = "anonymous";
 
@@ -157,7 +193,10 @@ async function playWithAudioElement(audioUrl: string, mode: LumiMode, hooks: Lum
 
       const rms = Math.sqrt(sumSquares / amplitudeData.length);
       const gained = Math.min(1, rms * 4.6);
-      smoothedMouth = smoothedMouth * 0.7 + gained * 0.3;
+      const elapsedMs = performance.now() - startedAt;
+      const visemeMouth = visemeMouthAtTime(tts.visemes, elapsedMs);
+      const targetMouth = Math.max(gained, visemeMouth);
+      smoothedMouth = smoothedMouth * 0.7 + targetMouth * 0.3;
 
       const elapsed = (performance.now() - startedAt) / 1000;
       const lightIntensity = getLightIntensity(mode, smoothedMouth, elapsed);
@@ -288,8 +327,8 @@ export async function lumiSpeak(
   cancelLumiSpeak();
 
   try {
-    const audioUrl = await fetchAudioUrl(text, mode);
-    await playWithAudioElement(audioUrl, mode, hooks);
+    const tts = await fetchTTSData(text, mode);
+    await playWithAudioElement(tts, mode, hooks);
   } catch (apiError) {
     console.warn("TTS API unavailable, using browser fallback speech.", apiError);
     hooks.onError?.(apiError);
