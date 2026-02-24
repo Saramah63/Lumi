@@ -7,6 +7,7 @@ import { ScenarioStep } from "./pages/ScenarioStep";
 import { ClosingRitual } from "./pages/ClosingRitual";
 import { ComponentLibrary } from "./pages/ComponentLibrary";
 import { DesignSystem } from "./pages/DesignSystem";
+import { VoiceTest } from "./pages/VoiceTest";
 
 export const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
       { path: "breath", Component: BreathSync },
       { path: "scenario", Component: ScenarioStep },
       { path: "closing", Component: ClosingRitual },
+      { path: "voice-test", Component: VoiceTest },
       { path: "components", Component: ComponentLibrary },
       { path: "design-system", Component: DesignSystem },
     ],
