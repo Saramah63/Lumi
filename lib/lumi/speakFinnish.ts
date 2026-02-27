@@ -62,6 +62,13 @@ async function fetchTTSData(text: string, mode: LumiMode): Promise<TTSPayload> {
     throw new Error(`TTS request failed (${response.status}): ${detail}`);
   }
 
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("audio/mpeg")) {
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    return { audioUrl: objectUrl };
+  }
+
   const payload = (await response.json()) as TTSPayload;
   if (!payload.audioUrl) {
     throw new Error("Missing audioUrl in /api/tts response");
@@ -122,6 +129,9 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     audio.pause();
     audio.currentTime = 0;
     audio.src = "";
+    if (normalizedUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(normalizedUrl);
+    }
 
     if (source) {
       source.disconnect();
