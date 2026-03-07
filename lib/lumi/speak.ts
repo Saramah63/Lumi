@@ -25,6 +25,66 @@ let activePlayback: ActivePlayback | null = null;
 let ttsBypassUntil = 0;
 let ttsBypassReason = "";
 
+type AudioGraph = {
+  context: AudioContext;
+  audio: HTMLAudioElement;
+  analyser: AnalyserNode;
+  data: Uint8Array<ArrayBuffer>;
+};
+
+let sharedAudio: HTMLAudioElement | null = null;
+let sharedSource: MediaElementAudioSourceNode | null = null;
+let sharedAnalyser: AnalyserNode | null = null;
+let sharedData: Uint8Array<ArrayBuffer> | null = null;
+
+async function ensureAudioGraph(): Promise<AudioGraph | null> {
+  const context = await getAudioContext();
+  if (!context) return null;
+
+  if (!sharedAudio) {
+    sharedAudio = new Audio();
+    sharedAudio.crossOrigin = "anonymous";
+    sharedAudio.preload = "auto";
+  }
+
+  if (!sharedSource || sharedSource.context !== context) {
+    try {
+      sharedSource?.disconnect();
+    } catch {
+      // ignore
+    }
+    sharedSource = context.createMediaElementSource(sharedAudio);
+  }
+
+  const needsAnalyserReset = !sharedAnalyser || sharedAnalyser.context !== context;
+  if (needsAnalyserReset) {
+    sharedAnalyser = context.createAnalyser();
+    sharedAnalyser.fftSize = 1024;
+    sharedAnalyser.smoothingTimeConstant = 0.82;
+  }
+
+  try {
+    sharedSource.disconnect();
+  } catch {
+    // ignore
+  }
+
+  try {
+    sharedAnalyser.disconnect();
+  } catch {
+    // ignore
+  }
+
+  sharedSource.connect(sharedAnalyser);
+  sharedAnalyser.connect(context.destination);
+
+  if (!sharedData || sharedData.length !== sharedAnalyser.fftSize) {
+    sharedData = new Uint8Array(sharedAnalyser.fftSize) as Uint8Array<ArrayBuffer>;
+  }
+
+  return { context, audio: sharedAudio, analyser: sharedAnalyser, data: sharedData };
+}
+
 export async function cancelLumiSpeak(): Promise<void> {
   if (!activePlayback) return;
   await activePlayback.stop();
@@ -191,104 +251,48 @@ export async function lumiSpeak(
   const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);
 
-  const audio = new Audio(objectUrl);
-  audio.crossOrigin = "anonymous";
-
-  const context = await getAudioContext();
-
-  if (!context) {
+  const graph = await ensureAudioGraph();
+  if (!graph) {
+    const fallbackAudio = new Audio(objectUrl);
+    fallbackAudio.crossOrigin = "anonymous";
     callbacks.onSpeakingChange?.(true);
-    let raf = 0;
-    let stopped = false;
-    const startedAt = performance.now();
-    let fallbackPrev: MouthState = 0;
-
-    const stopFallback = () => {
-      if (stopped) return;
-      stopped = true;
-      if (raf) cancelAnimationFrame(raf);
-      audio.pause();
-      audio.currentTime = 0;
-      audio.src = "";
-      audio.load();
+    try {
+      await fallbackAudio.play();
+      await new Promise<void>((resolve, reject) => {
+        fallbackAudio.onended = () => resolve();
+        fallbackAudio.onerror = () => reject(new Error("Audio playback failed"));
+      });
+    } catch (error) {
       callbacks.onSpeakingChange?.(false);
       callbacks.onMouthStateChange?.(0);
       callbacks.onLightIntensityChange?.(0);
-    };
-
-    const tickFallback = () => {
-      if (stopped) return;
-      const t = (performance.now() - startedAt) / 1000;
-      const base = mode === "firm" ? 0.08 : mode === "firm_calm" ? 0.085 : 0.1;
-      const wave = 0.08 * Math.abs(Math.sin(t * 10.5));
-      const jitter = 0.03 * Math.abs(Math.sin(t * 27.1));
-      const rms = Math.max(0, Math.min(1, base + wave + jitter));
-      const next = mouthStateFromRms(rms * 2.2);
-      const stable = stabilizeMouthState(fallbackPrev, next);
-      fallbackPrev = stable;
-      callbacks.onMouthStateChange?.(stable);
-      callbacks.onLightIntensityChange?.(Math.max(0, Math.min(1, rms * 1.5)));
-      raf = requestAnimationFrame(tickFallback);
-    };
-
-    const stop = async () => {
-      stopFallback();
-    };
-
-    activePlayback = { stop };
-
-    try {
-      tickFallback();
-      await audio.play();
-      await new Promise<void>((resolve, reject) => {
-        audio.onended = () => resolve();
-        audio.onerror = () => reject(new Error("Audio playback failed"));
-      });
-    } catch (error) {
-      stopFallback();
       return playWithBrowserSpeech(
         text,
         mode,
         callbacks,
         `Audio play failed: ${error instanceof Error ? error.message : "unknown"}`
       );
-    }
-
-    stopFallback();
-    if (activePlayback?.stop === stop) {
-      activePlayback = null;
+    } finally {
+      callbacks.onSpeakingChange?.(false);
+      callbacks.onMouthStateChange?.(0);
+      callbacks.onLightIntensityChange?.(0);
+      fallbackAudio.src = "";
+      fallbackAudio.load();
     }
     return;
   }
 
-  let source: MediaElementAudioSourceNode | null = null;
-  let analyser: AnalyserNode | null = null;
-  const data = new Uint8Array(1024);
+  const { context, audio, analyser, data } = graph;
+  audio.pause();
+  audio.onended = null;
+  audio.onerror = null;
+  audio.currentTime = 0;
+  audio.src = objectUrl;
+  audio.load();
+
   let raf = 0;
   let stopped = false;
   let prevMouth: MouthState = 0;
-
-  try {
-    source = context.createMediaElementSource(audio);
-    analyser = context.createAnalyser();
-    analyser.fftSize = 1024;
-    analyser.smoothingTimeConstant = 0.82;
-
-    source.connect(analyser);
-    analyser.connect(context.destination);
-  } catch (error) {
-    markAudioError(error);
-    callbacks.onSpeakingChange?.(false);
-    callbacks.onMouthStateChange?.(0);
-    callbacks.onLightIntensityChange?.(0);
-    URL.revokeObjectURL(objectUrl);
-    return playWithBrowserSpeech(
-      text,
-      mode,
-      callbacks,
-      `Audio graph setup failed: ${error instanceof Error ? error.message : "unknown"}`
-    );
-  }
 
   const stop = async () => {
     if (stopped) return;
@@ -298,29 +302,18 @@ export async function lumiSpeak(
     callbacks.onSpeakingChange?.(false);
     callbacks.onMouthStateChange?.(0);
     callbacks.onLightIntensityChange?.(0);
-    if (source) {
-      try {
-        source.disconnect();
-      } catch {
-        // ignore
-      }
-    }
-    if (analyser) {
-      try {
-        analyser.disconnect();
-      } catch {
-        // ignore
-      }
-    }
+    audio.onended = null;
+    audio.onerror = null;
     audio.src = "";
+    audio.removeAttribute("src");
+    audio.srcObject = null;
     audio.load();
   };
 
   activePlayback = { stop };
 
   const tick = () => {
-    if (stopped || !analyser) return;
-
+    if (stopped) return;
     analyser.getByteTimeDomainData(data);
     const rms = computeRmsFromTimeDomain(data);
 

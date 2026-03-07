@@ -28,6 +28,66 @@ type ActivePlayback = {
 
 let activePlayback: ActivePlayback | null = null;
 
+type AudioGraph = {
+  context: AudioContext;
+  audio: HTMLAudioElement;
+  analyser: AnalyserNode;
+  data: Uint8Array<ArrayBuffer>;
+};
+
+let sharedAudio: HTMLAudioElement | null = null;
+let sharedSource: MediaElementAudioSourceNode | null = null;
+let sharedAnalyser: AnalyserNode | null = null;
+let sharedData: Uint8Array<ArrayBuffer> | null = null;
+
+async function ensureAudioGraph(): Promise<AudioGraph | null> {
+  const context = await getAudioContext();
+  if (!context) return null;
+
+  if (!sharedAudio) {
+    sharedAudio = new Audio();
+    sharedAudio.preload = "auto";
+    sharedAudio.crossOrigin = "anonymous";
+  }
+
+  if (!sharedSource || sharedSource.context !== context) {
+    try {
+      sharedSource?.disconnect();
+    } catch {
+      // ignore
+    }
+    sharedSource = context.createMediaElementSource(sharedAudio);
+  }
+
+  const needsAnalyserReset = !sharedAnalyser || sharedAnalyser.context !== context;
+  if (needsAnalyserReset) {
+    sharedAnalyser = context.createAnalyser();
+    sharedAnalyser.fftSize = 1024;
+    sharedAnalyser.smoothingTimeConstant = 0.78;
+  }
+
+  try {
+    sharedSource.disconnect();
+  } catch {
+    // ignore
+  }
+
+  try {
+    sharedAnalyser.disconnect();
+  } catch {
+    // ignore
+  }
+
+  sharedSource.connect(sharedAnalyser);
+  sharedAnalyser.connect(context.destination);
+
+  if (!sharedData || sharedData.length !== sharedAnalyser.fftSize) {
+    sharedData = new Uint8Array(sharedAnalyser.fftSize) as Uint8Array<ArrayBuffer>;
+  }
+
+  return { context, audio: sharedAudio, analyser: sharedAnalyser, data: sharedData };
+}
+
 export function cancelLumiSpeak(): void {
   activePlayback?.stop();
   activePlayback = null;
@@ -95,64 +155,29 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     (/^(https?:)?\//.test(tts.audioUrl) || tts.audioUrl.startsWith("blob:") || tts.audioUrl.startsWith("data:"))
       ? tts.audioUrl
       : `/${tts.audioUrl ?? ""}`;
-  const audio = new Audio(normalizedUrl);
-  audio.preload = "auto";
-  audio.crossOrigin = "anonymous";
-  const releaseObjectUrl = () => {
-    // intentionally no-op to avoid premature revokes that can spawn player errors
-  };
-  let rafId: number | null = null;
-  let stopped = false;
-  let context: AudioContext | null = null;
-  let analyser: AnalyserNode | null = null;
-  let source: MediaElementAudioSourceNode | null = null;
-  let amplitudeData: Uint8Array<ArrayBuffer> | null = null;
-  let smoothedMouth = 0;
-  const startedAt = performance.now();
 
-  const cleanup = () => {
-    if (rafId !== null) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
+  const graph = await ensureAudioGraph();
+  if (!graph) {
+    const temp = new Audio(normalizedUrl);
+    temp.preload = "auto";
+    temp.crossOrigin = "anonymous";
+    let rafId: number | null = null;
+    let stopped = false;
+    const startedAt = performance.now();
 
-    audio.onended = null;
-    audio.onerror = null;
-    audio.pause();
-    audio.currentTime = 0;
-    audio.src = "";
-    audio.load();
+    const stop = () => {
+      if (stopped) return;
+      stopped = true;
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      temp.pause();
+      temp.src = "";
+      temp.load();
+      hooks.onFrame?.(0, 0.25);
+      hooks.onEnd?.();
+    };
 
-    if (source) {
-      try {
-        source.disconnect();
-      } catch {
-        // ignore disconnect failures
-      }
-    }
+    activePlayback = { stop };
 
-    if (analyser) {
-      try {
-        analyser.disconnect();
-      } catch {
-        // ignore disconnect failures
-      }
-    }
-
-    hooks.onFrame?.(0, 0.25);
-    releaseObjectUrl();
-  };
-
-  const stop = () => {
-    if (stopped) {
-      return;
-    }
-    stopped = true;
-    cleanup();
-    hooks.onEnd?.();
-  };
-
-  const playWithoutContext = async () => {
     const animate = () => {
       if (stopped) return;
       const elapsedMs = performance.now() - startedAt;
@@ -164,81 +189,85 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
       rafId = requestAnimationFrame(animate);
     };
 
-    hooks.onStart?.();
-    rafId = requestAnimationFrame(animate);
     try {
-      await audio.play();
+      hooks.onStart?.();
+      rafId = requestAnimationFrame(animate);
+      await temp.play();
       await new Promise<void>((resolve, reject) => {
-        audio.onended = () => resolve();
-        audio.onerror = () => reject(new Error("Audio playback failed"));
+        temp.onended = () => resolve();
+        temp.onerror = () => reject(new Error("Audio playback failed"));
       });
-    } finally {
       stop();
+    } catch (error) {
+      stop();
+      markAudioError(error);
+      throw error;
+    } finally {
+      if (activePlayback?.stop === stop) activePlayback = null;
     }
+    return;
+  }
+
+  const { context, audio, analyser, data } = graph;
+  audio.pause();
+  audio.onended = null;
+  audio.onerror = null;
+  audio.currentTime = 0;
+  audio.src = normalizedUrl;
+  audio.load();
+
+  let rafId: number | null = null;
+  let stopped = false;
+  let smoothedMouth = 0;
+  const startedAt = performance.now();
+
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    if (rafId !== null) cancelAnimationFrame(rafId);
+    audio.pause();
+    audio.onended = null;
+    audio.onerror = null;
+    audio.src = "";
+    audio.removeAttribute("src");
+    audio.srcObject = null;
+    audio.load();
+    hooks.onFrame?.(0, 0.25);
+    hooks.onEnd?.();
   };
 
   activePlayback = { stop };
 
+  const frame = () => {
+    if (stopped) return;
+    analyser.getByteTimeDomainData(data);
+    let sumSquares = 0;
+
+    for (let i = 0; i < data.length; i += 1) {
+      const sample = (data[i] - 128) / 128;
+      sumSquares += sample * sample;
+    }
+
+    const rms = Math.sqrt(sumSquares / data.length);
+    const gained = Math.min(1, rms * 4.6);
+    const elapsedMs = performance.now() - startedAt;
+    const visemeMouth = visemeMouthAtTime(tts.visemes, elapsedMs);
+    const targetMouth = Math.max(gained, visemeMouth);
+    smoothedMouth = smoothedMouth * 0.7 + targetMouth * 0.3;
+
+    const lightIntensity = getLightIntensityFromRms(rms);
+
+    hooks.onFrame?.(Math.max(0, Math.min(1, smoothedMouth)), lightIntensity);
+    rafId = requestAnimationFrame(frame);
+  };
+
   try {
-    try {
-      context = await getAudioContext();
-    } catch (error) {
-      markAudioError(error);
-      context = null;
-    }
-
-    if (!context) {
-      await playWithoutContext();
-      return;
-    }
-
-    source = context.createMediaElementSource(audio);
-    analyser = context.createAnalyser();
-    analyser.fftSize = 1024;
-    analyser.smoothingTimeConstant = 0.78;
-    amplitudeData = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>;
-
-    source.connect(analyser);
-    analyser.connect(context.destination);
-
     if (context.state === "suspended") {
       await context.resume();
     }
 
     hooks.onStart?.();
-    try {
-      await audio.play();
-    } catch (error) {
-      markAudioError(error);
-      throw error;
-    }
-
-    const frame = () => {
-      if (stopped || !analyser || !amplitudeData) {
-        return;
-      }
-
-      analyser.getByteTimeDomainData(amplitudeData);
-      let sumSquares = 0;
-
-      for (let i = 0; i < amplitudeData.length; i += 1) {
-        const sample = (amplitudeData[i] - 128) / 128;
-        sumSquares += sample * sample;
-      }
-
-      const rms = Math.sqrt(sumSquares / amplitudeData.length);
-      const gained = Math.min(1, rms * 4.6);
-      const elapsedMs = performance.now() - startedAt;
-      const visemeMouth = visemeMouthAtTime(tts.visemes, elapsedMs);
-      const targetMouth = Math.max(gained, visemeMouth);
-      smoothedMouth = smoothedMouth * 0.7 + targetMouth * 0.3;
-
-      const lightIntensity = getLightIntensityFromRms(rms);
-
-      hooks.onFrame?.(Math.max(0, Math.min(1, smoothedMouth)), lightIntensity);
-      rafId = requestAnimationFrame(frame);
-    };
-
+    await audio.play();
     rafId = requestAnimationFrame(frame);
 
     await new Promise<void>((resolve, reject) => {
