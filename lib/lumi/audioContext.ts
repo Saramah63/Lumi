@@ -52,3 +52,14 @@ export async function safeResumeAudioContext(): Promise<boolean> {
   const ctx = await getAudioContext();
   return !!ctx;
 }
+
+export function closeSharedAudioContext(): void {
+  if (!sharedContext || sharedContext.state === "closed") return;
+  try {
+    void sharedContext.close();
+  } catch {
+    // ignore close failures
+  } finally {
+    sharedContext = null;
+  }
+}

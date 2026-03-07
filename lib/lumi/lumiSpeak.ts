@@ -1,4 +1,5 @@
 import { mouthStateFromRms, stabilizeMouthState } from "./lipSync";
+import { getAudioContext, markAudioError } from "./audioContext";
 import type { MouthState } from "../../src/app/components/lumi/LumiAvatarRive";
 
 export type Mode = "baseline" | "listening" | "firm" | "firm_calm" | "warm";
@@ -26,26 +27,63 @@ export async function lumiSpeak(params: {
   const audio = new Audio(url);
   audio.crossOrigin = "anonymous";
 
-  const AudioContextCtor = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AudioContextCtor) {
+  const ctx = await getAudioContext();
+
+  if (!ctx) {
+    let raf = 0;
+    let stopped = false;
+    const startedAt = performance.now();
+    const tickFallback = () => {
+      if (stopped) return;
+      const t = (performance.now() - startedAt) / 1000;
+      const rms = Math.max(
+        0,
+        Math.min(1, 0.1 + 0.08 * Math.abs(Math.sin(t * 11)) + 0.03 * Math.abs(Math.sin(t * 29)))
+      );
+      const mouth = mouthStateFromRms(rms * 2.2);
+      onMouthState(mouth);
+      raf = requestAnimationFrame(tickFallback);
+    };
+
+    try {
+      onSpeakingChange(true);
+      raf = requestAnimationFrame(tickFallback);
+      await audio.play();
+      await new Promise<void>((resolve, reject) => {
+        audio.onended = () => resolve();
+        audio.onerror = () => reject(new Error("Audio playback failed"));
+      });
+    } finally {
+      stopped = true;
+      cancelAnimationFrame(raf);
+      onSpeakingChange(false);
+      onMouthState(0);
+      URL.revokeObjectURL(url);
+    }
+    return;
+  }
+
+  let source: MediaElementAudioSourceNode | null = null;
+  let analyser: AnalyserNode | null = null;
+  const data = new Uint8Array(1024);
+  let raf = 0;
+  let prevState: MouthState = 0;
+
+  try {
+    source = ctx.createMediaElementSource(audio);
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+
+    source.connect(analyser);
+    analyser.connect(ctx.destination);
+  } catch (error) {
+    markAudioError(error);
     await audio.play();
     return;
   }
 
-  const ctx = new AudioContextCtor();
-  const source = ctx.createMediaElementSource(audio);
-  const analyser = ctx.createAnalyser();
-  analyser.fftSize = 1024;
-
-  source.connect(analyser);
-  analyser.connect(ctx.destination);
-
-  const data = new Uint8Array(analyser.frequencyBinCount);
-
-  let raf = 0;
-  let prevState: MouthState = 0;
-
   const tick = () => {
+    if (!analyser) return;
     analyser.getByteTimeDomainData(data);
 
     let sum = 0;
@@ -65,22 +103,31 @@ export async function lumiSpeak(params: {
   };
 
   audio.onplay = async () => {
-    await ctx.resume();
+    if (ctx.state === "suspended") {
+      await ctx.resume();
+    }
     onSpeakingChange(true);
     tick();
   };
 
-  audio.onended = async () => {
+  audio.onended = () => {
     cancelAnimationFrame(raf);
     onSpeakingChange(false);
     onMouthState(0);
     URL.revokeObjectURL(url);
     try {
-      await ctx.close();
+      source?.disconnect();
+      analyser?.disconnect();
     } catch {
-      // noop
+      // ignore
     }
   };
 
-  await audio.play();
+  try {
+    await audio.play();
+  } catch (error) {
+    markAudioError(error);
+    onSpeakingChange(false);
+    onMouthState(0);
+  }
 }

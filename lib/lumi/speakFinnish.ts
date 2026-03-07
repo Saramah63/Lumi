@@ -1,4 +1,5 @@
 import { unlockAudio } from "./audioUnlock";
+import { getAudioContext, markAudioError } from "./audioContext";
 
 export type LumiMode = "baseline" | "listening" | "firm" | "firm_calm" | "warm";
 export type LumiLang = "fi-FI";
@@ -97,11 +98,6 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
   const audio = new Audio(normalizedUrl);
   audio.preload = "auto";
   audio.crossOrigin = "anonymous";
-
-  const AudioContextCtor =
-    window.AudioContext ||
-    (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-
   let rafId: number | null = null;
   let stopped = false;
   let context: AudioContext | null = null;
@@ -117,6 +113,8 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
       rafId = null;
     }
 
+    audio.onended = null;
+    audio.onerror = null;
     audio.pause();
     audio.currentTime = 0;
     audio.src = "";
@@ -125,15 +123,19 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     }
 
     if (source) {
-      source.disconnect();
+      try {
+        source.disconnect();
+      } catch {
+        // ignore disconnect failures
+      }
     }
 
     if (analyser) {
-      analyser.disconnect();
-    }
-
-    if (context && context.state !== "closed") {
-      void context.close();
+      try {
+        analyser.disconnect();
+      } catch {
+        // ignore disconnect failures
+      }
     }
 
     hooks.onFrame?.(0, 0.25);
@@ -148,31 +150,51 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     hooks.onEnd?.();
   };
 
-  activePlayback = { stop };
+  const playWithoutContext = async () => {
+    const animate = () => {
+      if (stopped) return;
+      const elapsedMs = performance.now() - startedAt;
+      const visemeMouth = visemeMouthAtTime(tts.visemes, elapsedMs);
+      const pulse = 0.12 * Math.abs(Math.sin(elapsedMs / 120));
+      const mouth = Math.max(visemeMouth, pulse);
+      const lightIntensity = getLightIntensityFromRms(mouth * 0.8);
+      hooks.onFrame?.(Math.max(0, Math.min(1, mouth)), lightIntensity);
+      rafId = requestAnimationFrame(animate);
+    };
 
-  try {
-    if (!AudioContextCtor) {
-      hooks.onStart?.();
-      try {
-        await audio.play();
-      } catch (error) {
-        hooks.onEnd?.();
-        throw error;
-      }
+    hooks.onStart?.();
+    rafId = requestAnimationFrame(animate);
+    try {
+      await audio.play();
       await new Promise<void>((resolve, reject) => {
         audio.onended = () => resolve();
         audio.onerror = () => reject(new Error("Audio playback failed"));
       });
+    } finally {
       stop();
+    }
+  };
+
+  activePlayback = { stop };
+
+  try {
+    try {
+      context = await getAudioContext();
+    } catch (error) {
+      markAudioError(error);
+      context = null;
+    }
+
+    if (!context) {
+      await playWithoutContext();
       return;
     }
 
-    context = new AudioContextCtor();
     source = context.createMediaElementSource(audio);
     analyser = context.createAnalyser();
     analyser.fftSize = 1024;
     analyser.smoothingTimeConstant = 0.78;
-    amplitudeData = new Uint8Array<ArrayBuffer>(new ArrayBuffer(analyser.frequencyBinCount));
+    amplitudeData = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>;
 
     source.connect(analyser);
     analyser.connect(context.destination);
@@ -185,7 +207,7 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     try {
       await audio.play();
     } catch (error) {
-      stop();
+      markAudioError(error);
       throw error;
     }
 
@@ -225,9 +247,8 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     stop();
   } catch (error) {
     if (!stopped) {
-      stopped = true;
-      cleanup();
-      hooks.onEnd?.();
+      markAudioError(error);
+      stop();
     }
     throw error;
   } finally {

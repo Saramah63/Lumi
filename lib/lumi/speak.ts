@@ -7,6 +7,7 @@ import {
   type MouthState,
 } from "./lipSync";
 import { unlockAudio } from "./audioUnlock";
+import { getAudioContext, markAudioError } from "./audioContext";
 
 export type SpeakMode = "baseline" | "listening" | "firm" | "firm_calm" | "warm" | "regulation";
 
@@ -193,45 +194,100 @@ export async function lumiSpeak(
   const audio = new Audio(objectUrl);
   audio.crossOrigin = "anonymous";
 
-  const AudioContextCtor =
-    window.AudioContext ||
-    (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  const context = await getAudioContext();
 
-  if (!AudioContextCtor) {
+  if (!context) {
     callbacks.onSpeakingChange?.(true);
-    try {
-      await audio.play();
-    } catch (error) {
+    let raf = 0;
+    let stopped = false;
+    const startedAt = performance.now();
+    let fallbackPrev: MouthState = 0;
+
+    const stopFallback = () => {
+      if (stopped) return;
+      stopped = true;
+      if (raf) cancelAnimationFrame(raf);
+      audio.pause();
+      audio.currentTime = 0;
       callbacks.onSpeakingChange?.(false);
       callbacks.onMouthStateChange?.(0);
       callbacks.onLightIntensityChange?.(0);
       URL.revokeObjectURL(objectUrl);
-      return playWithBrowserSpeech(text, mode, callbacks, `Audio play failed: ${error instanceof Error ? error.message : "unknown"}`);
+    };
+
+    const tickFallback = () => {
+      if (stopped) return;
+      const t = (performance.now() - startedAt) / 1000;
+      const base = mode === "firm" ? 0.08 : mode === "firm_calm" ? 0.085 : 0.1;
+      const wave = 0.08 * Math.abs(Math.sin(t * 10.5));
+      const jitter = 0.03 * Math.abs(Math.sin(t * 27.1));
+      const rms = Math.max(0, Math.min(1, base + wave + jitter));
+      const next = mouthStateFromRms(rms * 2.2);
+      const stable = stabilizeMouthState(fallbackPrev, next);
+      fallbackPrev = stable;
+      callbacks.onMouthStateChange?.(stable);
+      callbacks.onLightIntensityChange?.(Math.max(0, Math.min(1, rms * 1.5)));
+      raf = requestAnimationFrame(tickFallback);
+    };
+
+    const stop = async () => {
+      stopFallback();
+    };
+
+    activePlayback = { stop };
+
+    try {
+      tickFallback();
+      await audio.play();
+      await new Promise<void>((resolve, reject) => {
+        audio.onended = () => resolve();
+        audio.onerror = () => reject(new Error("Audio playback failed"));
+      });
+    } catch (error) {
+      stopFallback();
+      return playWithBrowserSpeech(
+        text,
+        mode,
+        callbacks,
+        `Audio play failed: ${error instanceof Error ? error.message : "unknown"}`
+      );
     }
-    await new Promise<void>((resolve, reject) => {
-      audio.onended = () => resolve();
-      audio.onerror = () => reject(new Error("Audio playback failed"));
-    });
+
+    stopFallback();
+    if (activePlayback?.stop === stop) {
+      activePlayback = null;
+    }
+    return;
+  }
+
+  let source: MediaElementAudioSourceNode | null = null;
+  let analyser: AnalyserNode | null = null;
+  const data = new Uint8Array(1024);
+  let raf = 0;
+  let stopped = false;
+  let prevMouth: MouthState = 0;
+
+  try {
+    source = context.createMediaElementSource(audio);
+    analyser = context.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.82;
+
+    source.connect(analyser);
+    analyser.connect(context.destination);
+  } catch (error) {
+    markAudioError(error);
     callbacks.onSpeakingChange?.(false);
     callbacks.onMouthStateChange?.(0);
     callbacks.onLightIntensityChange?.(0);
     URL.revokeObjectURL(objectUrl);
-    return;
+    return playWithBrowserSpeech(
+      text,
+      mode,
+      callbacks,
+      `Audio graph setup failed: ${error instanceof Error ? error.message : "unknown"}`
+    );
   }
-
-  const context = new AudioContextCtor();
-  const source = context.createMediaElementSource(audio);
-  const analyser = context.createAnalyser();
-  analyser.fftSize = 1024;
-  analyser.smoothingTimeConstant = 0.82;
-
-  source.connect(analyser);
-  analyser.connect(context.destination);
-
-  const data = new Uint8Array(analyser.frequencyBinCount);
-  let raf = 0;
-  let stopped = false;
-  let prevMouth: MouthState = 0;
 
   const stop = async () => {
     if (stopped) return;
@@ -242,17 +298,26 @@ export async function lumiSpeak(
     callbacks.onMouthStateChange?.(0);
     callbacks.onLightIntensityChange?.(0);
     URL.revokeObjectURL(objectUrl);
-    try {
-      if (context.state !== "closed") await context.close();
-    } catch {
-      // ignore close errors
+    if (source) {
+      try {
+        source.disconnect();
+      } catch {
+        // ignore
+      }
+    }
+    if (analyser) {
+      try {
+        analyser.disconnect();
+      } catch {
+        // ignore
+      }
     }
   };
 
   activePlayback = { stop };
 
   const tick = () => {
-    if (stopped) return;
+    if (stopped || !analyser) return;
 
     analyser.getByteTimeDomainData(data);
     const rms = computeRmsFromTimeDomain(data);
@@ -268,13 +333,21 @@ export async function lumiSpeak(
   };
 
   try {
-    await context.resume();
+    if (context.state === "suspended") {
+      await context.resume();
+    }
+
     callbacks.onSpeakingChange?.(true);
     try {
       await audio.play();
     } catch (error) {
       await stop();
-      return playWithBrowserSpeech(text, mode, callbacks, `Audio play failed: ${error instanceof Error ? error.message : "unknown"}`);
+      return playWithBrowserSpeech(
+        text,
+        mode,
+        callbacks,
+        `Audio play failed: ${error instanceof Error ? error.message : "unknown"}`
+      );
     }
     tick();
 
@@ -284,6 +357,15 @@ export async function lumiSpeak(
     });
 
     await stop();
+  } catch (error) {
+    markAudioError(error);
+    await stop();
+    return playWithBrowserSpeech(
+      text,
+      mode,
+      callbacks,
+      `Audio playback failed: ${error instanceof Error ? error.message : "unknown"}`
+    );
   } finally {
     if (activePlayback?.stop === stop) {
       activePlayback = null;

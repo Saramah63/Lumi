@@ -1,5 +1,7 @@
 "use client";
 
+import { getAudioContext, markAudioError } from "./audioContext";
+
 let audioUnlocked = false;
 
 export async function unlockAudio(): Promise<void> {
@@ -7,16 +9,9 @@ export async function unlockAudio(): Promise<void> {
   if (typeof window === "undefined") return;
 
   try {
-    const AudioContextCtor =
-      window.AudioContext ||
-      (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    const ctx = await getAudioContext();
+    if (!ctx) return;
 
-    if (!AudioContextCtor) {
-      audioUnlocked = true;
-      return;
-    }
-
-    const ctx = new AudioContextCtor();
     if (ctx.state === "suspended") {
       await ctx.resume();
     }
@@ -29,15 +24,7 @@ export async function unlockAudio(): Promise<void> {
     source.stop(0.01);
 
     audioUnlocked = true;
-
-    setTimeout(() => {
-      try {
-        void ctx.close();
-      } catch {
-        // ignore
-      }
-    }, 200);
-  } catch {
-    // ignore unlock failure
+  } catch (error) {
+    markAudioError(error);
   }
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { getAudioContext, markAudioError } from "./audioContext";
+
 export type BreathEyesState = "auto" | "closed" | "open";
 
 type BreathCueOptions = {
@@ -49,17 +51,19 @@ function playBreathWhoosh(ctx: AudioContext, phase: "inhale" | "exhale", seconds
 
 export function startBreathingCue(options: BreathCueOptions = {}): () => Promise<void> {
   const { onEyesStateChange, phaseMs = 1200 } = options;
-  const AudioContextCtor =
-    window.AudioContext ||
-    (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-
   let ctx: AudioContext | null = null;
-  if (AudioContextCtor) {
-    ctx = new AudioContextCtor();
-    void ctx.resume().catch(() => {
-      // keep running eye cue even if audio fails
-    });
-  }
+
+  void (async () => {
+    try {
+      ctx = await getAudioContext();
+      if (ctx?.state === "suspended") {
+        await ctx.resume();
+      }
+    } catch (error) {
+      markAudioError(error);
+      ctx = null;
+    }
+  })();
 
   let stopped = false;
   let phase: "inhale" | "exhale" = "inhale";
@@ -86,12 +90,5 @@ export function startBreathingCue(options: BreathCueOptions = {}): () => Promise
     stopped = true;
     if (timer) window.clearTimeout(timer);
     onEyesStateChange?.("auto");
-    if (ctx && ctx.state !== "closed") {
-      try {
-        await ctx.close();
-      } catch {
-        // ignore close errors
-      }
-    }
   };
 }
