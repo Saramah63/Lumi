@@ -57,7 +57,26 @@ async function playWithBrowserSpeech(
             : 0.92;
   utter.pitch = mode === "firm" ? 0.92 : mode === "firm_calm" ? 0.96 : mode === "warm" ? 1.06 : 1.0;
 
-  const fiVoice = synth.getVoices().find((v) => v.lang.toLowerCase().startsWith("fi"));
+  const ensureVoices = async () => {
+    const voices = synth.getVoices();
+    if (voices.length > 0) return voices;
+    await new Promise<void>((resolve) => {
+      const timeout = window.setTimeout(() => {
+        synth.removeEventListener("voiceschanged", onChange);
+        resolve();
+      }, 500);
+      const onChange = () => {
+        window.clearTimeout(timeout);
+        synth.removeEventListener("voiceschanged", onChange);
+        resolve();
+      };
+      synth.addEventListener("voiceschanged", onChange);
+    });
+    return synth.getVoices();
+  };
+
+  const voices = await ensureVoices();
+  const fiVoice = voices.find((v) => v.lang.toLowerCase().startsWith("fi"));
   if (fiVoice) {
     utter.voice = fiVoice;
   }
@@ -180,7 +199,15 @@ export async function lumiSpeak(
 
   if (!AudioContextCtor) {
     callbacks.onSpeakingChange?.(true);
-    await audio.play();
+    try {
+      await audio.play();
+    } catch (error) {
+      callbacks.onSpeakingChange?.(false);
+      callbacks.onMouthStateChange?.(0);
+      callbacks.onLightIntensityChange?.(0);
+      URL.revokeObjectURL(objectUrl);
+      return playWithBrowserSpeech(text, mode, callbacks, `Audio play failed: ${error instanceof Error ? error.message : "unknown"}`);
+    }
     await new Promise<void>((resolve, reject) => {
       audio.onended = () => resolve();
       audio.onerror = () => reject(new Error("Audio playback failed"));
@@ -243,7 +270,12 @@ export async function lumiSpeak(
   try {
     await context.resume();
     callbacks.onSpeakingChange?.(true);
-    await audio.play();
+    try {
+      await audio.play();
+    } catch (error) {
+      await stop();
+      return playWithBrowserSpeech(text, mode, callbacks, `Audio play failed: ${error instanceof Error ? error.message : "unknown"}`);
+    }
     tick();
 
     await new Promise<void>((resolve, reject) => {

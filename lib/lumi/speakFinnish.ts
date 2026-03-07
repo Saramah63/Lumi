@@ -153,7 +153,12 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
   try {
     if (!AudioContextCtor) {
       hooks.onStart?.();
-      await audio.play();
+      try {
+        await audio.play();
+      } catch (error) {
+        hooks.onEnd?.();
+        throw error;
+      }
       await new Promise<void>((resolve, reject) => {
         audio.onended = () => resolve();
         audio.onerror = () => reject(new Error("Audio playback failed"));
@@ -177,7 +182,12 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     }
 
     hooks.onStart?.();
-    await audio.play();
+    try {
+      await audio.play();
+    } catch (error) {
+      stop();
+      throw error;
+    }
 
     const frame = () => {
       if (stopped || !analyser || !amplitudeData) {
@@ -240,7 +250,26 @@ async function playWithBrowserSpeech(text: string, mode: LumiMode, hooks: LumiSp
   utter.rate = mode === "listening" ? 0.85 : mode === "firm" ? 0.82 : 0.92;
   utter.pitch = mode === "firm" ? 0.9 : mode === "warm" ? 1.06 : 1.0;
 
-  const fiVoice = synth.getVoices().find((v) => v.lang.toLowerCase().startsWith("fi"));
+  const ensureVoices = async () => {
+    const voices = synth.getVoices();
+    if (voices.length > 0) return voices;
+    await new Promise<void>((resolve) => {
+      const timeout = window.setTimeout(() => {
+        synth.removeEventListener("voiceschanged", onChange);
+        resolve();
+      }, 500);
+      const onChange = () => {
+        window.clearTimeout(timeout);
+        synth.removeEventListener("voiceschanged", onChange);
+        resolve();
+      };
+      synth.addEventListener("voiceschanged", onChange);
+    });
+    return synth.getVoices();
+  };
+
+  const voices = await ensureVoices();
+  const fiVoice = voices.find((v) => v.lang.toLowerCase().startsWith("fi"));
   if (fiVoice) {
     utter.voice = fiVoice;
   }

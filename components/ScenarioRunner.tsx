@@ -493,6 +493,23 @@ export function ScenarioRunner() {
   }, []);
 
   useEffect(() => {
+    let unlocked = false;
+    const onUserGesture = () => {
+      if (unlocked) return;
+      unlocked = true;
+      void unlockAudio();
+      window.removeEventListener("pointerdown", onUserGesture);
+      window.removeEventListener("keydown", onUserGesture);
+    };
+    window.addEventListener("pointerdown", onUserGesture);
+    window.addEventListener("keydown", onUserGesture);
+    return () => {
+      window.removeEventListener("pointerdown", onUserGesture);
+      window.removeEventListener("keydown", onUserGesture);
+    };
+  }, []);
+
+  useEffect(() => {
     if (sessionMode !== "solo_personalized") return;
     if (soloHistory.length > 0) return;
     setIsRunning(false);
