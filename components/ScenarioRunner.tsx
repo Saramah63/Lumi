@@ -435,6 +435,12 @@ export function ScenarioRunner() {
   const [summary, setSummary] = useState<TeacherSummaryFi | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [teacherNotes, setTeacherNotes] = useState("");
+
+  const sessionLogRef = useRef<SessionLog | null>(null);
+
+  useEffect(() => {
+    sessionLogRef.current = sessionLog;
+  }, [sessionLog]);
   const [customScenario, setCustomScenario] = useState<{
     id: string;
     title: string;
@@ -483,7 +489,8 @@ export function ScenarioRunner() {
   );
 
   const ensureSessionLog = useCallback((): SessionLog => {
-    if (sessionLog && !sessionLog.endedAt) return sessionLog;
+    const existing = sessionLogRef.current;
+    if (existing && !existing.endedAt) return existing;
     const created: SessionLog = {
       sessionId: crypto.randomUUID(),
       startedAt: new Date().toISOString(),
@@ -500,12 +507,13 @@ export function ScenarioRunner() {
       soloContext: groupSize === 1 ? { childName: soloChildName || "ystävä", safeAdultName: soloSafeAdultName || "opettaja" } : undefined,
       soloTurns: [],
     };
+    sessionLogRef.current = created;
     setSessionLog(created);
     setSummary(null);
     setSummaryOpen(false);
     setTeacherNotes("");
     return created;
-  }, [sessionLog, sessionMode, groupSize, scenarioId, scenario?.title, soloChildName, soloSafeAdultName]);
+  }, [sessionMode, groupSize, scenarioId, scenario?.title, soloChildName, soloSafeAdultName]);
 
   const endSession = useCallback(() => {
     if (!sessionLog) return;
