@@ -99,15 +99,7 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
   audio.preload = "auto";
   audio.crossOrigin = "anonymous";
   const releaseObjectUrl = () => {
-    if (normalizedUrl.startsWith("blob:")) {
-      window.setTimeout(() => {
-        try {
-          URL.revokeObjectURL(normalizedUrl);
-        } catch {
-          // ignore revoke errors
-        }
-      }, 5000);
-    }
+    // intentionally no-op to avoid premature revokes that can spawn player errors
   };
   let rafId: number | null = null;
   let stopped = false;
@@ -128,6 +120,8 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     audio.onerror = null;
     audio.pause();
     audio.currentTime = 0;
+    audio.src = "";
+    audio.load();
 
     if (source) {
       try {

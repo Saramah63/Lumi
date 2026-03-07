@@ -22,6 +22,11 @@ export async function unlockAudio(): Promise<void> {
     source.connect(ctx.destination);
     source.start(0);
     source.stop(0.01);
+    try {
+      source.disconnect();
+    } catch {
+      // ignore
+    }
 
     audioUnlocked = true;
   } catch (error) {
