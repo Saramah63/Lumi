@@ -1,3 +1,5 @@
 {
-  "/lumi/page": "app/lumi/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/lumi/page": "app/lumi/page.js",
+  "/api/tts/route": "app/api/tts/route.js"
 }

@@ -622,12 +622,14 @@ export function ScenarioRunner() {
 
   useEffect(() => {
     if (customScenario) return;
-    if (!availableScenarios.some((s) => s.id === scenarioId)) {
-      setScenarioId(availableScenarios[0]?.id ?? scenarios[0]?.id ?? "hitting");
-      setStepIndex(0);
-      setDone(false);
-      setAwaitingChoice(false);
-    }
+    const hasScenario = availableScenarios.some((s) => s.id === scenarioId);
+    if (hasScenario) return;
+    const nextId = availableScenarios[0]?.id ?? scenarios[0]?.id;
+    if (!nextId || nextId === scenarioId) return;
+    setScenarioId(nextId);
+    setStepIndex(0);
+    setDone(false);
+    setAwaitingChoice(false);
   }, [availableScenarios, scenarioId, customScenario]);
 
   const activeScenario = customScenario ?? scenario;
