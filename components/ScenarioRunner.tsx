@@ -532,6 +532,8 @@ export function ScenarioRunner() {
     [theme]
   );
 
+  const isPlayingStepRef = useRef(false);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -765,11 +767,14 @@ export function ScenarioRunner() {
 
   const playCurrentStep = useCallback(
     async (index: number) => {
+      if (isPlayingStepRef.current) return;
+      isPlayingStepRef.current = true;
       const current = activeScenario?.steps[index];
       if (!activeScenario || !current) {
         setIsRunning(false);
         setDone(true);
         endSession();
+        isPlayingStepRef.current = false;
         return;
       }
 
@@ -878,6 +883,7 @@ export function ScenarioRunner() {
       }
 
       setStepIndex((prev) => prev + 1);
+      isPlayingStepRef.current = false;
     },
     [activeScenario, votingMode, lastVoteAppliedStep, votes, sessionMode, ensureSessionLog, endSession, performVoteResponse, speakLine]
   );

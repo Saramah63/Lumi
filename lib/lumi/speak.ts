@@ -292,9 +292,10 @@ export async function lumiSpeak(
 
     const next = mouthStateFromRms(rms * 2.8);
     const stable = stabilizeMouthState(prevMouth, next);
-    prevMouth = stable;
-
-    callbacks.onMouthStateChange?.(stable);
+    if (stable !== prevMouth) {
+      prevMouth = stable;
+      callbacks.onMouthStateChange?.(stable);
+    }
     callbacks.onLightIntensityChange?.(Math.max(0, Math.min(1, rms * 2)));
 
     raf = requestAnimationFrame(tick);

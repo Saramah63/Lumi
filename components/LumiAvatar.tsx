@@ -119,7 +119,10 @@ export function LumiAvatar({
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (rafRef.current) return undefined;
     const start = performance.now();
+    const lastBreath = { v: breath };
+    const lastLife = { v: lifePhase };
     const tick = (now: number) => {
       const sec = (now - start) / 1000;
       const cycle = 4.6;
@@ -133,16 +136,23 @@ export function LumiAvatar({
       const primary = phase <= inhaleRatio ? inhale : exhale;
       const secondary = 0.08 * Math.sin(sec * (Math.PI * 2) / 9.2 + 1.1);
       const b = clamp01(0.18 + primary * 0.72 + secondary);
-      setBreath(b);
-      setLifePhase(sec);
+      if (Math.abs(b - lastBreath.v) > 0.0005) {
+        lastBreath.v = b;
+        setBreath(b);
+      }
+      if (Math.abs(sec - lastLife.v) > 0.0005) {
+        lastLife.v = sec;
+        setLifePhase(sec);
+      }
       rafRef.current = requestAnimationFrame(tick);
     };
 
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
     };
-  }, []);
+  }, [breath, lifePhase]);
 
   const breathAmp = isSpeaking ? 0.42 : 0.8;
   const translateY = (((breath - 0.5) * 2.4) + Math.sin(lifePhase * 0.7) * 0.2) * breathAmp;
