@@ -152,7 +152,7 @@ export function LumiAvatar({
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
-  }, [breath, lifePhase]);
+  }, []);
 
   const breathAmp = isSpeaking ? 0.42 : 0.8;
   const translateY = (((breath - 0.5) * 2.4) + Math.sin(lifePhase * 0.7) * 0.2) * breathAmp;
