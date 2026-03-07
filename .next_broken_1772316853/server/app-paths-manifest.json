@@ -1,0 +1,4 @@
+{
+  "/api/tts/route": "app/api/tts/route.js",
+  "/lumi/page": "app/lumi/page.js"
+}

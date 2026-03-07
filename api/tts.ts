@@ -55,7 +55,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const body = JSON.parse(rawBody) as Partial<TTSInput>;
     const parsed = validateTTSInput(body);
 
-    if (!parsed.ok) {
+    if (parsed.ok === false) {
       json(res, 400, { error: parsed.error });
       return;
     }

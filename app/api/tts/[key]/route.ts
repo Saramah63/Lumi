@@ -15,7 +15,7 @@ export async function GET(_: Request, context: Params) {
     return NextResponse.json({ error: "Audio not found" }, { status: 404 });
   }
 
-  return new Response(audio.buffer, {
+  return new Response(new Uint8Array(audio.buffer), {
     status: 200,
     headers: {
       "Content-Type": audio.mimeType,

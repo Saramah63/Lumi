@@ -4,7 +4,7 @@ import path from "node:path";
 import { Pool } from "pg";
 
 export type LumiLanguage = "fi-FI";
-export type LumiVoiceMode = "baseline" | "listening" | "firm" | "warm";
+export type LumiVoiceMode = "baseline" | "listening" | "firm" | "firm_calm" | "warm";
 
 export type TTSInput = {
   text: string;
@@ -73,8 +73,11 @@ export function validateTTSInput(input: Partial<TTSInput>): { ok: true; data: Re
     return { ok: false, error: "lang must be fi-FI" };
   }
 
-  if (!mode || (mode !== "baseline" && mode !== "listening" && mode !== "firm" && mode !== "warm")) {
-    return { ok: false, error: "mode must be baseline, listening, firm, or warm" };
+  if (
+    !mode ||
+    (mode !== "baseline" && mode !== "listening" && mode !== "firm" && mode !== "firm_calm" && mode !== "warm")
+  ) {
+    return { ok: false, error: "mode must be baseline, listening, firm, firm_calm, or warm" };
   }
 
   return {
@@ -89,7 +92,7 @@ export function validateTTSInput(input: Partial<TTSInput>): { ok: true; data: Re
 }
 
 function normalizeMode(mode?: string): LumiVoiceMode {
-  if (mode === "listening" || mode === "firm" || mode === "warm") {
+  if (mode === "listening" || mode === "firm" || mode === "firm_calm" || mode === "warm") {
     return mode;
   }
   return "baseline";
@@ -104,6 +107,7 @@ function normalizeVoice(mode: LumiVoiceMode, voice?: string): string {
     baseline: "fi_baseline",
     listening: "fi_listening",
     firm: "fi_firm",
+    firm_calm: "fi_firm_calm",
     warm: "fi_warm",
   }[mode];
 }
@@ -173,6 +177,9 @@ function elevenVoiceSettings(mode: LumiVoiceMode): { stability: number; similari
   if (mode === "firm") {
     return { stability: 0.68, similarity_boost: 0.75, style: 0.25, use_speaker_boost: true };
   }
+  if (mode === "firm_calm") {
+    return { stability: 0.74, similarity_boost: 0.78, style: 0.18, use_speaker_boost: true };
+  }
   if (mode === "warm") {
     return { stability: 0.42, similarity_boost: 0.85, style: 0.45, use_speaker_boost: true };
   }
@@ -186,6 +193,13 @@ function elevenVoiceIdForMode(mode: LumiVoiceMode): string | undefined {
   if (mode === "firm") {
     return process.env.ELEVENLABS_VOICE_ID_FIRM ?? process.env.ELEVENLABS_VOICE_ID;
   }
+  if (mode === "firm_calm") {
+    return (
+      process.env.ELEVENLABS_VOICE_ID_FIRM_CALM ??
+      process.env.ELEVENLABS_VOICE_ID_FIRM ??
+      process.env.ELEVENLABS_VOICE_ID
+    );
+  }
   if (mode === "warm") {
     return process.env.ELEVENLABS_VOICE_ID_WARM ?? process.env.ELEVENLABS_VOICE_ID;
   }
@@ -198,6 +212,9 @@ function elevenVoiceIdForMode(mode: LumiVoiceMode): string | undefined {
 function openAIVoiceForMode(mode: LumiVoiceMode): string {
   if (mode === "firm") {
     return process.env.OPENAI_TTS_VOICE_FIRM ?? "onyx";
+  }
+  if (mode === "firm_calm") {
+    return process.env.OPENAI_TTS_VOICE_FIRM_CALM ?? process.env.OPENAI_TTS_VOICE_FIRM ?? "onyx";
   }
   if (mode === "warm") {
     return process.env.OPENAI_TTS_VOICE_WARM ?? "nova";

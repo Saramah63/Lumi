@@ -1,4 +1,4 @@
-export type LumiMode = "baseline" | "listening" | "firm" | "warm";
+export type LumiMode = "baseline" | "listening" | "firm" | "firm_calm" | "warm";
 export type LumiLang = "fi-FI";
 
 export type LumiSpeakHooks = {
@@ -30,22 +30,8 @@ export function cancelLumiSpeak(): void {
   activePlayback = null;
 }
 
-function getLightIntensity(mode: LumiMode, mouthOpen: number, elapsedSeconds: number): number {
-  const pulse = Math.sin(elapsedSeconds * 3.2) * 0.04;
-
-  if (mode === "firm") {
-    return 0.54;
-  }
-
-  if (mode === "listening") {
-    return Math.max(0, Math.min(1, 0.28 + mouthOpen * 0.14));
-  }
-
-  if (mode === "warm") {
-    return Math.max(0, Math.min(1, 0.44 + mouthOpen * 0.2 + pulse));
-  }
-
-  return Math.max(0, Math.min(1, 0.4 + mouthOpen * 0.24 + pulse));
+function getLightIntensityFromRms(rms: number): number {
+  return Math.max(0, Math.min(1, rms * 2));
 }
 
 async function fetchTTSData(text: string, mode: LumiMode): Promise<TTSPayload> {
@@ -102,7 +88,10 @@ function visemeMouthAtTime(visemes: VisemePoint[] | undefined, elapsedMs: number
 
 async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: LumiSpeakHooks): Promise<void> {
   const normalizedUrl =
-    tts.audioUrl && /^(https?:)?\//.test(tts.audioUrl) ? tts.audioUrl : `/${tts.audioUrl ?? ""}`;
+    tts.audioUrl &&
+    (/^(https?:)?\//.test(tts.audioUrl) || tts.audioUrl.startsWith("blob:") || tts.audioUrl.startsWith("data:"))
+      ? tts.audioUrl
+      : `/${tts.audioUrl ?? ""}`;
   const audio = new Audio(normalizedUrl);
   audio.preload = "auto";
   audio.crossOrigin = "anonymous";
@@ -116,7 +105,7 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
   let context: AudioContext | null = null;
   let analyser: AnalyserNode | null = null;
   let source: MediaElementAudioSourceNode | null = null;
-  let amplitudeData: Float32Array | null = null;
+  let amplitudeData: Uint8Array<ArrayBuffer> | null = null;
   let smoothedMouth = 0;
   const startedAt = performance.now();
 
@@ -176,7 +165,7 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     analyser = context.createAnalyser();
     analyser.fftSize = 1024;
     analyser.smoothingTimeConstant = 0.78;
-    amplitudeData = new Float32Array(analyser.fftSize);
+    amplitudeData = new Uint8Array<ArrayBuffer>(new ArrayBuffer(analyser.frequencyBinCount));
 
     source.connect(analyser);
     analyser.connect(context.destination);
@@ -193,11 +182,11 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
         return;
       }
 
-      analyser.getFloatTimeDomainData(amplitudeData);
+      analyser.getByteTimeDomainData(amplitudeData);
       let sumSquares = 0;
 
       for (let i = 0; i < amplitudeData.length; i += 1) {
-        const sample = amplitudeData[i];
+        const sample = (amplitudeData[i] - 128) / 128;
         sumSquares += sample * sample;
       }
 
@@ -208,8 +197,7 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
       const targetMouth = Math.max(gained, visemeMouth);
       smoothedMouth = smoothedMouth * 0.7 + targetMouth * 0.3;
 
-      const elapsed = (performance.now() - startedAt) / 1000;
-      const lightIntensity = getLightIntensity(mode, smoothedMouth, elapsed);
+      const lightIntensity = getLightIntensityFromRms(rms);
 
       hooks.onFrame?.(Math.max(0, Math.min(1, smoothedMouth)), lightIntensity);
       rafId = requestAnimationFrame(frame);
@@ -258,8 +246,6 @@ async function playWithBrowserSpeech(text: string, mode: LumiMode, hooks: LumiSp
   let rafId: number | null = null;
   let stopped = false;
   let energy = 0;
-  const startedAt = performance.now();
-
   const animate = () => {
     if (stopped) {
       return;
@@ -267,8 +253,7 @@ async function playWithBrowserSpeech(text: string, mode: LumiMode, hooks: LumiSp
     energy *= 0.88;
     const noise = (Math.sin(performance.now() / 58) + 1) * 0.08;
     const mouthOpen = Math.max(0, Math.min(1, energy + noise));
-    const elapsed = (performance.now() - startedAt) / 1000;
-    const lightIntensity = getLightIntensity(mode, mouthOpen, elapsed);
+    const lightIntensity = getLightIntensityFromRms(mouthOpen);
     hooks.onFrame?.(mouthOpen, lightIntensity);
     rafId = requestAnimationFrame(animate);
   };

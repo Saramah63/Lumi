@@ -1,0 +1,25 @@
+{
+  "default": {
+    "emotions": [
+      { "id": "happy", "label": "Iloinen" },
+      { "id": "sad", "label": "Surullinen" },
+      { "id": "angry", "label": "Vihainen" },
+      { "id": "scared", "label": "Pelkään" },
+      { "id": "confused", "label": "Hämmentynyt" },
+      { "id": "frustrated", "label": "Turhautunut" },
+      { "id": "calm", "label": "Rauhallinen" }
+    ],
+    "phrases": [
+      { "id": "hit", "label": "Hän löi minua" },
+      { "id": "threw", "label": "Hän heitti" },
+      { "id": "took_toy", "label": "Hän otti leluni" },
+      { "id": "mean_words", "label": "Hän sanoi ilkeästi" },
+      { "id": "said_no", "label": "Minä sanoin ei" },
+      { "id": "scared", "label": "Minua pelottaa" },
+      { "id": "alone", "label": "Olen yksin" },
+      { "id": "want_hug", "label": "Haluan halauksen" },
+      { "id": "want_space", "label": "Haluan tilaa" },
+      { "id": "need_adult", "label": "Tarvitsen aikuisen" }
+    ]
+  }
+}

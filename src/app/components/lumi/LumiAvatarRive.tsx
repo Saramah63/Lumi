@@ -1,47 +1,40 @@
-import { useEffect, useState } from "react";
-import { Alignment, Fit, Layout, useRive, useStateMachineInput } from "@rive-app/react-canvas";
+import { useEffect, useRef, useState } from "react";
+import { useRive, useStateMachineInput } from "@rive-app/react-canvas";
 import { LumiAvatarFallback } from "./LumiAvatarFallback";
+
+export type MouthState = 0 | 1 | 2 | 3 | 4;
 
 interface LumiAvatarRiveProps {
   className?: string;
   isSpeaking?: boolean;
-  isListening?: boolean;
-  isFirm?: boolean;
+  mouthState?: MouthState;
   mouthOpen?: number;
   lightIntensity?: number;
   floatAmount?: number;
   blinkTick?: number;
-  warmGlowTick?: number;
-  syncBreathTick?: number;
 }
 
-const STATE_MACHINE = "LumiSM";
+const STATE_MACHINE = "LumiMachine";
 
 export function LumiAvatarRive({
   className,
   isSpeaking = false,
-  isListening = false,
-  isFirm = false,
+  mouthState = 0,
   mouthOpen = 0,
   lightIntensity = 0.3,
   floatAmount = 0.35,
   blinkTick = 0,
-  warmGlowTick = 0,
-  syncBreathTick = 0,
 }: LumiAvatarRiveProps) {
   const [loadError, setLoadError] = useState(false);
+  const lastBlink = useRef(0);
 
   const { rive, RiveComponent } = useRive({
-    src: "/rive/Lumi.riv",
+    src: "/rive/LumiMouth.riv",
     stateMachines: STATE_MACHINE,
     autoplay: true,
     onLoadError: () => {
       setLoadError(true);
     },
-    layout: new Layout({
-      fit: Fit.Contain,
-      alignment: Alignment.Center,
-    }),
   });
 
   useEffect(() => {
@@ -55,68 +48,19 @@ export function LumiAvatarRive({
   }, [rive]);
 
   const speakingInput = useStateMachineInput(rive, STATE_MACHINE, "isSpeaking");
-  const listeningInput = useStateMachineInput(rive, STATE_MACHINE, "isListening");
-  const firmInput = useStateMachineInput(rive, STATE_MACHINE, "isFirm");
-  const mouthOpenInput = useStateMachineInput(rive, STATE_MACHINE, "mouthOpen");
-  const lightIntensityInput = useStateMachineInput(rive, STATE_MACHINE, "lightIntensity");
-  const floatAmountInput = useStateMachineInput(rive, STATE_MACHINE, "floatAmount");
-  const blinkInput = useStateMachineInput(rive, STATE_MACHINE, "blink");
-  const warmGlowInput = useStateMachineInput(rive, STATE_MACHINE, "warmGlow");
-  const syncBreathInput = useStateMachineInput(rive, STATE_MACHINE, "syncBreath");
+  const mouthInput = useStateMachineInput(rive, STATE_MACHINE, "mouthState");
+  const blinkTrigger = useStateMachineInput(rive, STATE_MACHINE, "blink");
 
   useEffect(() => {
-    if (speakingInput) {
-      speakingInput.value = isSpeaking;
-    }
-  }, [isSpeaking, speakingInput]);
+    if (!rive) return;
+    if (speakingInput) speakingInput.value = isSpeaking;
+    if (mouthInput) mouthInput.value = mouthState;
 
-  useEffect(() => {
-    if (listeningInput) {
-      listeningInput.value = isListening;
+    if (blinkTrigger && blinkTick !== lastBlink.current) {
+      lastBlink.current = blinkTick;
+      blinkTrigger.fire();
     }
-  }, [isListening, listeningInput]);
-
-  useEffect(() => {
-    if (firmInput) {
-      firmInput.value = isFirm;
-    }
-  }, [isFirm, firmInput]);
-
-  useEffect(() => {
-    if (mouthOpenInput) {
-      mouthOpenInput.value = Math.max(0, Math.min(1, mouthOpen));
-    }
-  }, [mouthOpen, mouthOpenInput]);
-
-  useEffect(() => {
-    if (lightIntensityInput) {
-      lightIntensityInput.value = Math.max(0, Math.min(1, lightIntensity));
-    }
-  }, [lightIntensity, lightIntensityInput]);
-
-  useEffect(() => {
-    if (floatAmountInput) {
-      floatAmountInput.value = Math.max(0, Math.min(1, floatAmount));
-    }
-  }, [floatAmount, floatAmountInput]);
-
-  useEffect(() => {
-    if (blinkInput && blinkTick > 0) {
-      blinkInput.fire();
-    }
-  }, [blinkTick, blinkInput]);
-
-  useEffect(() => {
-    if (warmGlowInput && warmGlowTick > 0) {
-      warmGlowInput.fire();
-    }
-  }, [warmGlowTick, warmGlowInput]);
-
-  useEffect(() => {
-    if (syncBreathInput && syncBreathTick > 0) {
-      syncBreathInput.fire();
-    }
-  }, [syncBreathTick, syncBreathInput]);
+  }, [rive, isSpeaking, mouthState, blinkTick, speakingInput, mouthInput, blinkTrigger]);
 
   if (loadError) {
     return (

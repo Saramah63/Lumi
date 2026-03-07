@@ -1,5 +1,7 @@
-import { LumiAvatarRive } from "./LumiAvatarRive";
+import { useRef } from "react";
+import { LumiAvatarRive, type MouthState } from "./LumiAvatarRive";
 import { useLumiEngineState } from "../../engine/useLumiEngine";
+import { mouthStateFromRms, stabilizeMouthState } from "../../../../lib/lumi/mouthState";
 
 interface LumiAvatarProps {
   size?: "sm" | "md" | "lg" | "xl" | "xxl";
@@ -17,6 +19,7 @@ export function LumiAvatar({
   className = "",
 }: LumiAvatarProps) {
   const engine = useLumiEngineState();
+  const prevMouthStateRef = useRef<MouthState>(0);
 
   const sizeMap = {
     sm: "w-36 h-36",
@@ -27,8 +30,6 @@ export function LumiAvatar({
   };
 
   const isSpeaking = speaking ?? engine.isSpeaking;
-  const isListening = emotion === "thinking" || engine.isListening;
-  const isFirm = engine.isFirm;
 
   const emotionLight = {
     neutral: 0.28,
@@ -39,6 +40,9 @@ export function LumiAvatar({
 
   const floatAmount = breathing ? 0.8 : engine.floatAmount;
   const lightIntensity = isSpeaking ? engine.lightIntensity : emotionLight;
+  const nextMouthState = isSpeaking ? mouthStateFromRms(engine.mouthOpen) : 0;
+  const mouthState = stabilizeMouthState(prevMouthStateRef.current, nextMouthState);
+  prevMouthStateRef.current = mouthState;
 
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
@@ -55,14 +59,11 @@ export function LumiAvatar({
       <LumiAvatarRive
         className={`relative ${sizeMap[size]}`}
         isSpeaking={isSpeaking}
-        isListening={isListening}
-        isFirm={isFirm}
+        mouthState={mouthState}
         mouthOpen={engine.mouthOpen}
         lightIntensity={lightIntensity}
         floatAmount={floatAmount}
         blinkTick={engine.blinkTick}
-        warmGlowTick={engine.warmGlowTick}
-        syncBreathTick={engine.syncBreathTick}
       />
     </div>
   );
