@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import type { GlowState } from "../../../lib/lumi/types";
 
-export const runtime = "nodejs";
-
 type SpeakMode = "baseline" | "listening" | "firm" | "firm_calm" | "warm" | "regulation";
 
 type LumiChatRequest = {

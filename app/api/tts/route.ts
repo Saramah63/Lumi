@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 
-export const runtime = "nodejs";
-
 type Mode = "baseline" | "listening" | "firm" | "firm_calm" | "warm" | "regulation";
 type Lang = "fi-FI";
 
