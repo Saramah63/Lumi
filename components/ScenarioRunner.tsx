@@ -17,7 +17,7 @@ const emojis = [
   { id: "sad", label: "😢", text: "Surullinen" },
   { id: "angry", label: "😠", text: "Vihainen" },
   { id: "scared", label: "😨", text: "Pelokas" },
-  { id: "unsure", label: "🤷", text: "En tiedä" },
+  { id: "confused", label: "🤔", text: "Hämmentynyt" },
 ];
 
 const themeScenarioIds = {
@@ -59,8 +59,12 @@ type SoloQuickButtons = {
   phrases: Array<{ id: string; label: string }>;
 };
 type VoteAction = {
-  targetTheme: Theme;
-  targetMode: SpeakMode | null;
+  dominant: "happy" | "sad" | "angry" | "scared" | "confused";
+  responseText: string;
+  responseMode: SpeakMode;
+  calmSupport: boolean;
+  repeatStep: boolean;
+  jumpMode: SpeakMode | null;
   message: string;
 };
 
@@ -325,43 +329,75 @@ function findNextStepByMode(steps: ScenarioStep[], startIndex: number, mode: Spe
 
 function decideVoteAction(votes: Record<string, number>): VoteAction | null {
   const total = Object.values(votes).reduce((sum, n) => sum + n, 0);
-  if (total < 3) return null;
+  if (total < 2) return null;
 
-  const happy = (votes.happy ?? 0) / total;
-  const sad = (votes.sad ?? 0) / total;
-  const angry = (votes.angry ?? 0) / total;
-  const scared = (votes.scared ?? 0) / total;
-  const unsure = (votes.unsure ?? 0) / total;
-  const distress = sad + scared;
+  const counts = {
+    happy: votes.happy ?? 0,
+    sad: votes.sad ?? 0,
+    angry: votes.angry ?? 0,
+    scared: votes.scared ?? 0,
+    confused: votes.confused ?? 0,
+  };
 
-  if (angry >= 0.35) {
+  const dominant = (Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ??
+    "confused") as VoteAction["dominant"];
+
+  if (dominant === "happy") {
     return {
-      targetTheme: "turvataidot",
-      targetMode: "firm",
-      message: "Votes -> firm boundary support",
+      dominant,
+      responseText: "Kuulen iloa. Hienoa! Jatketaan rauhassa yhdessä.",
+      responseMode: "warm",
+      calmSupport: false,
+      repeatStep: false,
+      jumpMode: "warm",
+      message: "Ilo huomattu, jatketaan.",
     };
   }
 
-  if (distress >= 0.4) {
+  if (dominant === "sad") {
     return {
-      targetTheme: "turvataidot",
-      targetMode: "regulation",
-      message: "Votes -> calming regulation path",
+      dominant,
+      responseText: "Kuulen surua. Olen tässä. Hengitetään yhdessä.",
+      responseMode: "regulation",
+      calmSupport: true,
+      repeatStep: false,
+      jumpMode: "regulation",
+      message: "Surua huomattu, rauhoitutaan.",
     };
   }
 
-  if (happy >= 0.5 || (happy + unsure >= 0.6)) {
+  if (dominant === "angry") {
     return {
-      targetTheme: "toveritaidot",
-      targetMode: "warm",
-      message: "Votes -> warm cooperative path",
+      dominant,
+      responseText: "Huomaan kiukkua. Pysähdytään ja hengitetään.",
+      responseMode: "firm",
+      calmSupport: true,
+      repeatStep: false,
+      jumpMode: "regulation",
+      message: "Kiukku huomattu, rauhoitutaan.",
+    };
+  }
+
+  if (dominant === "scared") {
+    return {
+      dominant,
+      responseText: "Kuulen pelkoa. Olet turvassa. Hengitetään yhdessä.",
+      responseMode: "warm",
+      calmSupport: true,
+      repeatStep: false,
+      jumpMode: "regulation",
+      message: "Pelko huomattu, rauhoitutaan.",
     };
   }
 
   return {
-    targetTheme: "turvataidot",
-    targetMode: null,
-    message: "Votes tracked, continue current path",
+    dominant: "confused",
+    responseText: "Tämä on hämmentävää. Sanon sen vielä lyhyesti.",
+    responseMode: "listening",
+    calmSupport: false,
+    repeatStep: true,
+    jumpMode: null,
+    message: "Hämmennys huomattu, selkeytetään.",
   };
 }
 
@@ -424,7 +460,6 @@ export function ScenarioRunner() {
   const [showBreathCue, setShowBreathCue] = useState(false);
   const breathPracticeTimerRef = useRef<number | null>(null);
   const breathPracticeRafRef = useRef<number | null>(null);
-  const manualAdvanceRef = useRef(false);
   const [debugOverlay, setDebugOverlay] = useState(false);
   const [glowOff, setGlowOff] = useState(false);
   const [layoutDebug, setLayoutDebug] = useState(false);
@@ -435,7 +470,7 @@ export function ScenarioRunner() {
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [votes, setVotes] = useState<Record<string, number>>({});
   const [lastVoteAppliedStep, setLastVoteAppliedStep] = useState(-1);
-  const [voteEffect, setVoteEffect] = useState("No adaptive action yet.");
+  const [voteEffect, setVoteEffect] = useState("Odotetaan tunteita.");
   const [runError, setRunError] = useState<string | null>(null);
 
   const sessionMode: SessionMode = groupSize === 1 ? "solo_personalized" : "group_script";
@@ -646,6 +681,26 @@ export function ScenarioRunner() {
     setForceBlink(false);
   }, []);
 
+  const speakLine = useCallback(
+    async (text: string, mode: SpeakMode) => {
+      if (voiceEnabled) {
+        await lumiSpeak(text, mode, {
+          onSpeakingChange: setIsSpeaking,
+          onMouthStateChange: setMouthState,
+          onLightIntensityChange: setAudioIntensity,
+        });
+        return;
+      }
+      setIsSpeaking(false);
+      setMouthState(0);
+      setAudioIntensity(0);
+      const silentMs = Math.max(900, Math.min(2500, text.length * 40));
+      await new Promise((resolve) => window.setTimeout(resolve, silentMs));
+    },
+    [voiceEnabled]
+  );
+
+
   const startBreathingPractice = useCallback((durationMs = 7000) => {
     stopBreathingPractice();
     setAnimationSource("breath");
@@ -669,6 +724,33 @@ export function ScenarioRunner() {
     breathPracticeRafRef.current = requestAnimationFrame(animateGlow);
     breathPracticeTimerRef.current = window.setTimeout(stopBreathingPractice, durationMs);
   }, [stopBreathingPractice]);
+
+  const performVoteResponse = useCallback(
+    async (action: VoteAction, currentText: string | undefined) => {
+      setVoteEffect(action.message);
+      const glow =
+        action.dominant === "angry" ? "strong" : action.dominant === "confused" ? "alert" : "calm";
+      setGlowPinned(glow);
+      setGlowState(glow);
+
+      if (action.calmSupport) {
+        startBreathingPractice();
+        const logNow = ensureSessionLog();
+        logNow.microPractices.push({ type: "breathing", at: new Date().toISOString() });
+        setSessionLog({ ...logNow });
+      }
+
+      await speakLine(action.responseText, action.responseMode);
+
+      if (action.repeatStep && currentText) {
+        await speakLine(currentText, "baseline");
+      }
+
+      setGlowPinned(null);
+      setGlowState(awarenessGlowState);
+    },
+    [speakLine, startBreathingPractice, ensureSessionLog, awarenessGlowState]
+  );
 
   const playCurrentStep = useCallback(
     async (index: number) => {
@@ -730,19 +812,7 @@ export function ScenarioRunner() {
         setForceBlink(false);
       }
 
-      if (voiceEnabled) {
-        await lumiSpeak(current.text, current.mode as SpeakMode, {
-          onSpeakingChange: setIsSpeaking,
-          onMouthStateChange: setMouthState,
-          onLightIntensityChange: setAudioIntensity,
-        });
-      } else {
-        setIsSpeaking(false);
-        setMouthState(0);
-        setAudioIntensity(0);
-        const silentMs = Math.max(900, Math.min(2500, current.text.length * 40));
-        await new Promise((resolve) => window.setTimeout(resolve, silentMs));
-      }
+      await speakLine(current.text, current.mode as SpeakMode);
 
       if (breathPhaseTimer) window.clearInterval(breathPhaseTimer);
       if (breathRaf) cancelAnimationFrame(breathRaf);
@@ -765,12 +835,11 @@ export function ScenarioRunner() {
       if (votingMode && lastVoteAppliedStep !== index) {
         const action = decideVoteAction(votes);
         if (action) {
-          setTheme(action.targetTheme);
-          setVoteEffect(action.message);
           setLastVoteAppliedStep(index);
+          await performVoteResponse(action, current.text);
 
-          if (action.targetMode) {
-            const jumpTo = findNextStepByMode(activeScenario.steps, index + 1, action.targetMode);
+          if (action.jumpMode) {
+            const jumpTo = findNextStepByMode(activeScenario.steps, index + 1, action.jumpMode);
             if (jumpTo >= 0) {
               setVotes({});
               setSelectedEmoji(null);
@@ -791,8 +860,7 @@ export function ScenarioRunner() {
         return;
       }
 
-      if (sessionMode === "group_script" && manualAdvanceRef.current) {
-        manualAdvanceRef.current = false;
+      if (sessionMode === "group_script") {
         setIsRunning(false);
         setStepIndex((prev) => prev + 1);
         return;
@@ -800,7 +868,7 @@ export function ScenarioRunner() {
 
       setStepIndex((prev) => prev + 1);
     },
-    [activeScenario, voiceEnabled, votingMode, lastVoteAppliedStep, votes, sessionMode, ensureSessionLog, endSession]
+    [activeScenario, votingMode, lastVoteAppliedStep, votes, sessionMode, ensureSessionLog, endSession, performVoteResponse, speakLine]
   );
 
   useEffect(() => {
@@ -843,7 +911,7 @@ export function ScenarioRunner() {
       setConversationHistory([]);
       setCustomAssistantStatus("");
       setLastVoteAppliedStep(-1);
-      setVoteEffect("No adaptive action yet.");
+      setVoteEffect("Odotetaan tunteita.");
       setRunError(null);
       resetAvatarState();
     },
@@ -852,6 +920,7 @@ export function ScenarioRunner() {
 
   const handleStartSession = useCallback(async () => {
     await cancelLumiSpeak();
+    await unlockAudio();
     if (sessionMode === "solo_personalized") {
       setIsRunning(false);
       return;
@@ -892,7 +961,7 @@ export function ScenarioRunner() {
     setDone(false);
     setAwaitingChoice(false);
     setLastVoteAppliedStep(-1);
-    setVoteEffect("No adaptive action yet.");
+    setVoteEffect("Odotetaan tunteita.");
     setIsRunning(true);
     resetAvatarState();
   }, [
@@ -939,7 +1008,7 @@ export function ScenarioRunner() {
     setConversationHistory([]);
     setCustomAssistantStatus("");
     setLastVoteAppliedStep(-1);
-    setVoteEffect("No adaptive action yet.");
+    setVoteEffect("Odotetaan tunteita.");
     setIsRunning(true);
     setRunError(null);
     resetAvatarState();
@@ -954,26 +1023,19 @@ export function ScenarioRunner() {
     await unlockAudio();
 
     try {
-      if (voiceEnabled) {
-        await lumiSpeak(step.text, step.mode as SpeakMode, {
-          onSpeakingChange: setIsSpeaking,
-          onMouthStateChange: setMouthState,
-          onLightIntensityChange: setAudioIntensity,
-        });
-      } else {
+      await speakLine(step.text, step.mode as SpeakMode);
+      if (!voiceEnabled) {
         setGlowState(awarenessGlowState);
-        await new Promise((resolve) => window.setTimeout(resolve, 900));
       }
     } catch (error) {
       setRunError(error instanceof Error ? error.message : "Repeat failed");
     }
-  }, [step, voiceEnabled, awarenessGlowState]);
+  }, [step, voiceEnabled, awarenessGlowState, speakLine]);
 
   const handleNextStep = useCallback(async () => {
     if (sessionMode !== "group_script") return;
     if (awaitingChoice || done) return;
     await unlockAudio();
-    manualAdvanceRef.current = true;
     setIsRunning(true);
     const log = ensureSessionLog();
     log.teacherActions.push({ type: "next", at: new Date().toISOString() });
