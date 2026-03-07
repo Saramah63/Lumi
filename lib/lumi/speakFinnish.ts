@@ -98,6 +98,17 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
   const audio = new Audio(normalizedUrl);
   audio.preload = "auto";
   audio.crossOrigin = "anonymous";
+  const releaseObjectUrl = () => {
+    if (normalizedUrl.startsWith("blob:")) {
+      window.setTimeout(() => {
+        try {
+          URL.revokeObjectURL(normalizedUrl);
+        } catch {
+          // ignore revoke errors
+        }
+      }, 5000);
+    }
+  };
   let rafId: number | null = null;
   let stopped = false;
   let context: AudioContext | null = null;
@@ -117,10 +128,6 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     audio.onerror = null;
     audio.pause();
     audio.currentTime = 0;
-    audio.src = "";
-    if (normalizedUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(normalizedUrl);
-    }
 
     if (source) {
       try {
@@ -139,6 +146,7 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     }
 
     hooks.onFrame?.(0, 0.25);
+    releaseObjectUrl();
   };
 
   const stop = () => {

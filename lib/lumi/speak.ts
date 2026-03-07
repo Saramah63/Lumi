@@ -190,6 +190,17 @@ export async function lumiSpeak(
 
   const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);
+  const releaseObjectUrl = () => {
+    if (objectUrl.startsWith("blob:")) {
+      window.setTimeout(() => {
+        try {
+          URL.revokeObjectURL(objectUrl);
+        } catch {
+          // ignore revoke errors
+        }
+      }, 5000);
+    }
+  };
 
   const audio = new Audio(objectUrl);
   audio.crossOrigin = "anonymous";
@@ -212,7 +223,7 @@ export async function lumiSpeak(
       callbacks.onSpeakingChange?.(false);
       callbacks.onMouthStateChange?.(0);
       callbacks.onLightIntensityChange?.(0);
-      URL.revokeObjectURL(objectUrl);
+      releaseObjectUrl();
     };
 
     const tickFallback = () => {
@@ -297,7 +308,7 @@ export async function lumiSpeak(
     callbacks.onSpeakingChange?.(false);
     callbacks.onMouthStateChange?.(0);
     callbacks.onLightIntensityChange?.(0);
-    URL.revokeObjectURL(objectUrl);
+    releaseObjectUrl();
     if (source) {
       try {
         source.disconnect();
