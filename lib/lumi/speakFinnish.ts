@@ -1,3 +1,5 @@
+import { unlockAudio } from "./audioUnlock";
+
 export type LumiMode = "baseline" | "listening" | "firm" | "firm_calm" | "warm";
 export type LumiLang = "fi-FI";
 
@@ -320,6 +322,7 @@ export async function lumiSpeak(
   hooks: LumiSpeakHooks = {}
 ): Promise<void> {
   cancelLumiSpeak();
+  await unlockAudio();
 
   try {
     const tts = await fetchTTSData(text, mode);

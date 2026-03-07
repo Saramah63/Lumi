@@ -5,6 +5,7 @@ import { LumiAvatar } from "./LumiAvatar";
 import { cancelLumiSpeak, lumiSpeak, type SpeakMode } from "../lib/lumi/speak";
 import { lumiSpeak as lumiSpeakFinnish } from "../lib/lumi/speakFinnish";
 import { mouthStateFromRms } from "../lib/lumi/lipSync";
+import { unlockAudio } from "../lib/lumi/audioUnlock";
 import { buildTeacherSummaryFi, formatTeacherSummaryText, type SessionLog, type TeacherSummaryFi } from "../lib/lumi/teacherSummary";
 import { scenarios, type ScenarioStep } from "../data/scenarios";
 import type { GlowState, MouthState } from "../lib/lumi/types";
@@ -933,6 +934,7 @@ export function ScenarioRunner() {
     const log = ensureSessionLog();
     log.teacherActions.push({ type: "repeat", at: new Date().toISOString() });
     setSessionLog({ ...log });
+    await unlockAudio();
 
     try {
       if (voiceEnabled) {
@@ -953,6 +955,7 @@ export function ScenarioRunner() {
   const handleNextStep = useCallback(async () => {
     if (sessionMode !== "group_script") return;
     if (awaitingChoice || done) return;
+    await unlockAudio();
     manualAdvanceRef.current = true;
     setIsRunning(true);
     const log = ensureSessionLog();
@@ -963,6 +966,7 @@ export function ScenarioRunner() {
   const handleFirmBoundary = useCallback(async () => {
     if (sessionMode !== "group_script") return;
     setRunError(null);
+    await unlockAudio();
     const log = ensureSessionLog();
     log.teacherActions.push({ type: "firm_boundary", at: new Date().toISOString() });
     setSessionLog({ ...log });
@@ -986,6 +990,7 @@ export function ScenarioRunner() {
 
   const handleCalmSupport = useCallback(async () => {
     setRunError(null);
+    await unlockAudio();
 
     try {
       if (voiceEnabled) {
@@ -1016,7 +1021,8 @@ export function ScenarioRunner() {
     await handleCalmSupport();
   }, [ensureSessionLog, handleCalmSupport]);
 
-  const handleOptionClick = (next: number) => {
+  const handleOptionClick = async (next: number) => {
+    await unlockAudio();
     setAwaitingChoice(false);
     setIsRunning(true);
     setStepIndex(next);
@@ -1173,6 +1179,7 @@ export function ScenarioRunner() {
 
   const handleSoloSend = useCallback(async (messageOverride?: string, meta?: { topic?: string; emotion?: DetectedEmotion; teacherNote?: string }) => {
     if (sessionMode !== "solo_personalized") return;
+    await unlockAudio();
     const raw = (messageOverride ?? soloChildMessage).trim();
     if (!raw) return;
 

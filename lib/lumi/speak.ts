@@ -6,6 +6,7 @@ import {
   stabilizeMouthState,
   type MouthState,
 } from "./lipSync";
+import { unlockAudio } from "./audioUnlock";
 
 export type SpeakMode = "baseline" | "listening" | "firm" | "firm_calm" | "warm" | "regulation";
 
@@ -119,6 +120,7 @@ export async function lumiSpeak(
   callbacks: SpeakCallbacks = {}
 ): Promise<void> {
   await cancelLumiSpeak();
+  await unlockAudio();
 
   if (Date.now() < ttsBypassUntil) {
     return playWithBrowserSpeech(
