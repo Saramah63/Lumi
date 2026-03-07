@@ -155,6 +155,7 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
   const audio = new Audio(normalizedUrl);
   audio.preload = "auto";
   audio.crossOrigin = "anonymous";
+  audio.muted = true; // prevent parallel element output; Web Audio handles sound
 
   let analyser: AnalyserNode | null = null;
   let source: MediaElementAudioSourceNode | null = null;

@@ -29,6 +29,7 @@ export async function lumiSpeak(params: {
 
   const audio = new Audio(url);
   audio.crossOrigin = "anonymous";
+  audio.muted = true; // avoid double playback path; Web Audio handles output
 
   const ctx = await getAudioContext();
 
