@@ -25,64 +25,8 @@ let activePlayback: ActivePlayback | null = null;
 let ttsBypassUntil = 0;
 let ttsBypassReason = "";
 
-type AudioGraph = {
-  context: AudioContext;
-  audio: HTMLAudioElement;
-  analyser: AnalyserNode;
-  data: Uint8Array<ArrayBuffer>;
-};
-
-let sharedAudio: HTMLAudioElement | null = null;
-let sharedSource: MediaElementAudioSourceNode | null = null;
-let sharedAnalyser: AnalyserNode | null = null;
-let sharedData: Uint8Array<ArrayBuffer> | null = null;
-
-async function ensureAudioGraph(): Promise<AudioGraph | null> {
-  const context = await getAudioContext();
-  if (!context) return null;
-
-  if (!sharedAudio) {
-    sharedAudio = new Audio();
-    sharedAudio.crossOrigin = "anonymous";
-    sharedAudio.preload = "auto";
-  }
-
-  if (!sharedSource || sharedSource.context !== context) {
-    try {
-      sharedSource?.disconnect();
-    } catch {
-      // ignore
-    }
-    sharedSource = context.createMediaElementSource(sharedAudio);
-  }
-
-  const needsAnalyserReset = !sharedAnalyser || sharedAnalyser.context !== context;
-  if (needsAnalyserReset) {
-    sharedAnalyser = context.createAnalyser();
-    sharedAnalyser.fftSize = 1024;
-    sharedAnalyser.smoothingTimeConstant = 0.82;
-  }
-
-  try {
-    sharedSource.disconnect();
-  } catch {
-    // ignore
-  }
-
-  try {
-    sharedAnalyser.disconnect();
-  } catch {
-    // ignore
-  }
-
-  sharedSource.connect(sharedAnalyser);
-  sharedAnalyser.connect(context.destination);
-
-  if (!sharedData || sharedData.length !== sharedAnalyser.fftSize) {
-    sharedData = new Uint8Array(sharedAnalyser.fftSize) as Uint8Array<ArrayBuffer>;
-  }
-
-  return { context, audio: sharedAudio, analyser: sharedAnalyser, data: sharedData };
+async function getSharedContext(): Promise<AudioContext | null> {
+  return getAudioContext();
 }
 
 export async function cancelLumiSpeak(): Promise<void> {
@@ -251,10 +195,11 @@ export async function lumiSpeak(
   const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);
 
-  const graph = await ensureAudioGraph();
-  if (!graph) {
+  const context = await getSharedContext();
+  if (!context) {
     const fallbackAudio = new Audio(objectUrl);
     fallbackAudio.crossOrigin = "anonymous";
+    fallbackAudio.preload = "auto";
     callbacks.onSpeakingChange?.(true);
     try {
       await fallbackAudio.play();
@@ -282,13 +227,34 @@ export async function lumiSpeak(
     return;
   }
 
-  const { context, audio, analyser, data } = graph;
-  audio.pause();
-  audio.onended = null;
-  audio.onerror = null;
-  audio.currentTime = 0;
-  audio.src = objectUrl;
-  audio.load();
+  const audio = new Audio(objectUrl);
+  audio.crossOrigin = "anonymous";
+  audio.preload = "auto";
+
+  let analyser: AnalyserNode | null = null;
+  let source: MediaElementAudioSourceNode | null = null;
+  let data: Uint8Array<ArrayBuffer> | null = null;
+
+  try {
+    source = context.createMediaElementSource(audio);
+    analyser = context.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.82;
+    source.connect(analyser);
+    analyser.connect(context.destination);
+    data = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>;
+  } catch (error) {
+    markAudioError(error);
+    callbacks.onSpeakingChange?.(false);
+    callbacks.onMouthStateChange?.(0);
+    callbacks.onLightIntensityChange?.(0);
+    return playWithBrowserSpeech(
+      text,
+      mode,
+      callbacks,
+      `Audio graph setup failed: ${error instanceof Error ? error.message : "unknown"}`
+    );
+  }
 
   let raf = 0;
   let stopped = false;
@@ -308,12 +274,18 @@ export async function lumiSpeak(
     audio.removeAttribute("src");
     audio.srcObject = null;
     audio.load();
+    try {
+      source?.disconnect();
+      analyser?.disconnect();
+    } catch {
+      // ignore
+    }
   };
 
   activePlayback = { stop };
 
   const tick = () => {
-    if (stopped) return;
+    if (stopped || !analyser || !data) return;
     analyser.getByteTimeDomainData(data);
     const rms = computeRmsFromTimeDomain(data);
 

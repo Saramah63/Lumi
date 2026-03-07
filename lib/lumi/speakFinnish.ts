@@ -28,64 +28,8 @@ type ActivePlayback = {
 
 let activePlayback: ActivePlayback | null = null;
 
-type AudioGraph = {
-  context: AudioContext;
-  audio: HTMLAudioElement;
-  analyser: AnalyserNode;
-  data: Uint8Array<ArrayBuffer>;
-};
-
-let sharedAudio: HTMLAudioElement | null = null;
-let sharedSource: MediaElementAudioSourceNode | null = null;
-let sharedAnalyser: AnalyserNode | null = null;
-let sharedData: Uint8Array<ArrayBuffer> | null = null;
-
-async function ensureAudioGraph(): Promise<AudioGraph | null> {
-  const context = await getAudioContext();
-  if (!context) return null;
-
-  if (!sharedAudio) {
-    sharedAudio = new Audio();
-    sharedAudio.preload = "auto";
-    sharedAudio.crossOrigin = "anonymous";
-  }
-
-  if (!sharedSource || sharedSource.context !== context) {
-    try {
-      sharedSource?.disconnect();
-    } catch {
-      // ignore
-    }
-    sharedSource = context.createMediaElementSource(sharedAudio);
-  }
-
-  const needsAnalyserReset = !sharedAnalyser || sharedAnalyser.context !== context;
-  if (needsAnalyserReset) {
-    sharedAnalyser = context.createAnalyser();
-    sharedAnalyser.fftSize = 1024;
-    sharedAnalyser.smoothingTimeConstant = 0.78;
-  }
-
-  try {
-    sharedSource.disconnect();
-  } catch {
-    // ignore
-  }
-
-  try {
-    sharedAnalyser.disconnect();
-  } catch {
-    // ignore
-  }
-
-  sharedSource.connect(sharedAnalyser);
-  sharedAnalyser.connect(context.destination);
-
-  if (!sharedData || sharedData.length !== sharedAnalyser.fftSize) {
-    sharedData = new Uint8Array(sharedAnalyser.fftSize) as Uint8Array<ArrayBuffer>;
-  }
-
-  return { context, audio: sharedAudio, analyser: sharedAnalyser, data: sharedData };
+async function getSharedContext(): Promise<AudioContext | null> {
+  return getAudioContext();
 }
 
 export function cancelLumiSpeak(): void {
@@ -156,8 +100,8 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
       ? tts.audioUrl
       : `/${tts.audioUrl ?? ""}`;
 
-  const graph = await ensureAudioGraph();
-  if (!graph) {
+  const context = await getSharedContext();
+  if (!context) {
     const temp = new Audio(normalizedUrl);
     temp.preload = "auto";
     temp.crossOrigin = "anonymous";
@@ -208,13 +152,26 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     return;
   }
 
-  const { context, audio, analyser, data } = graph;
-  audio.pause();
-  audio.onended = null;
-  audio.onerror = null;
-  audio.currentTime = 0;
-  audio.src = normalizedUrl;
-  audio.load();
+  const audio = new Audio(normalizedUrl);
+  audio.preload = "auto";
+  audio.crossOrigin = "anonymous";
+
+  let analyser: AnalyserNode | null = null;
+  let source: MediaElementAudioSourceNode | null = null;
+  let data: Uint8Array<ArrayBuffer> | null = null;
+
+  try {
+    source = context.createMediaElementSource(audio);
+    analyser = context.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.78;
+    source.connect(analyser);
+    analyser.connect(context.destination);
+    data = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>;
+  } catch (error) {
+    markAudioError(error);
+    throw error;
+  }
 
   let rafId: number | null = null;
   let stopped = false;
@@ -232,6 +189,12 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
     audio.removeAttribute("src");
     audio.srcObject = null;
     audio.load();
+    try {
+      source?.disconnect();
+      analyser?.disconnect();
+    } catch {
+      // ignore
+    }
     hooks.onFrame?.(0, 0.25);
     hooks.onEnd?.();
   };
@@ -239,7 +202,7 @@ async function playWithAudioElement(tts: TTSPayload, mode: LumiMode, hooks: Lumi
   activePlayback = { stop };
 
   const frame = () => {
-    if (stopped) return;
+    if (stopped || !analyser || !data) return;
     analyser.getByteTimeDomainData(data);
     let sumSquares = 0;
 
