@@ -466,7 +466,7 @@ export function ScenarioRunner() {
   const [svgMismatchWarning, setSvgMismatchWarning] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  const [votingMode, setVotingMode] = useState(false);
+  const [votingMode, setVotingMode] = useState(true);
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [votes, setVotes] = useState<Record<string, number>>({});
   const [lastVoteAppliedStep, setLastVoteAppliedStep] = useState(-1);
@@ -475,6 +475,7 @@ export function ScenarioRunner() {
 
   const sessionMode: SessionMode = groupSize === 1 ? "solo_personalized" : "group_script";
   const childLanguage = "fi";
+  const showDevTools = process.env.NODE_ENV !== "production";
 
   const scenario = useMemo(
     () => scenarios.find((s) => s.id === scenarioId) ?? scenarios[0],
@@ -1108,12 +1109,15 @@ export function ScenarioRunner() {
   };
 
   const handleVote = (emojiId: string) => {
+    if (!votingMode) return;
     setSelectedEmoji(emojiId);
     setVotes((prev) => ({ ...prev, [emojiId]: (prev[emojiId] ?? 0) + 1 }));
     const log = ensureSessionLog();
     const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0) + 1;
     log.votingEvents.push({ at: new Date().toISOString(), emoji: emojiId, countDelta: 1, totalVotes });
     setSessionLog({ ...log });
+    const label = emojis.find((e) => e.id === emojiId)?.text ?? "Tunne";
+    setVoteEffect(`Ääni vastaanotettu: ${label}.`);
   };
 
   const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0);
@@ -1459,7 +1463,6 @@ export function ScenarioRunner() {
         </div>
         <div className="mt-4 min-w-0 overflow-hidden text-center">
           <p className="break-words text-xs leading-tight text-slate-400 [overflow-wrap:anywhere]">{activeScenario?.title ?? "-"} • {stepIndex + 1}/{activeScenario?.steps.length ?? 0}</p>
-          <p className="mt-1 text-sm leading-tight text-slate-300">Audio intensity: {audioIntensity.toFixed(2)}</p>
           {showBreathCue ? (
             <p className="mt-2 text-sm font-medium text-cyan-200">Hengitetään yhdessä</p>
           ) : null}
@@ -1468,8 +1471,9 @@ export function ScenarioRunner() {
               {svgMismatchWarning}
             </p>
           ) : null}
-          {process.env.NODE_ENV !== "production" ? (
+          {showDevTools ? (
             <div className="mt-3 flex min-w-0 flex-wrap justify-center gap-2">
+              <p className="w-full text-center text-xs text-slate-400">Audio intensity: {audioIntensity.toFixed(2)}</p>
               <button
                 type="button"
                 onClick={() => setBlinkNowTick((v) => v + 1)}
@@ -1570,6 +1574,44 @@ export function ScenarioRunner() {
 
         {teacherAccess && (
           <div className="grid min-w-0 gap-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:grid-cols-2 md:p-4">
+            <div className="min-w-0 space-y-3 md:col-span-2">
+              <p className="text-sm font-medium text-slate-200">Istunto</p>
+              <div className="grid min-w-0 grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleStartSession()}
+                  disabled={isRunning || sessionMode !== "group_script"}
+                  className="h-11 max-w-full rounded-xl bg-cyan-600 px-2 text-xs font-semibold leading-tight text-white disabled:opacity-60 md:text-sm"
+                >
+                  Aloita
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleStop()}
+                  disabled={sessionMode !== "group_script"}
+                  className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
+                >
+                  Lopeta
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleRestart()}
+                  disabled={sessionMode !== "group_script"}
+                  className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
+                >
+                  Alusta
+                </button>
+              </div>
+              <p className="text-xs text-slate-400">
+                {sessionMode !== "group_script"
+                  ? "Yksilötila on käytössä."
+                  : done
+                    ? "Istunto valmis. Voit aloittaa uuden."
+                    : isRunning
+                      ? "Istunto käynnissä."
+                      : "Valmiina aloittamaan."}
+              </p>
+            </div>
             <div className="min-w-0 space-y-3">
               <p className="text-sm font-medium text-slate-200">Teema</p>
               <div className="grid min-w-0 grid-cols-2 gap-2">
@@ -1655,7 +1697,7 @@ export function ScenarioRunner() {
         {teacherAccess && groupSize === 1 && (
           <div className="min-w-0 space-y-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-medium text-slate-200">Yksilötila (Solo Personalized)</p>
+              <p className="text-sm font-medium text-slate-200">Yksilötila (1:1)</p>
               <span className="rounded-full border border-cyan-200/30 bg-cyan-500/10 px-2 py-0.5 text-[11px] text-cyan-200">1:1</span>
             </div>
             <p className="text-xs text-slate-400">Skenaario: {scenario?.title ?? "Yksilötila"}</p>
@@ -1683,7 +1725,7 @@ export function ScenarioRunner() {
               {showManualInput ? (
                 <div className="grid min-w-0 gap-2 md:grid-cols-3">
                   <div className="md:col-span-2">
-                    <label className="text-xs text-slate-300">Child says</label>
+                    <label className="text-xs text-slate-300">Lapsi sanoo</label>
                     <input
                       value={soloChildMessage}
                       onChange={(e) => setSoloChildMessage(e.target.value)}
@@ -1929,9 +1971,12 @@ export function ScenarioRunner() {
 
             <div className="space-y-3">
               <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-                <p className="min-w-0 break-words text-sm font-medium text-slate-200 [overflow-wrap:anywhere]">Voting mode</p>
+                <div className="min-w-0">
+                  <p className="min-w-0 break-words text-sm font-medium text-slate-200 [overflow-wrap:anywhere]">Tunneäänestys</p>
+                  <p className="text-xs text-slate-400">Lapset: valitkaa tunne</p>
+                </div>
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <span className="text-xs text-slate-400">Votes: {totalVotes}</span>
+                  <span className="text-xs text-slate-400">Ääniä: {totalVotes}</span>
                   <button
                     type="button"
                     onClick={() => setVotingMode((v) => !v)}
@@ -1939,7 +1984,7 @@ export function ScenarioRunner() {
                       votingMode ? "bg-cyan-600 text-white" : "bg-slate-800 text-slate-100"
                     }`}
                   >
-                    {votingMode ? "ON" : "OFF"}
+                    {votingMode ? "Päällä" : "Pois"}
                   </button>
                   <button
                     type="button"
@@ -1949,7 +1994,7 @@ export function ScenarioRunner() {
                     }}
                     className="h-10 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-xl bg-slate-800 px-3 text-xs font-semibold leading-tight text-slate-100 md:text-sm"
                   >
-                    Reset
+                    Tyhjennä
                   </button>
                 </div>
               </div>
@@ -1962,12 +2007,16 @@ export function ScenarioRunner() {
                       selectedEmoji === emoji.id
                         ? "border-cyan-300 bg-cyan-500/20"
                         : "border-cyan-100/30 bg-slate-900/50"
-                    } ${votingMode ? "h-20 text-4xl" : "h-14 text-2xl"}`}
+                    } ${votingMode ? "h-20 text-4xl" : "h-14 text-2xl"} ${votingMode ? "" : "opacity-50"}`}
                     aria-label={emoji.id}
                     type="button"
                     onClick={() => handleVote(emoji.id)}
+                    disabled={!votingMode}
                   >
-                    <span>{emoji.label}</span>
+                    <span className="flex flex-col items-center justify-center gap-1 text-base">
+                      <span className={votingMode ? "text-4xl" : "text-2xl"}>{emoji.label}</span>
+                      <span className="text-[10px] text-slate-200">{emoji.text}</span>
+                    </span>
                     {votingMode && (
                       <span className="ml-2 inline-block rounded-md bg-slate-900/60 px-2 py-0.5 text-xs align-middle">
                         {votes[emoji.id] ?? 0}
@@ -1978,7 +2027,7 @@ export function ScenarioRunner() {
               </div>
               {selectedEmoji && (
                 <p className="break-words text-xs text-slate-400 [overflow-wrap:anywhere]">
-                  Last vote: {emojis.find((e) => e.id === selectedEmoji)?.text}
+                  Viimeisin tunne: {emojis.find((e) => e.id === selectedEmoji)?.text}
                 </p>
               )}
               <p className="break-words text-xs text-cyan-200/90 [overflow-wrap:anywhere]">{voteEffect}</p>
@@ -2009,7 +2058,23 @@ export function ScenarioRunner() {
 
         {sessionMode === "group_script" && done && (
           <div className="rounded-2xl border border-emerald-300/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 break-words [overflow-wrap:anywhere]">
-            Istunto valmis. Voit käynnistää uuden istunnon.
+            <p>Istunto valmis. Voit aloittaa uuden istunnon.</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => void handleStartSession()}
+                className="rounded-xl bg-emerald-600 px-3 py-1 text-xs font-semibold text-white"
+              >
+                Aloita uusi
+              </button>
+              <button
+                type="button"
+                onClick={() => setSummaryOpen(true)}
+                className="rounded-xl bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-100"
+              >
+                Näytä yhteenveto
+              </button>
+            </div>
           </div>
         )}
         </div>
