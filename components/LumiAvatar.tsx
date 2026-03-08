@@ -59,6 +59,16 @@ export function LumiAvatar({
   const blinkTimer = useRef<number | null>(null);
   const closeTimer = useRef<number | null>(null);
   const lastBlinkTick = useRef(0);
+  const blinkFailsafe = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!blinkOn) return;
+    if (blinkFailsafe.current) window.clearTimeout(blinkFailsafe.current);
+    blinkFailsafe.current = window.setTimeout(() => setBlinkOn(false), 260);
+    return () => {
+      if (blinkFailsafe.current) window.clearTimeout(blinkFailsafe.current);
+    };
+  }, [blinkOn]);
 
   useEffect(() => {
     let cancelled = false;
