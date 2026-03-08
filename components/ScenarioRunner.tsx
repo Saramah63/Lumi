@@ -1748,14 +1748,6 @@ export function ScenarioRunner() {
                 >
                   Toista skenaario
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void handlePrevStep()}
-                  disabled={sessionMode !== "group_script" || stepIndex === 0}
-                  className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
-                >
-                  Edellinen
-                </button>
               </div>
               <div className="grid min-w-0 grid-cols-2 gap-2">
                 <button
@@ -1764,14 +1756,6 @@ export function ScenarioRunner() {
                   className={`h-11 max-w-full rounded-xl px-2 text-xs font-semibold leading-tight whitespace-normal break-words [overflow-wrap:anywhere] md:text-sm ${teacherPauseBetweenSteps ? "bg-cyan-700 text-white" : "bg-slate-800 text-slate-100"}`}
                 >
                   {teacherPauseBetweenSteps ? "Tauko vaiheiden välissä" : "Etene automaattisesti"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleNextStep()}
-                  disabled={sessionMode !== "group_script" || awaitingChoice || done}
-                  className="h-11 max-w-full rounded-xl bg-cyan-700 px-2 text-xs font-semibold leading-tight text-white disabled:opacity-50 md:text-sm"
-                >
-                  Seuraava
                 </button>
               </div>
               {awaitingDiscussionNote && (
@@ -2137,6 +2121,13 @@ export function ScenarioRunner() {
             </div>
 
             <div className="grid min-w-0 grid-cols-2 gap-2 md:grid-cols-4">
+              <button
+                onClick={() => void handlePrevStep()}
+                disabled={stepIndex === 0 || awaitingChoice || isRunning === false || sessionMode !== "group_script"}
+                className="h-auto min-h-12 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl bg-slate-800 px-3 py-3 text-sm font-semibold leading-tight text-white md:min-h-14 md:text-base"
+              >
+                Edellinen
+              </button>
               <button
                 onClick={() => void handleNextStep()}
                 disabled={isRunning || done}
