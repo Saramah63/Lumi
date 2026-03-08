@@ -403,9 +403,6 @@ function decideVoteAction(votes: Record<string, number>): VoteAction | null {
 
 export function ScenarioRunner() {
   const [mounted, setMounted] = useState(false);
-  const [teacherAccess, setTeacherAccess] = useState(true);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-
   const [theme, setTheme] = useState<Theme>("turvataidot");
   const [scenarioMode, setScenarioMode] = useState<ScenarioMode>("random");
   const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -1592,7 +1589,7 @@ export function ScenarioRunner() {
   }
 
   return (
-    <div className={`mx-auto grid h-full min-h-0 w-full max-w-6xl gap-6 text-slate-100 lg:grid-cols-[1.35fr_1fr] ${layoutDebug ? "[&_*]:outline [&_*]:outline-1 [&_*]:outline-rose-500/30" : ""}`}>
+    <div className="mx-auto grid h-full min-h-0 w-full max-w-6xl gap-6 text-slate-100 lg:grid-cols-[1.4fr_1fr]">
       <section className="flex min-h-0 flex-col items-center justify-center overflow-hidden rounded-3xl border border-cyan-200/20 bg-white/[0.04] p-4 backdrop-blur-sm md:min-h-[66vh] md:p-8">
         <div className="aspect-square w-full max-w-[460px] md:max-w-[520px]">
           <LumiAvatar
@@ -1610,47 +1607,9 @@ export function ScenarioRunner() {
           />
         </div>
         <div className="mt-4 min-w-0 overflow-hidden text-center">
-          <p className="break-words text-xs leading-tight text-slate-400 [overflow-wrap:anywhere]">{activeScenario?.title ?? "-"} • {stepIndex + 1}/{activeScenario?.steps.length ?? 0}</p>
+          <p className="break-words text-sm font-semibold text-slate-50 [overflow-wrap:anywhere]">{activeScenario?.title ?? "-"} • {stepIndex + 1}/{activeScenario?.steps.length ?? 0}</p>
           {showBreathCue ? (
-            <p className="mt-2 text-sm font-medium text-cyan-200">Hengitetään yhdessä</p>
-          ) : null}
-          {svgMismatchWarning ? (
-            <p className="mt-2 rounded-lg border border-amber-300/50 bg-amber-500/10 px-2 py-1 text-xs text-amber-200 break-words [overflow-wrap:anywhere]">
-              {svgMismatchWarning}
-            </p>
-          ) : null}
-          {showDevTools ? (
-            <div className="mt-3 flex min-w-0 flex-wrap justify-center gap-2">
-              <p className="w-full text-center text-xs text-slate-400">Audio intensity: {audioIntensity.toFixed(2)}</p>
-              <button
-                type="button"
-                onClick={() => setBlinkNowTick((v) => v + 1)}
-                className="max-w-full rounded-lg bg-slate-700 px-3 py-1 text-xs leading-tight whitespace-normal break-words [overflow-wrap:anywhere]"
-              >
-                Blink now
-              </button>
-              <button
-                type="button"
-                onClick={() => setDebugOverlay((v) => !v)}
-                className="max-w-full rounded-lg bg-slate-700 px-3 py-1 text-xs leading-tight whitespace-normal break-words [overflow-wrap:anywhere]"
-              >
-                {debugOverlay ? "Hide frame" : "Show frame"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setGlowOff((v) => !v)}
-                className="max-w-full rounded-lg bg-slate-700 px-3 py-1 text-xs leading-tight whitespace-normal break-words [overflow-wrap:anywhere]"
-              >
-                {glowOff ? "Glow on" : "Glow off"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setLayoutDebug((v) => !v)}
-                className="max-w-full rounded-lg bg-slate-700 px-3 py-1 text-xs leading-tight whitespace-normal break-words [overflow-wrap:anywhere]"
-              >
-                {layoutDebug ? "Layout normal" : "Layout debug"}
-              </button>
-            </div>
+            <p className="mt-1 text-xs font-medium text-cyan-100">Hengitetään yhdessä</p>
           ) : null}
         </div>
       </section>
@@ -1664,7 +1623,7 @@ export function ScenarioRunner() {
         </div>
 
         <div className="min-h-0 min-w-0 space-y-4 overflow-y-auto pr-1">
-        {teacherAccess && (
+        {
           <div className="grid min-w-0 gap-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:grid-cols-2 md:p-4">
             <div className="min-w-0 space-y-3 md:col-span-2">
               <p className="text-sm font-medium text-slate-200">Istunto</p>
@@ -1710,29 +1669,13 @@ export function ScenarioRunner() {
                   Edellinen
                 </button>
               </div>
-              <div className="grid min-w-0 grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTeacherMode((v) => !v)}
-                  className={`h-11 max-w-full rounded-xl px-2 text-xs font-semibold leading-tight whitespace-normal break-words [overflow-wrap:anywhere] md:text-sm ${teacherMode ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-100"}`}
-                >
-                  {teacherMode ? "Opettajan tila päällä" : "Opettajan tila pois"}
-                </button>
+              <div className="grid min-w-0 grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setTeacherPauseBetweenSteps((v) => !v)}
-                  disabled={!teacherMode}
-                  className={`h-11 max-w-full rounded-xl px-2 text-xs font-semibold leading-tight whitespace-normal break-words [overflow-wrap:anywhere] md:text-sm ${teacherPauseBetweenSteps ? "bg-cyan-700 text-white" : "bg-slate-800 text-slate-100"} ${!teacherMode ? "opacity-50" : ""}`}
+                  className={`h-11 max-w-full rounded-xl px-2 text-xs font-semibold leading-tight whitespace-normal break-words [overflow-wrap:anywhere] md:text-sm ${teacherPauseBetweenSteps ? "bg-cyan-700 text-white" : "bg-slate-800 text-slate-100"}`}
                 >
-                  {teacherPauseBetweenSteps ? "Tauko vaiheiden välissä" : "Auto etenee"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleTeacherContinue()}
-                  disabled={!awaitingTeacherContinue}
-                  className="h-11 max-w-full rounded-xl bg-amber-600 px-2 text-xs font-semibold leading-tight text-white disabled:opacity-50 md:text-sm"
-                >
-                  Jatka seuraavaan
+                  {teacherPauseBetweenSteps ? "Tauko vaiheiden välissä" : "Etene automaattisesti"}
                 </button>
                 <button
                   type="button"
@@ -1838,7 +1781,7 @@ export function ScenarioRunner() {
           </div>
         )}
 
-        {teacherAccess && groupSize === 1 && (
+        {groupSize === 1 && (
           <div className="min-w-0 space-y-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-medium text-slate-200">Yksilötila (1:1)</p>
