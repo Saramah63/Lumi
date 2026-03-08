@@ -1661,65 +1661,9 @@ export function ScenarioRunner() {
             <p className="break-words text-sm font-semibold text-slate-100 [overflow-wrap:anywhere]">Opettajan ohjaus</p>
             <p className="break-words text-xs text-slate-400 [overflow-wrap:anywhere]">Aika: {elapsedLabel}</p>
           </div>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setSettingsOpen((v) => !v)}
-              className="h-10 max-w-full rounded-xl bg-slate-800 px-3 text-xs font-semibold leading-tight text-slate-100 whitespace-normal break-words [overflow-wrap:anywhere] md:text-sm"
-            >
-              Asetukset
-            </button>
-            <button
-              type="button"
-              onClick={() => setTeacherAccess((v) => !v)}
-              className={`h-10 max-w-full rounded-xl px-3 text-xs font-semibold leading-tight whitespace-normal break-words [overflow-wrap:anywhere] md:text-sm ${teacherAccess ? "bg-cyan-600 text-white" : "bg-slate-800 text-slate-100"}`}
-            >
-              {teacherAccess ? "Auki" : "Kiinni"}
-            </button>
-          </div>
         </div>
 
         <div className="min-h-0 min-w-0 space-y-4 overflow-y-auto pr-1">
-
-        {teacherAccess && settingsOpen && (
-          <div className="grid min-w-0 gap-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:grid-cols-3 md:p-4">
-            <div className="min-w-0 space-y-2">
-              <p className="text-sm font-medium text-slate-200">Istunnon pituus</p>
-              <div className="grid min-w-0 grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSessionLength("6-8")}
-                  className={`h-10 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-xl border px-2 text-xs leading-tight md:text-sm ${sessionLength === "6-8" ? "border-cyan-300 bg-cyan-500/15" : "border-cyan-100/30 bg-slate-900/50"}`}
-                >
-                  6-8 min
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSessionLength("10-12")}
-                  className={`h-10 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-xl border px-2 text-xs leading-tight md:text-sm ${sessionLength === "10-12" ? "border-cyan-300 bg-cyan-500/15" : "border-cyan-100/30 bg-slate-900/50"}`}
-                >
-                  10-12 min
-                </button>
-              </div>
-            </div>
-            <div className="min-w-0 space-y-2">
-              <p className="text-sm font-medium text-slate-200">Kieli</p>
-              <div className="h-10 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-xl border border-cyan-300 bg-cyan-500/15 px-3 text-xs leading-10 md:text-sm">Suomi (fi-FI)</div>
-            </div>
-            <div className="min-w-0 space-y-2">
-              <p className="text-sm font-medium text-slate-200">Ryhmän koko</p>
-              <input
-                type="number"
-                min={1}
-                max={30}
-                value={groupSize}
-                onChange={(e) => setGroupSize(Math.max(1, Math.min(30, Number(e.target.value) || 1)))}
-                className="h-10 min-w-0 w-full rounded-xl border border-cyan-100/30 bg-slate-900/60 px-3 text-sm text-slate-100"
-              />
-            </div>
-          </div>
-        )}
-
         {teacherAccess && (
           <div className="grid min-w-0 gap-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:grid-cols-2 md:p-4">
             <div className="min-w-0 space-y-3 md:col-span-2">
@@ -2172,8 +2116,8 @@ export function ScenarioRunner() {
             <div className="space-y-3">
               <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="min-w-0 break-words text-sm font-medium text-slate-200 [overflow-wrap:anywhere]">Tunneäänestys</p>
-                  <p className="text-xs text-slate-400">Lapset: valitkaa tunne</p>
+                  <p className="min-w-0 break-words text-sm font-semibold text-slate-100 [overflow-wrap:anywhere]">Valitse tunne</p>
+                  <p className="text-xs text-slate-300">Lapset valitsevat miltä tuntuu</p>
                 </div>
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <span className="text-xs text-slate-400">Ääniä: {totalVotes}</span>
