@@ -471,6 +471,10 @@ export function ScenarioRunner() {
   const [layoutDebug, setLayoutDebug] = useState(false);
   const [svgMismatchWarning, setSvgMismatchWarning] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [teacherMode, setTeacherMode] = useState(false);
+  const [teacherPauseBetweenSteps, setTeacherPauseBetweenSteps] = useState(true);
+  const [awaitingTeacherContinue, setAwaitingTeacherContinue] = useState(false);
+  const teacherPendingStepRef = useRef<number | null>(null);
 
   const [votingMode, setVotingMode] = useState(true);
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
@@ -554,6 +558,12 @@ export function ScenarioRunner() {
       window.removeEventListener("keydown", onUserGesture);
     };
   }, []);
+
+  useEffect(() => {
+    if (teacherMode) return;
+    setAwaitingTeacherContinue(false);
+    teacherPendingStepRef.current = null;
+  }, [teacherMode]);
 
   useEffect(() => {
     if (sessionMode !== "solo_personalized") return;
@@ -786,6 +796,11 @@ export function ScenarioRunner() {
           return;
         }
 
+        const emotionalGlow = modeToGlowState(current.mode ?? "baseline");
+        if (!glowPinned) {
+          setGlowState(emotionalGlow);
+        }
+
       setRunError(null);
       setDone(false);
       setAwaitingChoice(false);
@@ -837,6 +852,10 @@ export function ScenarioRunner() {
       }
 
       await speakLine(current.text, current.mode as SpeakMode);
+      if (breathingMode) {
+        setGlowState("calm");
+        await speakLine("Olen tässä. Hyvä rauha.", "warm");
+      }
 
       if (breathPhaseTimer) window.clearInterval(breathPhaseTimer);
       if (breathRaf) cancelAnimationFrame(breathRaf);
@@ -884,6 +903,18 @@ export function ScenarioRunner() {
         return;
       }
 
+      if (
+        teacherMode &&
+        teacherPauseBetweenSteps &&
+        sessionMode === "group_script" &&
+        !awaitingChoice
+      ) {
+        teacherPendingStepRef.current = index + 1;
+        setAwaitingTeacherContinue(true);
+        setIsRunning(false);
+        return;
+      }
+
       if (sessionMode === "group_script") {
         setIsRunning(false);
         setStepIndex((prev) => prev + 1);
@@ -895,7 +926,7 @@ export function ScenarioRunner() {
         isPlayingStepRef.current = false;
       }
     },
-    [activeScenario, votingMode, lastVoteAppliedStep, votes, sessionMode, ensureSessionLog, endSession, performVoteResponse, speakLine]
+    [activeScenario, votingMode, lastVoteAppliedStep, votes, sessionMode, ensureSessionLog, endSession, performVoteResponse, speakLine, teacherMode, teacherPauseBetweenSteps, awaitingChoice, glowPinned]
   );
 
   useEffect(() => {
@@ -940,6 +971,8 @@ export function ScenarioRunner() {
       setLastVoteAppliedStep(-1);
       setVoteEffect("Odotetaan tunteita.");
       setRunError(null);
+      setAwaitingTeacherContinue(false);
+      teacherPendingStepRef.current = null;
       resetAvatarState();
     },
     [resetAvatarState]
@@ -956,6 +989,8 @@ export function ScenarioRunner() {
     const log = ensureSessionLog();
     log.teacherActions.push({ type: "start", at: new Date().toISOString() });
     setSessionLog({ ...log });
+    setAwaitingTeacherContinue(false);
+    teacherPendingStepRef.current = null;
 
     let chosenScenario = scenario;
 
@@ -1015,6 +1050,8 @@ export function ScenarioRunner() {
     setSessionLog({ ...log });
     setRunError(null);
     resetAvatarState();
+    setAwaitingTeacherContinue(false);
+    teacherPendingStepRef.current = null;
     endSession();
   }, [sessionMode, resetAvatarState, ensureSessionLog, endSession]);
 
@@ -1036,6 +1073,8 @@ export function ScenarioRunner() {
     setCustomAssistantStatus("");
     setLastVoteAppliedStep(-1);
     setVoteEffect("Odotetaan tunteita.");
+    setAwaitingTeacherContinue(false);
+    teacherPendingStepRef.current = null;
     setIsRunning(true);
     setRunError(null);
     resetAvatarState();
@@ -1058,6 +1097,17 @@ export function ScenarioRunner() {
       setRunError(error instanceof Error ? error.message : "Repeat failed");
     }
   }, [step, voiceEnabled, awarenessGlowState, speakLine]);
+
+  const handleTeacherContinue = useCallback(() => {
+    if (!awaitingTeacherContinue) return;
+    const next = teacherPendingStepRef.current;
+    if (next == null) return;
+    setRunError(null);
+    setAwaitingTeacherContinue(false);
+    teacherPendingStepRef.current = null;
+    setStepIndex(next);
+    setIsRunning(true);
+  }, [awaitingTeacherContinue]);
 
   const handleNextStep = useCallback(async () => {
     if (sessionMode !== "group_script") return;
@@ -1626,6 +1676,31 @@ export function ScenarioRunner() {
                   className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
                 >
                   Alusta
+                </button>
+              </div>
+              <div className="grid min-w-0 grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTeacherMode((v) => !v)}
+                  className={`h-11 max-w-full rounded-xl px-2 text-xs font-semibold leading-tight whitespace-normal break-words [overflow-wrap:anywhere] md:text-sm ${teacherMode ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-100"}`}
+                >
+                  {teacherMode ? "Opettajan tila päällä" : "Opettajan tila pois"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTeacherPauseBetweenSteps((v) => !v)}
+                  disabled={!teacherMode}
+                  className={`h-11 max-w-full rounded-xl px-2 text-xs font-semibold leading-tight whitespace-normal break-words [overflow-wrap:anywhere] md:text-sm ${teacherPauseBetweenSteps ? "bg-cyan-700 text-white" : "bg-slate-800 text-slate-100"} ${!teacherMode ? "opacity-50" : ""}`}
+                >
+                  {teacherPauseBetweenSteps ? "Tauko vaiheiden välissä" : "Auto etenee"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleTeacherContinue()}
+                  disabled={!awaitingTeacherContinue}
+                  className="h-11 max-w-full rounded-xl bg-amber-600 px-2 text-xs font-semibold leading-tight text-white disabled:opacity-50 md:text-sm"
+                >
+                  Jatka seuraavaan
                 </button>
               </div>
               <p className="text-xs text-slate-400">
