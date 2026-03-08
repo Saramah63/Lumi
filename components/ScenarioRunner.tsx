@@ -17,7 +17,7 @@ const emojis = [
   { id: "sad", label: "😢", text: "Surullinen" },
   { id: "angry", label: "😠", text: "Vihainen" },
   { id: "scared", label: "😨", text: "Pelokas" },
-  { id: "confused", label: "🤔", text: "Hämmentynyt" },
+  { id: "confused", label: "😳", text: "Nolo / Hämmentynyt" },
 ];
 
 const themeScenarioIds = {
@@ -339,8 +339,11 @@ function decideVoteAction(votes: Record<string, number>): VoteAction | null {
     confused: votes.confused ?? 0,
   };
 
-  const dominant = (Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ??
-    "confused") as VoteAction["dominant"];
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const top = sorted[0];
+  const second = sorted[1];
+  const tie = top && second && top[1] === second[1];
+  const dominant = tie ? "confused" : ((top?.[0] as VoteAction["dominant"]) ?? "confused");
 
   if (dominant === "happy") {
     return {
@@ -387,6 +390,18 @@ function decideVoteAction(votes: Record<string, number>): VoteAction | null {
       repeatStep: false,
       jumpMode: "regulation",
       message: "Pelko huomattu, rauhoitutaan.",
+    };
+  }
+
+  if (dominant === "confused") {
+    return {
+      dominant: "confused",
+      responseText: "Jos on noloa tai outoa, yritetään rauhassa uudestaan.",
+      responseMode: "warm",
+      calmSupport: true,
+      repeatStep: true,
+      jumpMode: null,
+      message: "Hämmennys huomattu, hidastetaan.",
     };
   }
 
@@ -1249,19 +1264,24 @@ export function ScenarioRunner() {
     setSessionLog({ ...log });
     const label = emojis.find((e) => e.id === emojiId)?.text ?? "Tunne";
     const supportive: Record<string, string> = {
-      happy: "He näyttävät iloisilta. Se tuntuu hyvältä!",
-      sad: "He näyttävät surullisilta. Ehkä he tarvitsevat apua.",
-      angry: "Tuo on vihaa. Hidastetaan yhdessä ja hengitetään.",
-      scared: "On ok olla peloissaan. Voimme kertoa aikuiselle.",
+      happy: "Iloista energiaa, hienoa!",
+      sad: "Näen surua, olen tässä.",
+      angry: "Huomaan kiukkua, hengitetään hitaasti.",
+      scared: "On ok pelätä, olet turvassa.",
+      confused: "Jos on noloa, kokeillaan yhdessä.",
     };
-    const line = supportive[emojiId] ?? `Ääni vastaanotettu: ${label}.`;
+    const line = supportive[emojiId] ?? `Ääni: ${label}`;
     if (!glowPinned) {
-      const glowMap: Record<string, GlowState> = { angry: "strong", scared: "alert", sad: "calm", happy: "calm" };
+      const glowMap: Record<string, GlowState> = { angry: "strong", scared: "alert", sad: "calm", happy: "calm", confused: "alert" };
       setGlowState(glowMap[emojiId] ?? "alert");
     }
     setVoteEffect(line);
     if (voiceEnabled) {
-      await speakLine(line, emojiId === "angry" ? "firm_calm" : emojiId === "scared" ? "regulation" : "warm");
+      const mode = emojiId === "angry" ? "firm_calm" : emojiId === "scared" ? "regulation" : "warm";
+      await speakLine(line, mode);
+      if (emojiId === "angry" || emojiId === "scared") {
+        await speakLine("Hengitä sisään… ja ulos.", "regulation");
+      }
     }
   };
 
