@@ -441,7 +441,7 @@ function decideVoteAction(votes: Record<string, number>): VoteAction | null {
 export function ScenarioRunner() {
   const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState<Theme>("turvataidot");
-  const [scenarioMode, setScenarioMode] = useState<ScenarioMode>("random");
+  const [scenarioMode, setScenarioMode] = useState<ScenarioMode>("manual");
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [sessionLength, setSessionLength] = useState<SessionLength>("6-8");
   const [groupSize, setGroupSize] = useState(15);
@@ -1801,13 +1801,10 @@ export function ScenarioRunner() {
               <div className="grid min-w-0 grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setScenarioMode("random");
-                    if (!isRunning) selectRandomScenario();
-                  }}
-                  className={`h-auto min-h-11 max-w-full whitespace-normal break-words rounded-xl border px-2 py-2 text-[11px] leading-tight [overflow-wrap:anywhere] md:text-sm ${scenarioMode === "random" ? "border-cyan-300 bg-cyan-500/15" : "border-cyan-100/30 bg-slate-900/50"}`}
+                  disabled
+                  className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-xl border px-2 py-2 text-[11px] leading-tight [overflow-wrap:anywhere] md:text-sm border-slate-500/40 bg-slate-900/40 text-slate-500"
                 >
-                  Satunnainen
+                  Satunnainen (pois käytöstä)
                 </button>
                 <button
                   type="button"
