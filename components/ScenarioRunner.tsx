@@ -713,6 +713,14 @@ export function ScenarioRunner() {
     [voiceEnabled]
   );
 
+  useEffect(() => {
+    if (voiceEnabled) return;
+    void cancelLumiSpeak();
+    setIsSpeaking(false);
+    setMouthState(0);
+    setAudioIntensity(0);
+  }, [voiceEnabled]);
+
 
   const startBreathingPractice = useCallback((durationMs = 7000) => {
     stopBreathingPractice();

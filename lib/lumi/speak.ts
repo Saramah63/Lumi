@@ -230,10 +230,10 @@ export async function lumiSpeak(
   const audio = new Audio(objectUrl);
   audio.crossOrigin = "anonymous";
   audio.preload = "auto";
-  audio.muted = true; // avoid double output; Web Audio path handles playback
 
   let analyser: AnalyserNode | null = null;
   let source: MediaElementAudioSourceNode | null = null;
+  let silentGain: GainNode | null = null;
   let data: Uint8Array<ArrayBuffer> | null = null;
 
   try {
@@ -241,8 +241,11 @@ export async function lumiSpeak(
     analyser = context.createAnalyser();
     analyser.fftSize = 1024;
     analyser.smoothingTimeConstant = 0.82;
+    silentGain = context.createGain();
+    silentGain.gain.value = 0;
     source.connect(analyser);
-    analyser.connect(context.destination);
+    analyser.connect(silentGain);
+    silentGain.connect(context.destination);
     data = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>;
   } catch (error) {
     markAudioError(error);
@@ -278,6 +281,7 @@ export async function lumiSpeak(
     try {
       source?.disconnect();
       analyser?.disconnect();
+      silentGain?.disconnect();
     } catch {
       // ignore
     }
