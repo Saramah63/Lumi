@@ -714,6 +714,20 @@ export function ScenarioRunner() {
   const avatarMouthState: MouthState =
     animationSource === "breath" ? (breathInhale ? 1 : 4) : mouthState;
 
+  const selectRandomScenario = useCallback(() => {
+    const pool = availableScenarios.length > 0 ? availableScenarios : scenarios;
+    if (!pool.length) return;
+    const pick = randomItem(pool);
+    if (!pick) return;
+    setCustomScenario(null);
+    setConversationHistory([]);
+    setCustomAssistantStatus("");
+    setScenarioId(pick.id);
+    setStepIndex(0);
+    setDone(false);
+    setAwaitingChoice(false);
+  }, [availableScenarios, scenarios]);
+
   useEffect(() => {
     if (!isRunning) return;
     const id = window.setInterval(() => setElapsedSec((s) => s + 1), 1000);
@@ -1774,7 +1788,10 @@ export function ScenarioRunner() {
               <div className="grid min-w-0 grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setScenarioMode("random")}
+                  onClick={() => {
+                    setScenarioMode("random");
+                    if (!isRunning) selectRandomScenario();
+                  }}
                   className={`h-auto min-h-11 max-w-full whitespace-normal break-words rounded-xl border px-2 py-2 text-[11px] leading-tight [overflow-wrap:anywhere] md:text-sm ${scenarioMode === "random" ? "border-cyan-300 bg-cyan-500/15" : "border-cyan-100/30 bg-slate-900/50"}`}
                 >
                   Satunnainen
