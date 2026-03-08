@@ -492,6 +492,8 @@ export function ScenarioRunner() {
   const [votingMode, setVotingMode] = useState(true);
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [votes, setVotes] = useState<Record<string, number>>({});
+  const [emotionHistory, setEmotionHistory] = useState<string[]>([]);
+  const [emotionTrend, setEmotionTrend] = useState<"happy" | "sad" | "angry" | "scared" | "confused" | null>(null);
   const [lastVoteAppliedStep, setLastVoteAppliedStep] = useState(-1);
   const [voteEffect, setVoteEffect] = useState("Odotetaan tunteita.");
   const [runError, setRunError] = useState<string | null>(null);
@@ -829,6 +831,7 @@ export function ScenarioRunner() {
         mode: current.mode,
         text: current.text,
         startedAt: new Date().toISOString(),
+        emotionTrend: emotionTrend ?? undefined,
       });
       setSessionLog({ ...log });
       const breathingMode = isBreathingStep(current);
@@ -1030,6 +1033,8 @@ export function ScenarioRunner() {
     log.teacherActions.push({ type: "start", at: new Date().toISOString() });
     setSessionLog({ ...log });
     setAwaitingTeacherContinue(false);
+    setEmotionHistory([]);
+    setEmotionTrend(null);
     teacherPendingStepRef.current = null;
 
     let chosenScenario = scenario;
@@ -1258,6 +1263,16 @@ export function ScenarioRunner() {
     if (!votingMode) return;
     setSelectedEmoji(emojiId);
     setVotes((prev) => ({ ...prev, [emojiId]: (prev[emojiId] ?? 0) + 1 }));
+    setEmotionHistory((prev) => {
+      const next = [...prev.slice(-9), emojiId];
+      const freq = next.reduce<Record<string, number>>((acc, id) => ({ ...acc, [id]: (acc[id] ?? 0) + 1 }), {});
+      const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+      const top = sorted[0];
+      const second = sorted[1];
+      const tie = top && second && top[1] === second[1];
+      setEmotionTrend(tie ? "confused" : ((top?.[0] as any) ?? null));
+      return next;
+    });
     const log = ensureSessionLog();
     const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0) + 1;
     log.votingEvents.push({ at: new Date().toISOString(), emoji: emojiId, countDelta: 1, totalVotes });
