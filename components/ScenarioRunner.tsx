@@ -520,9 +520,7 @@ export function ScenarioRunner() {
       return;
     }
     setMouthState(breathInhale ? 1 : 4);
-    setForceBlink(true);
-    const timer = window.setTimeout(() => setForceBlink(false), 140);
-    return () => window.clearTimeout(timer);
+    setForceBlink(false);
   }, [animationSource, breathInhale]);
 
   const [votingMode, setVotingMode] = useState(true);
@@ -805,7 +803,6 @@ export function ScenarioRunner() {
     setAnimationSource("breath");
     setShowBreathCue(true);
     setBreathInhale(true);
-    setForceBlink(true);
     const phaseDuration = 2000;
     const phaseStarted = performance.now();
     const animateGlow = (now: number) => {
@@ -813,7 +810,6 @@ export function ScenarioRunner() {
       const progress = elapsed < phaseDuration ? elapsed / phaseDuration : (elapsed - phaseDuration) / phaseDuration;
       const inhale = elapsed < phaseDuration;
       setBreathInhale(inhale);
-      setForceBlink(inhale);
       const pulse = inhale ? progress : 1 - progress;
       setBreathGlow(0.04 + pulse * 0.08);
       if (now - phaseStarted < durationMs) {
@@ -884,21 +880,19 @@ export function ScenarioRunner() {
       const breathingMode = isBreathingStep(current);
       let breathPhaseTimer: number | null = null;
       let breathRaf: number | null = null;
-      const runGuidedBreathing = async () => {
-        const cycles = 2;
-        for (let i = 0; i < cycles; i += 1) {
-          setBreathInhale(true);
-          setForceBlink(true);
-          setBreathGlow(0.12);
-          await speakLine("Hengitä sisään", "warm");
-          await new Promise((resolve) => window.setTimeout(resolve, 500));
-          setBreathInhale(false);
-          setForceBlink(false);
-          setBreathGlow(0.06);
-          await speakLine("Puhalla ulos", "regulation");
-          await new Promise((resolve) => window.setTimeout(resolve, 600));
-        }
-        setBreathGlow(0.05);
+        const runGuidedBreathing = async () => {
+          const cycles = 2;
+          for (let i = 0; i < cycles; i += 1) {
+            setBreathInhale(true);
+            setBreathGlow(0.12);
+            await speakLine("Hengitä sisään", "warm");
+            await new Promise((resolve) => window.setTimeout(resolve, 500));
+            setBreathInhale(false);
+            setBreathGlow(0.06);
+            await speakLine("Puhalla ulos", "regulation");
+            await new Promise((resolve) => window.setTimeout(resolve, 600));
+          }
+          setBreathGlow(0.05);
         setBreathInhale(false);
         setCalmUsed(true);
       };
@@ -906,7 +900,6 @@ export function ScenarioRunner() {
         setAnimationSource("breath");
         setShowBreathCue(true);
         setBreathInhale(true);
-        setForceBlink(true);
         const logNow = ensureSessionLog();
         logNow.microPractices.push({ type: "breathing", at: new Date().toISOString() });
         setSessionLog({ ...logNow });
@@ -918,7 +911,6 @@ export function ScenarioRunner() {
           const progress = elapsed < phaseDuration ? elapsed / phaseDuration : (elapsed - phaseDuration) / phaseDuration;
           const inhale = elapsed < phaseDuration;
           setBreathInhale(inhale);
-          setForceBlink(inhale);
           const pulse = inhale ? progress : (1 - progress);
           setBreathGlow(0.04 + pulse * 0.08);
           breathRaf = requestAnimationFrame(animateGlow);
@@ -927,7 +919,6 @@ export function ScenarioRunner() {
         breathPhaseTimer = window.setInterval(() => {
           setBreathInhale((prev) => {
             const next = !prev;
-            setForceBlink(next);
             return next;
           });
         }, phaseDuration);
@@ -935,7 +926,6 @@ export function ScenarioRunner() {
         setAnimationSource("audio");
         setShowBreathCue(false);
         setBreathGlow(0);
-        setForceBlink(false);
       }
 
       const spokenText = current.text ? current.text.replace(/\)\}/g, "").trim() : current.text;
@@ -954,7 +944,6 @@ export function ScenarioRunner() {
         setAnimationSource("audio");
         setShowBreathCue(false);
         setBreathGlow(0);
-        setForceBlink(false);
       }
 
       const pauseMs = current.pauseMs ?? 500;
