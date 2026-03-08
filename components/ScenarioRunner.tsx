@@ -508,6 +508,12 @@ export function ScenarioRunner() {
   const teacherPendingStepRef = useRef<number | null>(null);
   const [awaitingDiscussionNote, setAwaitingDiscussionNote] = useState(false);
 
+  useEffect(() => {
+    if (!isSpeaking) {
+      setMouthState(0);
+    }
+  }, [isSpeaking]);
+
   const [votingMode, setVotingMode] = useState(true);
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [votes, setVotes] = useState<Record<string, number>>({});
