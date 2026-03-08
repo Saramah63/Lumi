@@ -6,6 +6,7 @@ import { cancelLumiSpeak, lumiSpeak, type SpeakMode } from "../lib/lumi/speak";
 import { lumiSpeak as lumiSpeakFinnish } from "../lib/lumi/speakFinnish";
 import { mouthStateFromRms } from "../lib/lumi/lipSync";
 import { unlockAudio } from "../lib/lumi/audioUnlock";
+import { getAudioContext } from "../lib/lumi/audioContext";
 import { buildTeacherSummaryFi, formatTeacherSummaryText, type SessionLog, type TeacherSummaryFi } from "../lib/lumi/teacherSummary";
 import { scenarios, type ScenarioStep } from "../data/scenarios";
 import type { GlowState, MouthState } from "../lib/lumi/types";
@@ -1321,9 +1322,35 @@ export function ScenarioRunner() {
     setStepIndex(next);
   };
 
+  const playSfx = useCallback(
+    async (kind: string) => {
+      const ctx = await getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const base =
+        kind === "happy" ? 720 :
+        kind === "sad" ? 420 :
+        kind === "angry" ? 260 :
+        kind === "scared" ? 340 :
+        kind === "confused" ? 500 : 600;
+      osc.frequency.setValueAtTime(base, now);
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.05, now + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.002, now + 0.18);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    },
+    []
+  );
+
   const handleVote = async (emojiId: string) => {
     if (!votingMode) return;
     setSelectedEmoji(emojiId);
+    void playSfx(emojiId);
     setVotes((prev) => ({ ...prev, [emojiId]: (prev[emojiId] ?? 0) + 1 }));
     setEmotionHistory((prev) => {
       const next = [...prev.slice(-9), emojiId];
