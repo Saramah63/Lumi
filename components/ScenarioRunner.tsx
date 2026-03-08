@@ -514,6 +514,17 @@ export function ScenarioRunner() {
     }
   }, [isSpeaking]);
 
+  useEffect(() => {
+    if (animationSource !== "breath") {
+      setForceBlink(false);
+      return;
+    }
+    setMouthState(breathInhale ? 1 : 4);
+    setForceBlink(true);
+    const timer = window.setTimeout(() => setForceBlink(false), 140);
+    return () => window.clearTimeout(timer);
+  }, [animationSource, breathInhale]);
+
   const [votingMode, setVotingMode] = useState(true);
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [votes, setVotes] = useState<Record<string, number>>({});
