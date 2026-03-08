@@ -1199,7 +1199,7 @@ export function ScenarioRunner() {
 
   const handleNextStep = useCallback(async () => {
     if (sessionMode !== "group_script") return;
-    if (awaitingChoice || done) return;
+    if (done) return;
 
     if (awaitingTeacherContinue && teacherPendingStepRef.current != null) {
       setAwaitingTeacherContinue(false);
@@ -1207,6 +1207,11 @@ export function ScenarioRunner() {
       const next = teacherPendingStepRef.current;
       teacherPendingStepRef.current = null;
       setStepIndex(next);
+    } else if (awaitingChoice) {
+      setAwaitingChoice(false);
+      setVotes({});
+      setSelectedEmoji(null);
+      setStepIndex((prev) => Math.min(prev + 1, activeScenario?.steps.length ?? prev + 1));
     } else if (activeScenario) {
       setStepIndex((prev) => Math.min(prev + 1, activeScenario.steps.length - 1));
     }
@@ -2117,7 +2122,7 @@ export function ScenarioRunner() {
               </button>
               <button
                 onClick={() => void handleNextStep()}
-                disabled={isRunning || done}
+                disabled={done}
                 className="h-auto min-h-12 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl px-3 py-3 text-sm font-semibold leading-tight text-white disabled:opacity-60 md:min-h-14 md:text-base bg-indigo-600"
               >
                 Seuraava
