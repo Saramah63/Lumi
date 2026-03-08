@@ -707,6 +707,7 @@ export function ScenarioRunner() {
 
   const activeScenario = customScenario ?? scenario;
   const step = activeScenario?.steps[stepIndex];
+  const stepTextClean = step?.text ? step.text.replace(/\)\}/g, "").trim() : step?.text;
   const awarenessGlowState = useMemo(
     () => decideAwarenessGlowState(step?.mode, votes, votingMode, theme),
     [step?.mode, votes, votingMode, theme]
@@ -937,7 +938,8 @@ export function ScenarioRunner() {
         setForceBlink(false);
       }
 
-      await speakLine(current.text, current.mode as SpeakMode);
+      const spokenText = current.text ? current.text.replace(/\)\}/g, "").trim() : current.text;
+      await speakLine(spokenText ?? current.text ?? "", current.mode as SpeakMode);
       if (breathingMode) {
         await runGuidedBreathing();
       }
@@ -2106,7 +2108,7 @@ export function ScenarioRunner() {
             <div className="min-w-0 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/60 p-4">
               <p className="text-xs uppercase tracking-wide text-slate-400">Vaihe {Math.min(stepIndex + 1, activeScenario?.steps.length ?? 0)} / {activeScenario?.steps.length ?? 0}</p>
               <div className="mt-2 min-w-0 max-h-36 overflow-y-auto pr-1">
-                <p className="break-words text-base leading-relaxed [overflow-wrap:anywhere] md:text-lg">{step?.text ?? "-"}</p>
+                <p className="break-words text-base leading-relaxed [overflow-wrap:anywhere] md:text-lg">{stepTextClean ?? "-"}</p>
                 {step?.teacherHint ? (
                   <p className="mt-2 break-words text-xs text-cyan-200/80 [overflow-wrap:anywhere]">{step.teacherHint}</p>
                 ) : null}
