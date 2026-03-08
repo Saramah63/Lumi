@@ -3,14 +3,16 @@
   "title": "Vuorottelu",
   "durationTarget": "3-4min",
   "steps": [
-    { "mode": "baseline", "text": "Hei, minä olen Lumi.", "pauseMs": 350 },
-    { "mode": "baseline", "text": "Harjoitellaan vuoroja yhdessä.", "pauseMs": 400 },
-    { "mode": "listening", "text": "Haluat lelun heti. Kaveri leikkii sillä nyt.", "pauseMs": 450 },
-    { "mode": "listening", "text": "Miltä odottaminen tuntuu?", "pauseMs": 500, "teacherHint": "Tunnekuvat" },
-    { "mode": "regulation", "text": "Hengitä sisään… ulos… lasku kolmeen.", "pauseMs": 800 },
-    { "mode": "warm", "text": "Kysy: \"Saanko vuoron?\" ja odota. Voit laskea kolmeen mielessä.", "pauseMs": 550 },
-    { "mode": "firm_calm", "text": "Jos vastaus on \"ei vielä\": sano \"Okei\" ja valitse toinen lelu.", "pauseMs": 550 },
-    { "mode": "listening", "text": "Tarvitsetko apua odottamiseen? Pyydä aikuista.", "pauseMs": 500 },
-    { "mode": "baseline", "text": "Vuorot tekevät leikistä reilun ja mukavan.", "pauseMs": 450 }
+    { "mode": "baseline", "text": "Hei, minä olen Lumi.", "pauseMs": 450 },
+    { "mode": "baseline", "text": "Harjoitellaan vuoroja yhdessä.", "pauseMs": 500 },
+    { "mode": "listening", "text": "Haluat lelun heti. Kaveri leikkii sillä nyt. (pieni hmm…)", "pauseMs": 550 },
+    { "mode": "listening", "text": "Miltä odottaminen tuntuu?", "pauseMs": 950, "teacherHint": "Tunnekuvat" },
+    { "mode": "regulation", "text": "Hengitä sisään…", "pauseMs": 650 },
+    { "mode": "regulation", "text": "(hiljainen sisäänhengitys)", "pauseMs": 400 },
+    { "mode": "regulation", "text": "…ulos… laske kolmeen.", "pauseMs": 750 },
+    { "mode": "warm", "text": "Kysy: \"Saanko vuoron?\" ja odota. Voit laskea kolmeen mielessä.", "pauseMs": 700 },
+    { "mode": "firm_calm", "text": "Jos vastaus on \"ei vielä\": sano \"Okei\" ja valitse toinen lelu. (pieni happy bell kun vaihdetaan)", "pauseMs": 700 },
+    { "mode": "listening", "text": "Tarvitsetko apua odottamiseen? Pyydä aikuista.", "pauseMs": 750 },
+    { "mode": "baseline", "text": "Vuorot tekevät leikistä reilun ja mukavan. (calm chime)", "pauseMs": 700 }
   ]
 }

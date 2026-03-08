@@ -3,14 +3,16 @@
   "title": "Tornin kaataminen",
   "durationTarget": "3-4min",
   "steps": [
-    { "mode": "baseline", "text": "Hei, olen Lumi!", "pauseMs": 350 },
-    { "mode": "baseline", "text": "Rakennetaan yhdessä. Täällä on turvallista.", "pauseMs": 400 },
-    { "mode": "listening", "text": "Kuuluu kolahdus (palikat kaatuvat). Torni menee nurin.", "pauseMs": 500 },
-    { "mode": "listening", "text": "Miltä se tuntuu, kun torni kaatuu?", "pauseMs": 550, "teacherHint": "Tunnekuvat" },
-    { "mode": "regulation", "text": "Hengitä sisään… ja ulos… Laske kolmeen.", "pauseMs": 850 },
-    { "mode": "firm_calm", "text": "Sano: \"Lopeta, kiitos. Haluan rakentaa rauhassa.\"", "pauseMs": 550 },
-    { "mode": "listening", "text": "Tarvitsetko apua? Pyydetään aikuinen mukaan.", "pauseMs": 500 },
-    { "mode": "warm", "text": "Korjataan. Sanotaan \"Anteeksi\" ja nostetaan palikat yhdessä.", "pauseMs": 600 },
-    { "mode": "baseline", "text": "Hyvä. Nyt torni nousee taas. Leikitään ystävällisesti.", "pauseMs": 450 }
+    { "mode": "baseline", "text": "Hei, olen Lumi!", "pauseMs": 450 },
+    { "mode": "baseline", "text": "Rakennetaan yhdessä. Täällä on turvallista.", "pauseMs": 500 },
+    { "mode": "listening", "text": "Kuuluu kolahdus (palikat kaatuvat) juuri kun torni kaatuu.", "pauseMs": 550 },
+    { "mode": "listening", "text": "Miltä se tuntuu, kun torni kaatuu?", "pauseMs": 950, "teacherHint": "Tunnekuvat" },
+    { "mode": "regulation", "text": "Hengitä sisään…", "pauseMs": 650 },
+    { "mode": "regulation", "text": "(hiljainen sisäänhengitys)", "pauseMs": 400 },
+    { "mode": "regulation", "text": "…ja ulos. Laske yksi, kaksi, kolme.", "pauseMs": 750 },
+    { "mode": "firm_calm", "text": "Sano: \"Lopeta, kiitos. Haluan rakentaa rauhassa.\"", "pauseMs": 650 },
+    { "mode": "listening", "text": "Tarvitsetko apua? Pyydetään aikuinen mukaan.", "pauseMs": 750 },
+    { "mode": "warm", "text": "Korjataan. Sanotaan \"Anteeksi\" ja nostetaan palikat yhdessä. (pieni block fall -ääni kun nostetaan)", "pauseMs": 650 },
+    { "mode": "baseline", "text": "Hyvä. Nyt torni nousee taas. Leikitään ystävällisesti. (calm chime)", "pauseMs": 700 }
   ]
 }

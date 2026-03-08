@@ -3,14 +3,16 @@
   "title": "Pelko ja ryhmän turva",
   "durationTarget": "3-4min",
   "steps": [
-    { "mode": "baseline", "text": "Hei, minä olen Lumi.", "pauseMs": 350 },
-    { "mode": "baseline", "text": "Joskus pelottaa. Se on ok.", "pauseMs": 400 },
-    { "mode": "listening", "text": "Kuuluu pieni \"oh\" (kevyt henkäys). Vatsa tuntuu jännältä.", "pauseMs": 500 },
-    { "mode": "listening", "text": "Miltä pelko tuntuu sinusta?", "pauseMs": 550, "teacherHint": "Tunnekuvat" },
-    { "mode": "regulation", "text": "Otetaan kolme hengitystä. Sisään… ulos… rauha.", "pauseMs": 850 },
-    { "mode": "firm_calm", "text": "Voit sanoa: \"Minua pelottaa.\" ja mennä aikuisen luo.", "pauseMs": 600 },
-    { "mode": "listening", "text": "Kenet haluat viereen? Aikuinen vai ystävä?", "pauseMs": 500 },
-    { "mode": "warm", "text": "Istu hetkeksi rauhalliseen paikkaan. Kuuletko pienen rauhaisan kilahduksen?", "pauseMs": 600 },
-    { "mode": "baseline", "text": "Hyvä. Täällä autamme ja pelko pienenee.", "pauseMs": 450 }
+    { "mode": "baseline", "text": "Hei, minä olen Lumi.", "pauseMs": 450 },
+    { "mode": "baseline", "text": "Joskus pelottaa. Se on ok.", "pauseMs": 500 },
+    { "mode": "listening", "text": "Kuuluu pieni \"oh\" (kevyt henkäys). Vatsa tuntuu jännältä.", "pauseMs": 550 },
+    { "mode": "listening", "text": "Miltä pelko tuntuu sinusta?", "pauseMs": 950, "teacherHint": "Tunnekuvat" },
+    { "mode": "regulation", "text": "Otetaan kolme hengitystä. Sisään…", "pauseMs": 700 },
+    { "mode": "regulation", "text": "(hiljainen sisäänhengitys)", "pauseMs": 400 },
+    { "mode": "regulation", "text": "…ulos… rauha.", "pauseMs": 750 },
+    { "mode": "firm_calm", "text": "Voit sanoa: \"Minua pelottaa.\" ja mennä aikuisen luo.", "pauseMs": 750 },
+    { "mode": "listening", "text": "Kenet haluat viereen? Aikuinen vai ystävä?", "pauseMs": 850 },
+    { "mode": "warm", "text": "Istu hetkeksi rauhalliseen paikkaan. Kuuletko pienen rauhaisan kilahduksen? (calm chime)", "pauseMs": 700 },
+    { "mode": "baseline", "text": "Hyvä. Täällä autamme ja pelko pienenee. (happy bell)", "pauseMs": 700 }
   ]
 }

@@ -3,15 +3,18 @@
   "title": "Heittäminen",
   "durationTarget": "3-4min",
   "steps": [
-    { "mode": "baseline", "text": "Hei, täällä Lumi.", "pauseMs": 350 },
-    { "mode": "baseline", "text": "Leikitään yhdessä turvallisesti.", "pauseMs": 350 },
-    { "mode": "listening", "text": "Kuuluu pomppu (pallon pomppu). Lelut lentävät ilmassa.", "pauseMs": 450 },
-    { "mode": "firm", "text": "Pysähdytään. Sisällä ei heitetä. Se voi osua.", "pauseMs": 600 },
-    { "mode": "listening", "text": "Miltä sinusta tuntuu, jos lelu osuu?", "pauseMs": 550, "teacherHint": "Tunnekuvat" },
-    { "mode": "regulation", "text": "Hengitä rauhassa sisään… ja ulos.", "pauseMs": 800 },
-    { "mode": "firm_calm", "text": "Lelut pysyvät lattialla. Kädet syliin.", "pauseMs": 500 },
-    { "mode": "listening", "text": "Tarvitsetko apua? Pyydä aikuinen mukaan.", "pauseMs": 500 },
-    { "mode": "warm", "text": "Lasketaan yhdessä kolmeen ja lasketaan lelu alas. 1…2…3… hienosti!", "pauseMs": 650 },
-    { "mode": "baseline", "text": "Hyvä. Nyt jatketaan leikkiä rauhassa.", "pauseMs": 450 }
+    { "mode": "baseline", "text": "Hei, täällä Lumi.", "pauseMs": 450 },
+    { "mode": "baseline", "text": "Leikitään yhdessä turvallisesti.", "pauseMs": 500 },
+    { "mode": "listening", "text": "Kuuluu pomppu (pallon pomppu) juuri kun lelu lentää.", "pauseMs": 500 },
+    { "mode": "firm", "text": "Pysähdytään. Sisällä ei heitetä. Se voi osua.", "pauseMs": 700 },
+    { "mode": "listening", "text": "Miltä sinusta tuntuu, jos lelu osuu?", "pauseMs": 950, "teacherHint": "Tunnekuvat" },
+    { "mode": "regulation", "text": "Hengitä sisään…", "pauseMs": 650 },
+    { "mode": "regulation", "text": "(hiljainen sisäänhengitys)", "pauseMs": 400 },
+    { "mode": "regulation", "text": "…ja ulos.", "pauseMs": 650 },
+    { "mode": "regulation", "text": "(rauhallinen uloshengitys)", "pauseMs": 450 },
+    { "mode": "firm_calm", "text": "Lelut pysyvät lattialla. Kädet syliin.", "pauseMs": 600 },
+    { "mode": "listening", "text": "Tarvitsetko apua? Pyydä aikuinen mukaan.", "pauseMs": 750 },
+    { "mode": "warm", "text": "Lasketaan yhdessä kolmeen ja lasketaan lelu alas. 1…2…3… hienosti! (pieni happy bell)", "pauseMs": 700 },
+    { "mode": "baseline", "text": "Hyvä. Nyt jatketaan leikkiä rauhassa.", "pauseMs": 650 }
   ]
 }

@@ -3,14 +3,16 @@
   "title": "Ilkeat sanat",
   "durationTarget": "3-4min",
   "steps": [
-    { "mode": "baseline", "text": "Hei, olen Lumi.", "pauseMs": 350 },
-    { "mode": "baseline", "text": "Puhutaan sanoista, jotka tuntuvat hyvältä.", "pauseMs": 400 },
-    { "mode": "listening", "text": "Joku sanoo ilkeän sanan. Se sattuu sydämeen.", "pauseMs": 450 },
-    { "mode": "listening", "text": "Miltä sinusta tuntuu, kun kuulet ilkeän sanan?", "pauseMs": 550, "teacherHint": "Tunnekuvat" },
-    { "mode": "regulation", "text": "Hengitä sisään… ja ulos… (lempeä kilahdus)", "pauseMs": 800 },
-    { "mode": "firm_calm", "text": "Sano: \"Lopeta, kiitos. En pidä tuosta.\"", "pauseMs": 550 },
-    { "mode": "listening", "text": "Kerro aikuiselle. Kenelle kerrot?", "pauseMs": 500 },
-    { "mode": "warm", "text": "Valitse ystävällinen sana tilalle. Mikä sana on pehmeä?", "pauseMs": 550 },
-    { "mode": "baseline", "text": "Hyvä. Ystävälliset sanat tekevät olon kevyeksi.", "pauseMs": 450 }
+    { "mode": "baseline", "text": "Hei, olen Lumi.", "pauseMs": 450 },
+    { "mode": "baseline", "text": "Puhutaan sanoista, jotka tuntuvat hyvältä.", "pauseMs": 500 },
+    { "mode": "listening", "text": "\"Oh\" kuuluu, kun joku sanoo ilkeän sanan. Se sattuu sydämeen.", "pauseMs": 550 },
+    { "mode": "listening", "text": "Miltä sinusta tuntuu, kun kuulet ilkeän sanan?", "pauseMs": 950, "teacherHint": "Tunnekuvat" },
+    { "mode": "regulation", "text": "Hengitä sisään…", "pauseMs": 650 },
+    { "mode": "regulation", "text": "(hiljainen sisäänhengitys)", "pauseMs": 400 },
+    { "mode": "regulation", "text": "…ja ulos. (lempeä kilahdus)", "pauseMs": 750 },
+    { "mode": "firm_calm", "text": "Sano: \"Lopeta, kiitos. En pidä tuosta.\"", "pauseMs": 650 },
+    { "mode": "listening", "text": "Kerro aikuiselle. Kenelle kerrot?", "pauseMs": 800 },
+    { "mode": "warm", "text": "Valitse ystävällinen sana tilalle. Mikä sana on pehmeä? (pieni sparkle)", "pauseMs": 700 },
+    { "mode": "baseline", "text": "Hyvä. Ystävälliset sanat tekevät olon kevyeksi.", "pauseMs": 650 }
   ]
 }

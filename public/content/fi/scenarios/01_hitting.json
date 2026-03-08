@@ -3,15 +3,18 @@
   "title": "Lyöminen",
   "durationTarget": "3-4min",
   "steps": [
-    { "mode": "baseline", "text": "Hei, olen Lumi!", "pauseMs": 350 },
-    { "mode": "baseline", "text": "Leikitään ja pidetään toisistamme huolta.", "pauseMs": 350 },
-    { "mode": "listening", "text": "Pehmeä tömähdys kuuluu. Joku heilautti kättä ja osui kaveriin.", "pauseMs": 400 },
-    { "mode": "listening", "text": "Miltä sinusta tuntuu kun joku lyö?", "pauseMs": 550, "teacherHint": "Näytä tunnekuvat: surullinen/vihainen/pelokas/hämmentynyt" },
-    { "mode": "firm", "text": "Pysähdytään. Kädet alas. Lyöminen sattuu.", "pauseMs": 650 },
-    { "mode": "regulation", "text": "Hengitä sisään… ja ulos… (rauhaisa kilahdus)", "pauseMs": 850 },
-    { "mode": "firm_calm", "text": "Sano: \"Ei noin. En halua että minua sattuu.\"", "pauseMs": 550 },
-    { "mode": "listening", "text": "Kerro aikuiselle. Kenelle kerrotaan?", "pauseMs": 500, "teacherHint": "Aikuisten nimet" },
-    { "mode": "warm", "text": "Korjataan. Voit sanoa: \"Anteeksi\" ja näyttää peukun sovuksi.", "pauseMs": 500 },
-    { "mode": "baseline", "text": "Hyvä. Täällä on turvallista. Jatketaan leikkiä ystävällisesti.", "pauseMs": 450 }
+    { "mode": "baseline", "text": "Hei, olen Lumi!", "pauseMs": 450 },
+    { "mode": "baseline", "text": "Leikitään ja pidetään toisistamme huolta.", "pauseMs": 500 },
+    { "mode": "listening", "text": "Pehmeä tömähdys kuuluu (lelu osuu). Joku heilautti kättä ja osui kaveriin.", "pauseMs": 550 },
+    { "mode": "listening", "text": "Miltä sinusta tuntuu kun joku lyö?", "pauseMs": 950, "teacherHint": "Näytä tunnekuvat: surullinen/vihainen/pelokas/hämmentynyt" },
+    { "mode": "firm", "text": "Pysähdytään. Kädet alas. Lyöminen sattuu.", "pauseMs": 750 },
+    { "mode": "regulation", "text": "Hengitä sisään…", "pauseMs": 700 },
+    { "mode": "regulation", "text": "(hiljainen sisäänhengityksen ääni)", "pauseMs": 450 },
+    { "mode": "regulation", "text": "…ja ulos.", "pauseMs": 700 },
+    { "mode": "regulation", "text": "(rauhallinen uloshengitys + calm chime)", "pauseMs": 500 },
+    { "mode": "firm_calm", "text": "Sano: \"Ei noin. En halua että minua sattuu.\"", "pauseMs": 650 },
+    { "mode": "listening", "text": "Kerro aikuiselle. Kenelle kerrotaan?", "pauseMs": 800, "teacherHint": "Aikuisten nimet" },
+    { "mode": "warm", "text": "Korjataan. Voit sanoa: \"Anteeksi\" ja näyttää peukun sovuksi. (pieni sparkle)", "pauseMs": 650 },
+    { "mode": "baseline", "text": "Hyvä. Täällä on turvallista. Jatketaan leikkiä ystävällisesti.", "pauseMs": 700 }
   ]
 }

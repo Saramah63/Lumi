@@ -3,14 +3,16 @@
   "title": "Ei kuunnella",
   "durationTarget": "3-4min",
   "steps": [
-    { "mode": "baseline", "text": "Hei, olen Lumi.", "pauseMs": 350 },
-    { "mode": "baseline", "text": "Puhutaan rajoista ja kuuntelemisesta.", "pauseMs": 400 },
-    { "mode": "listening", "text": "Joku sanoo: \"Lopeta\". Toinen ei lopeta. Se tuntuu pahalta.", "pauseMs": 500 },
-    { "mode": "listening", "text": "Miltä se tuntuu sinusta?", "pauseMs": 550, "teacherHint": "Tunnekuvat" },
-    { "mode": "regulation", "text": "Hengitä sisään… ulos… Hidastetaan.", "pauseMs": 800 },
-    { "mode": "firm_calm", "text": "Kolme askelta: sano \"Lopeta\", siirry pois, kerro aikuiselle.", "pauseMs": 600 },
-    { "mode": "listening", "text": "Kenelle sinä kerrot, jos ei lopu?", "pauseMs": 500 },
-    { "mode": "warm", "text": "Kysy ennen kosketusta: \"Saanko?\" Jos vastaus on ei, sano: \"Okei\".", "pauseMs": 550 },
-    { "mode": "baseline", "text": "Hyvä. Kun kuuntelemme, kaikilla on turvallinen olo.", "pauseMs": 450 }
+    { "mode": "baseline", "text": "Hei, olen Lumi.", "pauseMs": 450 },
+    { "mode": "baseline", "text": "Puhutaan rajoista ja kuuntelemisesta.", "pauseMs": 500 },
+    { "mode": "listening", "text": "Joku sanoo: \"Lopeta\". Toinen ei lopeta. Se tuntuu pahalta.", "pauseMs": 600 },
+    { "mode": "listening", "text": "Miltä se tuntuu sinusta?", "pauseMs": 950, "teacherHint": "Tunnekuvat" },
+    { "mode": "regulation", "text": "Hengitä sisään…", "pauseMs": 650 },
+    { "mode": "regulation", "text": "(hiljainen sisäänhengitys)", "pauseMs": 400 },
+    { "mode": "regulation", "text": "…ulos… Hidastetaan.", "pauseMs": 750 },
+    { "mode": "firm_calm", "text": "Kolme askelta: sano \"Lopeta\", siirry pois, kerro aikuiselle.", "pauseMs": 700 },
+    { "mode": "listening", "text": "Kenelle sinä kerrot, jos ei lopu?", "pauseMs": 800 },
+    { "mode": "warm", "text": "Kysy ennen kosketusta: \"Saanko?\" Jos vastaus on ei, sano: \"Okei\". (pieni happy bell kun kuunnellaan)", "pauseMs": 700 },
+    { "mode": "baseline", "text": "Hyvä. Kun kuuntelemme, kaikilla on turvallinen olo. (calm chime)", "pauseMs": 700 }
   ]
 }
