@@ -1209,19 +1209,23 @@ export function ScenarioRunner() {
   const handleNextStep = useCallback(async () => {
     if (sessionMode !== "group_script") return;
     if (awaitingChoice || done) return;
+
     if (awaitingTeacherContinue && teacherPendingStepRef.current != null) {
       setAwaitingTeacherContinue(false);
       setAwaitingDiscussionNote(false);
       const next = teacherPendingStepRef.current;
       teacherPendingStepRef.current = null;
       setStepIndex(next);
+    } else if (activeScenario) {
+      setStepIndex((prev) => Math.min(prev + 1, activeScenario.steps.length - 1));
     }
+
     await unlockAudio();
     setIsRunning(true);
     const log = ensureSessionLog();
     log.teacherActions.push({ type: "next", at: new Date().toISOString() });
     setSessionLog({ ...log });
-  }, [sessionMode, awaitingChoice, done, awaitingTeacherContinue, ensureSessionLog]);
+  }, [sessionMode, awaitingChoice, done, awaitingTeacherContinue, activeScenario, ensureSessionLog]);
 
   const handleReplayScenario = useCallback(async () => {
     await cancelLumiSpeak();
