@@ -494,6 +494,7 @@ export function ScenarioRunner() {
   const [votes, setVotes] = useState<Record<string, number>>({});
   const [emotionHistory, setEmotionHistory] = useState<string[]>([]);
   const [emotionTrend, setEmotionTrend] = useState<"happy" | "sad" | "angry" | "scared" | "confused" | null>(null);
+  const [calmUsed, setCalmUsed] = useState(false);
   const [lastVoteAppliedStep, setLastVoteAppliedStep] = useState(-1);
   const [voteEffect, setVoteEffect] = useState("Odotetaan tunteita.");
   const [runError, setRunError] = useState<string | null>(null);
@@ -853,6 +854,7 @@ export function ScenarioRunner() {
         }
         setBreathGlow(0.05);
         setBreathInhale(false);
+        setCalmUsed(true);
       };
       if (breathingMode) {
         setAnimationSource("breath");
@@ -1016,6 +1018,9 @@ export function ScenarioRunner() {
       setRunError(null);
       setAwaitingTeacherContinue(false);
       teacherPendingStepRef.current = null;
+      setEmotionHistory([]);
+      setEmotionTrend(null);
+      setCalmUsed(false);
       resetAvatarState();
     },
     [resetAvatarState]
@@ -1035,6 +1040,7 @@ export function ScenarioRunner() {
     setAwaitingTeacherContinue(false);
     setEmotionHistory([]);
     setEmotionTrend(null);
+    setCalmUsed(false);
     teacherPendingStepRef.current = null;
 
     let chosenScenario = scenario;
@@ -1236,6 +1242,7 @@ export function ScenarioRunner() {
     const log = ensureSessionLog();
     log.teacherActions.push({ type: "calm_support", at: new Date().toISOString() });
     setSessionLog({ ...log });
+    setCalmUsed(true);
     await handleCalmSupport();
   }, [ensureSessionLog, handleCalmSupport]);
 
@@ -1296,6 +1303,7 @@ export function ScenarioRunner() {
       await speakLine(line, mode);
       if (emojiId === "angry" || emojiId === "scared") {
         await speakLine("Hengitä sisään… ja ulos.", "regulation");
+        setCalmUsed(true);
       }
     }
   };
@@ -1658,7 +1666,6 @@ export function ScenarioRunner() {
         </div>
 
         <div className="min-h-0 min-w-0 space-y-4 overflow-y-auto pr-1">
-        {
           <div className="grid min-w-0 gap-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:grid-cols-2 md:p-4">
             <div className="min-w-0 space-y-3 md:col-span-2">
               <p className="text-sm font-medium text-slate-200">Istunto</p>
@@ -1964,6 +1971,10 @@ export function ScenarioRunner() {
                   <div>Tila: {summary.header.appMode}</div>
                   <div>Ryhmäkoko: {summary.header.groupSize}</div>
                   {summary.header.childName ? <div>Lapsi: {summary.header.childName}</div> : null}
+                  <div>Ääniä: {totalVotes}</div>
+                  <div>Yleisin tunne: {emotionTrend ? emojis.find((e) => e.id === emotionTrend)?.text ?? "—" : "—"}</div>
+                  <div>Rauhoittava tuki: {calmUsed ? "Käytettiin" : "Ei käytetty"}</div>
+                  <div>Istunto valmis: {done ? "Kyllä" : "Kesken"}</div>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-300">Mitä tapahtui</p>
@@ -1991,6 +2002,9 @@ export function ScenarioRunner() {
                     {summary.nextSteps.map((item) => (
                       <li key={item} className="break-words [overflow-wrap:anywhere]">{item}</li>
                     ))}
+                    {emotionTrend === "angry" ? <li className="break-words [overflow-wrap:anywhere]">Kokeile seuraavaksi rauhoittavaa tai vuorottelua tukevaa skenaariota.</li> : null}
+                    {emotionTrend === "scared" ? <li className="break-words [overflow-wrap:anywhere]">Kokeile turva- tai rohkaisuskenaariota.</li> : null}
+                    {emotionTrend === "sad" ? <li className="break-words [overflow-wrap:anywhere]">Valitse lohduttava tai ystävyysteemainen skenaario.</li> : null}
                   </ul>
                 </div>
                 <div>
@@ -2045,6 +2059,14 @@ export function ScenarioRunner() {
                   >
                     Lataa JSON
                   </button>
+                </div>
+                <div className="space-y-1 rounded-lg border border-cyan-100/20 bg-slate-950/50 p-3">
+                  <p className="text-xs font-semibold text-slate-200">Luokkakeskustelun ideat</p>
+                  <ul className="list-disc pl-5 text-xs text-slate-100">
+                    <li>Mikä auttoi lasta tässä tilanteessa?</li>
+                    <li>Mitä teemme, kun tunnemme vihaa tai pelkoa?</li>
+                  </ul>
+                  <p className="text-[11px] text-slate-400">Lumi on varhaiskasvatuksen tunneopas: tukee tunnetaitoja, turvaa, empatiaa ja rauhoittumista.</p>
                 </div>
               </div>
             ) : null}
