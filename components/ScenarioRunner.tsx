@@ -486,7 +486,7 @@ export function ScenarioRunner() {
 
   const sessionMode: SessionMode = groupSize === 1 ? "solo_personalized" : "group_script";
   const childLanguage = "fi";
-  const showDevTools = process.env.NODE_ENV !== "production";
+  const showDevTools = false;
 
   const scenario = useMemo(
     () => scenarios.find((s) => s.id === scenarioId) ?? scenarios[0],
@@ -1242,7 +1242,7 @@ export function ScenarioRunner() {
     setStepIndex(next);
   };
 
-  const handleVote = (emojiId: string) => {
+  const handleVote = async (emojiId: string) => {
     if (!votingMode) return;
     setSelectedEmoji(emojiId);
     setVotes((prev) => ({ ...prev, [emojiId]: (prev[emojiId] ?? 0) + 1 }));
@@ -1257,7 +1257,15 @@ export function ScenarioRunner() {
       angry: "Tuo on vihaa. Hidastetaan yhdessä ja hengitetään.",
       scared: "On ok olla peloissaan. Voimme kertoa aikuiselle.",
     };
-    setVoteEffect(supportive[emojiId] ?? `Ääni vastaanotettu: ${label}.`);
+    const line = supportive[emojiId] ?? `Ääni vastaanotettu: ${label}.`;
+    if (!glowPinned) {
+      const glowMap: Record<string, GlowState> = { angry: "strong", scared: "alert", sad: "calm", happy: "calm" };
+      setGlowState(glowMap[emojiId] ?? "alert");
+    }
+    setVoteEffect(line);
+    if (voiceEnabled) {
+      await speakLine(line, emojiId === "angry" ? "firm_calm" : emojiId === "scared" ? "regulation" : "warm");
+    }
   };
 
   const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0);
@@ -1716,7 +1724,7 @@ export function ScenarioRunner() {
           <div className="grid min-w-0 gap-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:grid-cols-2 md:p-4">
             <div className="min-w-0 space-y-3 md:col-span-2">
               <p className="text-sm font-medium text-slate-200">Istunto</p>
-              <div className="grid min-w-0 grid-cols-3 gap-2">
+              <div className="grid min-w-0 grid-cols-5 gap-2">
                 <button
                   type="button"
                   onClick={() => void handleStartSession()}
@@ -1749,6 +1757,14 @@ export function ScenarioRunner() {
                 >
                   Toista skenaario
                 </button>
+                <button
+                  type="button"
+                  onClick={() => void handlePrevStep()}
+                  disabled={sessionMode !== "group_script" || stepIndex === 0}
+                  className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
+                >
+                  Edellinen
+                </button>
               </div>
               <div className="grid min-w-0 grid-cols-3 gap-2">
                 <button
@@ -1773,6 +1789,14 @@ export function ScenarioRunner() {
                   className="h-11 max-w-full rounded-xl bg-amber-600 px-2 text-xs font-semibold leading-tight text-white disabled:opacity-50 md:text-sm"
                 >
                   Jatka seuraavaan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleNextStep()}
+                  disabled={sessionMode !== "group_script" || awaitingChoice || done}
+                  className="h-11 max-w-full rounded-xl bg-cyan-700 px-2 text-xs font-semibold leading-tight text-white disabled:opacity-50 md:text-sm"
+                >
+                  Seuraava
                 </button>
               </div>
               {awaitingDiscussionNote && (
@@ -1816,7 +1840,7 @@ export function ScenarioRunner() {
                   onClick={() => setScenarioMode("random")}
                   className={`h-auto min-h-11 max-w-full whitespace-normal break-words rounded-xl border px-2 py-2 text-[11px] leading-tight [overflow-wrap:anywhere] md:text-sm ${scenarioMode === "random" ? "border-cyan-300 bg-cyan-500/15" : "border-cyan-100/30 bg-slate-900/50"}`}
                 >
-                  Älykäs satunnainen
+                  Satunnainen
                 </button>
                 <button
                   type="button"
