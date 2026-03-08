@@ -20,6 +20,28 @@ const emojis = [
   { id: "confused", label: "😳", text: "Nolo / Hämmentynyt" },
 ];
 
+const scenarioSkill: Record<string, string> = {
+  hitting: "Pysähtyminen ja anteeksipyyntö",
+  throwing: "Turvallinen tekeminen ja rauhoittuminen",
+  ruining_game: "Pettymyksen sietäminen ja korjaaminen",
+  mean_words: "Ystävälliset sanat",
+  not_stopping: "Rajan asettaminen ja kuunteleminen",
+  turn_taking: "Vuorottelu ja odottaminen",
+  secrets_safety: "Turvattomasta asiasta kertominen aikuiselle",
+  fear_safety: "Pelon tunnistaminen ja turva-aikuisen hakeminen",
+};
+
+const reflectionPrompts: Record<string, string[]> = {
+  hitting: ["Mikä auttoi, kun joku satutti?", "Mitä voimme sanoa, jotta kaveri tuntuu turvalliselta?"],
+  throwing: ["Miksi sisällä ei heitetä?", "Miten voimme leikkiä turvallisesti?"],
+  ruining_game: ["Miltä tuntuu, kun torni kaatuu?", "Miten voimme auttaa kaveria harmissa?"],
+  mean_words: ["Mikä sana tuntuu hyvältä?", "Mitä voimme sanoa, jos kuulemme ilkeitä sanoja?"],
+  not_stopping: ["Miksi on tärkeää lopettaa, kun joku sanoo 'Lopeta'?", "Mitä teet, jos joku ei kuuntele?"],
+  turn_taking: ["Miltä tuntuu odottaa vuoroa?", "Miten voimme tehdä odottamisesta helpompaa?"],
+  secrets_safety: ["Kenelle kerrot, jos salaisuus pelottaa?", "Miltä hyvä salaisuus tuntuu?"],
+  fear_safety: ["Mikä auttaa, kun pelottaa?", "Kuka aikuinen on turva?"],
+};
+
 const themeScenarioIds = {
   turvataidot: ["hitting", "throwing", "not_stopping", "secrets_safety", "fear_safety"],
   toveritaidot: ["ruining_game", "mean_words", "turn_taking"],
@@ -1307,6 +1329,9 @@ export function ScenarioRunner() {
 
   const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0);
   const elapsedLabel = `${String(Math.floor(elapsedSec / 60)).padStart(2, "0")}:${String(elapsedSec % 60).padStart(2, "0")}`;
+  const dominantEmotionText = emotionTrend ? (emojis.find((e) => e.id === emotionTrend)?.text ?? "—") : "—";
+  const skillHighlight = scenarioSkill[scenarioId] ?? "Tunnetaitojen harjoittelu";
+  const reflectionList = reflectionPrompts[scenarioId] ?? ["Mikä auttoi Lumi-ystävää?", "Mitä teemme, kun tunne on iso?"];
 
   const handleListenQuestion = useCallback(async () => {
     setIsListeningQuestion(true);
@@ -1655,11 +1680,11 @@ export function ScenarioRunner() {
       </section>
 
       <section className="flex min-h-0 min-w-0 flex-col gap-4 overflow-hidden rounded-3xl border border-cyan-200/20 bg-white/[0.04] p-4 backdrop-blur-sm md:min-h-[66vh] md:p-6">
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-cyan-100/20 bg-slate-900/40 px-3 py-3 md:px-4">
-          <div className="min-w-0">
-            <p className="break-words text-sm font-semibold text-slate-100 [overflow-wrap:anywhere]">Opettajan ohjaus</p>
-            <p className="break-words text-xs text-slate-400 [overflow-wrap:anywhere]">Aika: {elapsedLabel}</p>
-          </div>
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-cyan-100/20 bg-slate-900/40 px-3 py-3 md:px-4">
+              <div className="min-w-0">
+                <p className="break-words text-sm font-semibold text-slate-100 [overflow-wrap:anywhere]">Opettajan ohjaus</p>
+                <p className="break-words text-xs text-slate-400 [overflow-wrap:anywhere]">Aika: {elapsedLabel}</p>
+              </div>
         </div>
 
         <div className="min-h-0 min-w-0 space-y-4 overflow-y-auto pr-1">
@@ -1969,7 +1994,7 @@ export function ScenarioRunner() {
                   <div>Ryhmäkoko: {summary.header.groupSize}</div>
                   {summary.header.childName ? <div>Lapsi: {summary.header.childName}</div> : null}
                   <div>Ääniä: {totalVotes}</div>
-                  <div>Yleisin tunne: {emotionTrend ? emojis.find((e) => e.id === emotionTrend)?.text ?? "—" : "—"}</div>
+                  <div>Yleisin tunne: {dominantEmotionText}</div>
                   <div>Rauhoittava tuki: {calmUsed ? "Käytettiin" : "Ei käytetty"}</div>
                   <div>Istunto valmis: {done ? "Kyllä" : "Kesken"}</div>
                 </div>
@@ -1992,6 +2017,10 @@ export function ScenarioRunner() {
                       <li key={item} className="break-words [overflow-wrap:anywhere]">{item}</li>
                     ))}
                   </ul>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-300">Harjoiteltu taito</p>
+                  <p className="text-sm text-slate-100">{skillHighlight}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-300">Seuraavat askeleet</p>
@@ -2060,8 +2089,9 @@ export function ScenarioRunner() {
                 <div className="space-y-1 rounded-lg border border-cyan-100/20 bg-slate-950/50 p-3">
                   <p className="text-xs font-semibold text-slate-200">Luokkakeskustelun ideat</p>
                   <ul className="list-disc pl-5 text-xs text-slate-100">
-                    <li>Mikä auttoi lasta tässä tilanteessa?</li>
-                    <li>Mitä teemme, kun tunnemme vihaa tai pelkoa?</li>
+                    {reflectionList.slice(0, 2).map((q) => (
+                      <li key={q}>{q}</li>
+                    ))}
                   </ul>
                   <p className="text-[11px] text-slate-400">Lumi on varhaiskasvatuksen tunneopas: tukee tunnetaitoja, turvaa, empatiaa ja rauhoittumista.</p>
                 </div>
