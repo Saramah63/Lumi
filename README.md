@@ -1,6 +1,11 @@
 # Lumi
 
-Lumi is a project workspace for design assets and frontend configuration.
+Lumi is a small social-emotional learning (SEL) companion for young children.
+It supports kindergarten (ages 4–6) pilots with short, guided scenarios that
+teach emotional awareness, calming, safe choices, and asking for help. Teachers
+can start, pause, or replay scenarios for group discussion, and Lumi offers
+breathing cues, warm praise, and simple reflection questions to make classroom
+use and research evaluation straightforward.
 
 ## Voice + TTS Environment
 

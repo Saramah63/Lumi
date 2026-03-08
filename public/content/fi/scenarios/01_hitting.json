@@ -1,6 +1,7 @@
 {
   "id": "hitting",
   "title": "Lyöminen",
+  "learningGoal": "Tunnistaa kiukun, pysähtyy ja pyytää apua, kun joku satuttaa.",
   "durationTarget": "3-4min",
   "steps": [
     { "mode": "baseline", "text": "Hei, olen Lumi!", "pauseMs": 450 },
@@ -14,7 +15,9 @@
     { "mode": "regulation", "text": "(rauhallinen uloshengitys + calm chime)", "pauseMs": 500 },
     { "mode": "firm_calm", "text": "Sano: \"Ei noin. En halua että minua sattuu.\"", "pauseMs": 650 },
     { "mode": "listening", "text": "Kerro aikuiselle. Kenelle kerrotaan?", "pauseMs": 800, "teacherHint": "Aikuisten nimet" },
+    { "mode": "warm", "text": "Hyvä valinta. Se oli ystävällistä. (pieni sparkle)", "pauseMs": 600 },
+    { "mode": "listening", "text": "Mieti: Miltä kaverista tuntui? Surullinen, vihainen, pelokas vai iloinen?", "pauseMs": 950, "teacherPrompt": "Kysy lapsilta miltä heistä tuntuisi ja miten voisi auttaa." },
     { "mode": "warm", "text": "Korjataan. Voit sanoa: \"Anteeksi\" ja näyttää peukun sovuksi. (pieni sparkle)", "pauseMs": 650 },
-    { "mode": "baseline", "text": "Hyvä. Täällä on turvallista. Jatketaan leikkiä ystävällisesti.", "pauseMs": 700 }
+    { "mode": "baseline", "text": "Hyvä. Täällä on turvallista. Hengitä kerran rauhassa ja jatketaan leikkiä ystävällisesti. (calm chime)", "pauseMs": 800 }
   ]
 }

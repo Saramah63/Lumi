@@ -1,6 +1,7 @@
 {
   "id": "throwing",
   "title": "Heittäminen",
+  "learningGoal": "Huomaa kun lelut ovat vaarassa, säätelee intoa ja pyytää apua.",
   "durationTarget": "3-4min",
   "steps": [
     { "mode": "baseline", "text": "Hei, täällä Lumi.", "pauseMs": 450 },
@@ -12,9 +13,11 @@
     { "mode": "regulation", "text": "(hiljainen sisäänhengitys)", "pauseMs": 400 },
     { "mode": "regulation", "text": "…ja ulos.", "pauseMs": 650 },
     { "mode": "regulation", "text": "(rauhallinen uloshengitys)", "pauseMs": 450 },
-    { "mode": "firm_calm", "text": "Lelut pysyvät lattialla. Kädet syliin.", "pauseMs": 600 },
+    { "mode": "firm_calm", "text": "Lelut pysyvät lattialla. Kädet syliin. Hyvä päätös.", "pauseMs": 650 },
     { "mode": "listening", "text": "Tarvitsetko apua? Pyydä aikuinen mukaan.", "pauseMs": 750 },
     { "mode": "warm", "text": "Lasketaan yhdessä kolmeen ja lasketaan lelu alas. 1…2…3… hienosti! (pieni happy bell)", "pauseMs": 700 },
-    { "mode": "baseline", "text": "Hyvä. Nyt jatketaan leikkiä rauhassa.", "pauseMs": 650 }
+    { "mode": "warm", "text": "Se oli hyvä ja turvallinen valinta. Hyvä sinä.", "pauseMs": 600 },
+    { "mode": "listening", "text": "Mieti: Miltä kaverista tuntuu kun lelu lentää? Pelokas vai iloinen?", "pauseMs": 950, "teacherPrompt": "Kysy lapsilta missä leluja on turvallista heittää." },
+    { "mode": "baseline", "text": "Hyvä. Nyt hengitetään kerran rauhassa ja jatketaan leikkiä turvallisesti. (calm chime)", "pauseMs": 800 }
   ]
 }

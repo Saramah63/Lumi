@@ -1,6 +1,7 @@
 {
   "id": "fear_safety",
   "title": "Pelko ja ryhmän turva",
+  "learningGoal": "Tunnistaa pelon, nimeää tunteen ja hakee rauhaa ja turvaa aikuiselta.",
   "durationTarget": "3-4min",
   "steps": [
     { "mode": "baseline", "text": "Hei, minä olen Lumi.", "pauseMs": 450 },
@@ -13,6 +14,7 @@
     { "mode": "firm_calm", "text": "Voit sanoa: \"Minua pelottaa.\" ja mennä aikuisen luo.", "pauseMs": 750 },
     { "mode": "listening", "text": "Kenet haluat viereen? Aikuinen vai ystävä?", "pauseMs": 850 },
     { "mode": "warm", "text": "Istu hetkeksi rauhalliseen paikkaan. Kuuletko pienen rauhaisan kilahduksen? (calm chime)", "pauseMs": 700 },
-    { "mode": "baseline", "text": "Hyvä. Täällä autamme ja pelko pienenee. (happy bell)", "pauseMs": 700 }
+    { "mode": "listening", "text": "Mieti: Kun pelottaa, mikä auttaa? Hengitys, aikuinen, ystävä?", "pauseMs": 950, "teacherPrompt": "Kysy: Missä sinä tunnet olosi turvalliseksi?" },
+    { "mode": "baseline", "text": "Hyvä. Täällä autamme ja pelko pienenee. Hengitä vielä kerran. (happy bell)", "pauseMs": 800 }
   ]
 }

@@ -1,6 +1,7 @@
 {
   "id": "mean_words",
   "title": "Ilkeat sanat",
+  "learningGoal": "Oppii nimeämään tunteen ja valitsemaan ystävällisen sanan.",
   "durationTarget": "3-4min",
   "steps": [
     { "mode": "baseline", "text": "Hei, olen Lumi.", "pauseMs": 450 },
@@ -13,6 +14,7 @@
     { "mode": "firm_calm", "text": "Sano: \"Lopeta, kiitos. En pidä tuosta.\"", "pauseMs": 650 },
     { "mode": "listening", "text": "Kerro aikuiselle. Kenelle kerrot?", "pauseMs": 800 },
     { "mode": "warm", "text": "Valitse ystävällinen sana tilalle. Mikä sana on pehmeä? (pieni sparkle)", "pauseMs": 700 },
-    { "mode": "baseline", "text": "Hyvä. Ystävälliset sanat tekevät olon kevyeksi.", "pauseMs": 650 }
+    { "mode": "listening", "text": "Mieti: Mikä sana tekee sinut iloiseksi? Mikä sana satuttaa?", "pauseMs": 950, "teacherPrompt": "Kysy esimerkkejä iloisista sanoista luokasta." },
+    { "mode": "baseline", "text": "Hyvä. Ystävälliset sanat tekevät olon kevyt ja rauhallinen. Hengitetään hetki. (calm chime)", "pauseMs": 800 }
   ]
 }

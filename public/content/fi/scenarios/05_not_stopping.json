@@ -1,6 +1,7 @@
 {
   "id": "not_stopping",
   "title": "Ei kuunnella",
+  "learningGoal": "Oppii kunnioittamaan rajaa ja hakemaan apua.",
   "durationTarget": "3-4min",
   "steps": [
     { "mode": "baseline", "text": "Hei, olen Lumi.", "pauseMs": 450 },
@@ -13,6 +14,7 @@
     { "mode": "firm_calm", "text": "Kolme askelta: sano \"Lopeta\", siirry pois, kerro aikuiselle.", "pauseMs": 700 },
     { "mode": "listening", "text": "Kenelle sinä kerrot, jos ei lopu?", "pauseMs": 800 },
     { "mode": "warm", "text": "Kysy ennen kosketusta: \"Saanko?\" Jos vastaus on ei, sano: \"Okei\". (pieni happy bell kun kuunnellaan)", "pauseMs": 700 },
-    { "mode": "baseline", "text": "Hyvä. Kun kuuntelemme, kaikilla on turvallinen olo. (calm chime)", "pauseMs": 700 }
+    { "mode": "listening", "text": "Mieti: Miltä kaveri tuntisi? Iloinen, surullinen, vihainen vai rauhallinen?", "pauseMs": 950, "teacherPrompt": "Kysy: Mitä teet jos joku ei kuuntele Lopeta-sanaa?" },
+    { "mode": "baseline", "text": "Hyvä. Kun kuuntelemme, kaikilla on turvallinen olo. Hengitä kerran rauhassa. (calm chime)", "pauseMs": 800 }
   ]
 }

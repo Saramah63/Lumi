@@ -1,6 +1,7 @@
 {
   "id": "ruining_game",
   "title": "Tornin kaataminen",
+  "learningGoal": "Harjoittelee pettymyksen tunnistamista ja ystävällistä korjaamista.",
   "durationTarget": "3-4min",
   "steps": [
     { "mode": "baseline", "text": "Hei, olen Lumi!", "pauseMs": 450 },
@@ -12,7 +13,9 @@
     { "mode": "regulation", "text": "…ja ulos. Laske yksi, kaksi, kolme.", "pauseMs": 750 },
     { "mode": "firm_calm", "text": "Sano: \"Lopeta, kiitos. Haluan rakentaa rauhassa.\"", "pauseMs": 650 },
     { "mode": "listening", "text": "Tarvitsetko apua? Pyydetään aikuinen mukaan.", "pauseMs": 750 },
+    { "mode": "warm", "text": "Hyvä rauha. Se oli ystävällistä.", "pauseMs": 600 },
+    { "mode": "listening", "text": "Mieti: Miltä sinusta tuntuu kun torni kaatuu? Mitä auttaa? (surullinen, vihainen, hämmentynyt)", "pauseMs": 950, "teacherPrompt": "Kysy lapsilta: miten voimme auttaa kun joku on harmissaan?" },
     { "mode": "warm", "text": "Korjataan. Sanotaan \"Anteeksi\" ja nostetaan palikat yhdessä. (pieni block fall -ääni kun nostetaan)", "pauseMs": 650 },
-    { "mode": "baseline", "text": "Hyvä. Nyt torni nousee taas. Leikitään ystävällisesti. (calm chime)", "pauseMs": 700 }
+    { "mode": "baseline", "text": "Hyvä. Nyt torni nousee taas. Hengitä rauhassa. Leikitään ystävällisesti. (calm chime)", "pauseMs": 800 }
   ]
 }

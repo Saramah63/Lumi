@@ -1,6 +1,7 @@
 {
   "id": "turn_taking",
   "title": "Vuorottelu",
+  "learningGoal": "Harjoittelee odottamista, vuorojen jakamista ja ystävällistä kieltä.",
   "durationTarget": "3-4min",
   "steps": [
     { "mode": "baseline", "text": "Hei, minä olen Lumi.", "pauseMs": 450 },
@@ -12,7 +13,8 @@
     { "mode": "regulation", "text": "…ulos… laske kolmeen.", "pauseMs": 750 },
     { "mode": "warm", "text": "Kysy: \"Saanko vuoron?\" ja odota. Voit laskea kolmeen mielessä.", "pauseMs": 700 },
     { "mode": "firm_calm", "text": "Jos vastaus on \"ei vielä\": sano \"Okei\" ja valitse toinen lelu. (pieni happy bell kun vaihdetaan)", "pauseMs": 700 },
+    { "mode": "listening", "text": "Mieti: miltä kaverista tuntuu kun saa vuoron? Iloinen ja rauhallinen.", "pauseMs": 950, "teacherPrompt": "Kysy: Mitä voi tehdä odottaessa vuoroa?" },
     { "mode": "listening", "text": "Tarvitsetko apua odottamiseen? Pyydä aikuista.", "pauseMs": 750 },
-    { "mode": "baseline", "text": "Vuorot tekevät leikistä reilun ja mukavan. (calm chime)", "pauseMs": 700 }
+    { "mode": "baseline", "text": "Vuorot tekevät leikistä reilun ja mukavan. Hengitä rauhassa. (calm chime)", "pauseMs": 800 }
   ]
 }
