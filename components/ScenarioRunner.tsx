@@ -1176,7 +1176,7 @@ export function ScenarioRunner() {
     setIsRunning(true);
     setRunError(null);
     resetAvatarState();
-  }, [resetAvatarState, groupSize, customScenario, sessionMode, ensureSessionLog]);
+  }, [resetAvatarState, groupSize, customScenario, sessionMode, ensureSessionLog, setCustomScenario, scenarioId, availableScenarios]);
 
   const handleRepeatStep = useCallback(async () => {
     if (!step) return;
