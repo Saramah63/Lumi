@@ -211,10 +211,14 @@ export function LumiAvatar({
     };
   }, [baseMap, regulationActive]);
 
+  useEffect(() => {
+    setSmoothedBase(baseMap);
+  }, [baseMap]);
+
   const awarenessPulse = 0.04 * Math.sin(pulsePhase);
   const voicePulse = clamp01(audioIntensity) * 0.06;
   const breathPulse = breath * 0.06;
-  let glowOpacity = clamp01(smoothedBase + awarenessPulse + breathPulse + voicePulse);
+  let glowOpacity = Math.max(0.22, clamp01(smoothedBase + awarenessPulse + breathPulse + voicePulse));
   if (glowDisabled) {
     glowOpacity = 0;
   }
