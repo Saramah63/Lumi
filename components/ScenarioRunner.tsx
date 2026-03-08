@@ -2120,7 +2120,7 @@ export function ScenarioRunner() {
               </div>
             </div>
 
-            <div className="grid min-w-0 grid-cols-2 gap-2 md:grid-cols-4">
+            <div className="grid min-w-0 grid-cols-2 gap-2 md:grid-cols-3">
               <button
                 onClick={() => void handlePrevStep()}
                 disabled={stepIndex === 0 || awaitingChoice || isRunning === false || sessionMode !== "group_script"}
@@ -2140,18 +2140,6 @@ export function ScenarioRunner() {
                 className="h-auto min-h-12 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl bg-slate-800 px-3 py-3 text-sm font-semibold leading-tight text-white md:min-h-14 md:text-base"
               >
                 Toista
-              </button>
-              <button
-                onClick={() => void handleCalmSupportLogged()}
-                className="h-auto min-h-12 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl bg-emerald-600 px-3 py-3 text-sm font-semibold leading-tight text-white md:min-h-14 md:text-base"
-              >
-                Rauhoita
-              </button>
-              <button
-                onClick={() => void handleFirmBoundary()}
-                className="h-auto min-h-12 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl bg-amber-600 px-3 py-3 text-sm font-semibold leading-tight text-white md:min-h-14 md:text-base"
-              >
-                Jämäkkä raja
               </button>
             </div>
 
