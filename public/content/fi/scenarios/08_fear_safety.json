@@ -15,6 +15,10 @@
     { "mode": "listening", "text": "Kenet haluat viereen? Aikuinen vai ystävä?", "pauseMs": 850 },
     { "mode": "warm", "text": "Istu hetkeksi rauhalliseen paikkaan. Kuuletko pienen rauhaisan kilahduksen? (calm chime)", "pauseMs": 700 },
     { "mode": "listening", "text": "Mieti: Kun pelottaa, mikä auttaa? Hengitys, aikuinen, ystävä?", "pauseMs": 950, "teacherPrompt": "Kysy: Missä sinä tunnet olosi turvalliseksi?" },
-    { "mode": "baseline", "text": "Hyvä. Täällä autamme ja pelko pienenee. Hengitä vielä kerran. (happy bell)", "pauseMs": 800 }
+    { "mode": "regulation", "text": "Otetaan vielä yksi rauhallinen hengitys.", "pauseMs": 700 },
+    { "mode": "regulation", "text": "Sisään… (hiljainen hengitys)", "pauseMs": 650 },
+    { "mode": "regulation", "text": "Ulos… (calm chime)", "pauseMs": 700 },
+    { "mode": "warm", "text": "Hyvä. Täällä autamme ja pelko pienenee.", "pauseMs": 650 },
+    { "mode": "baseline", "text": "Hengitä vielä kerran. Olet turvassa. (happy bell)", "pauseMs": 800 }
   ]
 }

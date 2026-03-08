@@ -15,6 +15,10 @@
     { "mode": "listening", "text": "Kerro aikuiselle. Kenelle kerrot?", "pauseMs": 800 },
     { "mode": "warm", "text": "Valitse ystävällinen sana tilalle. Mikä sana on pehmeä? (pieni sparkle)", "pauseMs": 700 },
     { "mode": "listening", "text": "Mieti: Mikä sana tekee sinut iloiseksi? Mikä sana satuttaa?", "pauseMs": 950, "teacherPrompt": "Kysy esimerkkejä iloisista sanoista luokasta." },
+    { "mode": "regulation", "text": "Hengitetään vielä kerran rauhassa.", "pauseMs": 700 },
+    { "mode": "regulation", "text": "Sisään… (hiljainen hengitys)", "pauseMs": 650 },
+    { "mode": "regulation", "text": "…ulos. (calm chime)", "pauseMs": 700 },
+    { "mode": "warm", "text": "Hyvä. Ystävälliset sanat tuntuvat hyvältä.", "pauseMs": 650 },
     { "mode": "baseline", "text": "Hyvä. Ystävälliset sanat tekevät olon kevyt ja rauhallinen. Hengitetään hetki. (calm chime)", "pauseMs": 800 }
   ]
 }

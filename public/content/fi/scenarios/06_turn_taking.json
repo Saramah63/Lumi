@@ -15,6 +15,10 @@
     { "mode": "firm_calm", "text": "Jos vastaus on \"ei vielä\": sano \"Okei\" ja valitse toinen lelu. (pieni happy bell kun vaihdetaan)", "pauseMs": 700 },
     { "mode": "listening", "text": "Mieti: miltä kaverista tuntuu kun saa vuoron? Iloinen ja rauhallinen.", "pauseMs": 950, "teacherPrompt": "Kysy: Mitä voi tehdä odottaessa vuoroa?" },
     { "mode": "listening", "text": "Tarvitsetko apua odottamiseen? Pyydä aikuista.", "pauseMs": 750 },
+    { "mode": "regulation", "text": "Hengitetään vielä kerran rauhassa.", "pauseMs": 700 },
+    { "mode": "regulation", "text": "Sisään… (hiljainen hengitys)", "pauseMs": 650 },
+    { "mode": "regulation", "text": "…ulos. (calm chime)", "pauseMs": 700 },
+    { "mode": "warm", "text": "Hyvä odotus. Olette ystävällisiä.", "pauseMs": 650 },
     { "mode": "baseline", "text": "Vuorot tekevät leikistä reilun ja mukavan. Hengitä rauhassa. (calm chime)", "pauseMs": 800 }
   ]
 }

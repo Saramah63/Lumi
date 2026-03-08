@@ -18,6 +18,10 @@
     { "mode": "warm", "text": "Lasketaan yhdessä kolmeen ja lasketaan lelu alas. 1…2…3… hienosti! (pieni happy bell)", "pauseMs": 700 },
     { "mode": "warm", "text": "Se oli hyvä ja turvallinen valinta. Hyvä sinä.", "pauseMs": 600 },
     { "mode": "listening", "text": "Mieti: Miltä kaverista tuntuu kun lelu lentää? Pelokas vai iloinen?", "pauseMs": 950, "teacherPrompt": "Kysy lapsilta missä leluja on turvallista heittää." },
+    { "mode": "regulation", "text": "Otetaan rauhallinen hengitys yhdessä.", "pauseMs": 750 },
+    { "mode": "regulation", "text": "Hengitä sisään… (pehmeä hengitysääni)", "pauseMs": 650 },
+    { "mode": "regulation", "text": "…ja puhalla ulos. (calm chime)", "pauseMs": 700 },
+    { "mode": "warm", "text": "Hyvä, olo pehmenee. Jatketaan rauhassa.", "pauseMs": 650 },
     { "mode": "baseline", "text": "Hyvä. Nyt hengitetään kerran rauhassa ja jatketaan leikkiä turvallisesti. (calm chime)", "pauseMs": 800 }
   ]
 }

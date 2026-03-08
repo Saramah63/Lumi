@@ -15,6 +15,10 @@
     { "mode": "listening", "text": "Tarvitsetko apua? Pyydetään aikuinen mukaan.", "pauseMs": 750 },
     { "mode": "warm", "text": "Hyvä rauha. Se oli ystävällistä.", "pauseMs": 600 },
     { "mode": "listening", "text": "Mieti: Miltä sinusta tuntuu kun torni kaatuu? Mitä auttaa? (surullinen, vihainen, hämmentynyt)", "pauseMs": 950, "teacherPrompt": "Kysy lapsilta: miten voimme auttaa kun joku on harmissaan?" },
+    { "mode": "regulation", "text": "Otetaan yksi rauhallinen hengitys.", "pauseMs": 700 },
+    { "mode": "regulation", "text": "Hengitä sisään… (hiljainen hengitys)", "pauseMs": 650 },
+    { "mode": "regulation", "text": "…ja puhalla ulos. (calm chime)", "pauseMs": 700 },
+    { "mode": "warm", "text": "Hyvä. Rauha auttaa korjaamaan.", "pauseMs": 650 },
     { "mode": "warm", "text": "Korjataan. Sanotaan \"Anteeksi\" ja nostetaan palikat yhdessä. (pieni block fall -ääni kun nostetaan)", "pauseMs": 650 },
     { "mode": "baseline", "text": "Hyvä. Nyt torni nousee taas. Hengitä rauhassa. Leikitään ystävällisesti. (calm chime)", "pauseMs": 800 }
   ]

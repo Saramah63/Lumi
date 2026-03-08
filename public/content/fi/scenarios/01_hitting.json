@@ -17,6 +17,10 @@
     { "mode": "listening", "text": "Kerro aikuiselle. Kenelle kerrotaan?", "pauseMs": 800, "teacherHint": "Aikuisten nimet" },
     { "mode": "warm", "text": "Hyvä valinta. Se oli ystävällistä. (pieni sparkle)", "pauseMs": 600 },
     { "mode": "listening", "text": "Mieti: Miltä kaverista tuntui? Surullinen, vihainen, pelokas vai iloinen?", "pauseMs": 950, "teacherPrompt": "Kysy lapsilta miltä heistä tuntuisi ja miten voisi auttaa." },
+    { "mode": "regulation", "text": "Otetaan rauhallinen hengitys yhdessä.", "pauseMs": 750 },
+    { "mode": "regulation", "text": "Hengitä sisään… (hiljainen hengitys)", "pauseMs": 650 },
+    { "mode": "regulation", "text": "…ja puhalla ulos. (calm chime)", "pauseMs": 700 },
+    { "mode": "warm", "text": "Hyvä, rauha tulee. Olen tässä kanssasi.", "pauseMs": 650 },
     { "mode": "warm", "text": "Korjataan. Voit sanoa: \"Anteeksi\" ja näyttää peukun sovuksi. (pieni sparkle)", "pauseMs": 650 },
     { "mode": "baseline", "text": "Hyvä. Täällä on turvallista. Hengitä kerran rauhassa ja jatketaan leikkiä ystävällisesti. (calm chime)", "pauseMs": 800 }
   ]

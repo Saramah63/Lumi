@@ -15,6 +15,10 @@
     { "mode": "listening", "text": "Kenelle sinä kerrot, jos ei lopu?", "pauseMs": 800 },
     { "mode": "warm", "text": "Kysy ennen kosketusta: \"Saanko?\" Jos vastaus on ei, sano: \"Okei\". (pieni happy bell kun kuunnellaan)", "pauseMs": 700 },
     { "mode": "listening", "text": "Mieti: Miltä kaveri tuntisi? Iloinen, surullinen, vihainen vai rauhallinen?", "pauseMs": 950, "teacherPrompt": "Kysy: Mitä teet jos joku ei kuuntele Lopeta-sanaa?" },
+    { "mode": "regulation", "text": "Otetaan rauhallinen hengitys yhdessä.", "pauseMs": 700 },
+    { "mode": "regulation", "text": "Hengitä sisään… (hiljainen hengitys)", "pauseMs": 650 },
+    { "mode": "regulation", "text": "…ja puhalla ulos. (calm chime)", "pauseMs": 700 },
+    { "mode": "warm", "text": "Hyvä. Rauha auttaa meitä kuulemaan toisiamme.", "pauseMs": 650 },
     { "mode": "baseline", "text": "Hyvä. Kun kuuntelemme, kaikilla on turvallinen olo. Hengitä kerran rauhassa. (calm chime)", "pauseMs": 800 }
   ]
 }
