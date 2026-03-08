@@ -478,9 +478,6 @@ export function ScenarioRunner() {
   const [showBreathCue, setShowBreathCue] = useState(false);
   const breathPracticeTimerRef = useRef<number | null>(null);
   const breathPracticeRafRef = useRef<number | null>(null);
-  const [debugOverlay, setDebugOverlay] = useState(false);
-  const [glowOff, setGlowOff] = useState(false);
-  const [layoutDebug, setLayoutDebug] = useState(false);
   const [svgMismatchWarning, setSvgMismatchWarning] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [teacherMode, setTeacherMode] = useState(false);
@@ -1644,8 +1641,8 @@ export function ScenarioRunner() {
             breathGlow={breathGlow}
             forceBlink={forceBlink}
             blinkNowTick={blinkNowTick}
-            debugOverlay={debugOverlay}
-            glowDisabled={glowOff}
+            debugOverlay={false}
+            glowDisabled={false}
             regulationActive={animationSource === "breath"}
           />
         </div>
