@@ -1,14 +1,16 @@
 {
   "id": "fear_safety",
-  "title": "Pelko ja ryhman turva",
+  "title": "Pelko ja ryhmän turva",
   "durationTarget": "3-4min",
   "steps": [
-    { "mode": "baseline", "text": "Hei. Olen Lumi. Tänään puhumme pelosta.", "pauseMs": 400 },
-    { "mode": "listening", "text": "Pelko on tunne. Se voi olla iso tai pieni.", "pauseMs": 500 },
-    { "mode": "regulation", "text": "Otetaan kolme hengitystä. Sisään… ulos.", "pauseMs": 800 },
-    { "mode": "listening", "text": "Kun pelottaa, mitä tarvitset?", "pauseMs": 600 },
-    { "mode": "baseline", "text": "Aikuinen. Kaveri. Rauhallinen paikka.", "pauseMs": 500 },
-    { "mode": "warm", "text": "Voit sanoa: Minua pelottaa. Voitko olla lähellä?", "pauseMs": 500 },
-    { "mode": "baseline", "text": "Meidän ryhmässä autamme. Täällä on turvallista.", "pauseMs": 400 }
+    { "mode": "baseline", "text": "Hei, minä olen Lumi.", "pauseMs": 350 },
+    { "mode": "baseline", "text": "Joskus pelottaa. Se on ok.", "pauseMs": 400 },
+    { "mode": "listening", "text": "Kuuluu pieni \"oh\" (kevyt henkäys). Vatsa tuntuu jännältä.", "pauseMs": 500 },
+    { "mode": "listening", "text": "Miltä pelko tuntuu sinusta?", "pauseMs": 550, "teacherHint": "Tunnekuvat" },
+    { "mode": "regulation", "text": "Otetaan kolme hengitystä. Sisään… ulos… rauha.", "pauseMs": 850 },
+    { "mode": "firm_calm", "text": "Voit sanoa: \"Minua pelottaa.\" ja mennä aikuisen luo.", "pauseMs": 600 },
+    { "mode": "listening", "text": "Kenet haluat viereen? Aikuinen vai ystävä?", "pauseMs": 500 },
+    { "mode": "warm", "text": "Istu hetkeksi rauhalliseen paikkaan. Kuuletko pienen rauhaisan kilahduksen?", "pauseMs": 600 },
+    { "mode": "baseline", "text": "Hyvä. Täällä autamme ja pelko pienenee.", "pauseMs": 450 }
   ]
 }

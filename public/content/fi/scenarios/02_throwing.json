@@ -1,15 +1,17 @@
 {
   "id": "throwing",
-  "title": "Heittaminen",
+  "title": "Heittäminen",
   "durationTarget": "3-4min",
   "steps": [
-    { "mode": "baseline", "text": "Hei. Olen Lumi. Tänään harjoittelemme turvaa.", "pauseMs": 400 },
-    { "mode": "listening", "text": "Joskus käsi heittää jotain. Ehkä tunne on iso.", "pauseMs": 400 },
-    { "mode": "firm", "text": "Pysähdy. Ei heitetä. Se ei ole turvallista.", "pauseMs": 600 },
-    { "mode": "listening", "text": "Miltä sinusta tuntuu?", "pauseMs": 600, "teacherHint": "Emoji vote" },
-    { "mode": "regulation", "text": "Hengitä sisään… ja ulos. Katsotaan yhdessä.", "pauseMs": 800 },
-    { "mode": "listening", "text": "Kun haluat heittää, mitä voit tehdä?", "pauseMs": 600 },
-    { "mode": "baseline", "text": "Laske esine alas. Pyydä apua. Mene aikuisen luo.", "pauseMs": 500 },
-    { "mode": "warm", "text": "Sinä yritit. Me opimme yhdessä.", "pauseMs": 500 }
+    { "mode": "baseline", "text": "Hei, täällä Lumi.", "pauseMs": 350 },
+    { "mode": "baseline", "text": "Leikitään yhdessä turvallisesti.", "pauseMs": 350 },
+    { "mode": "listening", "text": "Kuuluu pomppu (pallon pomppu). Lelut lentävät ilmassa.", "pauseMs": 450 },
+    { "mode": "firm", "text": "Pysähdytään. Sisällä ei heitetä. Se voi osua.", "pauseMs": 600 },
+    { "mode": "listening", "text": "Miltä sinusta tuntuu, jos lelu osuu?", "pauseMs": 550, "teacherHint": "Tunnekuvat" },
+    { "mode": "regulation", "text": "Hengitä rauhassa sisään… ja ulos.", "pauseMs": 800 },
+    { "mode": "firm_calm", "text": "Lelut pysyvät lattialla. Kädet syliin.", "pauseMs": 500 },
+    { "mode": "listening", "text": "Tarvitsetko apua? Pyydä aikuinen mukaan.", "pauseMs": 500 },
+    { "mode": "warm", "text": "Lasketaan yhdessä kolmeen ja lasketaan lelu alas. 1…2…3… hienosti!", "pauseMs": 650 },
+    { "mode": "baseline", "text": "Hyvä. Nyt jatketaan leikkiä rauhassa.", "pauseMs": 450 }
   ]
 }
