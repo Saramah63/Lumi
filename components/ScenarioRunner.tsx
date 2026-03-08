@@ -475,6 +475,7 @@ export function ScenarioRunner() {
   const [teacherPauseBetweenSteps, setTeacherPauseBetweenSteps] = useState(true);
   const [awaitingTeacherContinue, setAwaitingTeacherContinue] = useState(false);
   const teacherPendingStepRef = useRef<number | null>(null);
+  const [awaitingDiscussionNote, setAwaitingDiscussionNote] = useState(false);
 
   const [votingMode, setVotingMode] = useState(true);
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
@@ -563,6 +564,12 @@ export function ScenarioRunner() {
     if (teacherMode) return;
     setAwaitingTeacherContinue(false);
     teacherPendingStepRef.current = null;
+    setAwaitingDiscussionNote(false);
+  }, [teacherMode]);
+
+  useEffect(() => {
+    if (!teacherMode) return;
+    setTeacherPauseBetweenSteps(true);
   }, [teacherMode]);
 
   useEffect(() => {
@@ -931,6 +938,7 @@ export function ScenarioRunner() {
       ) {
         teacherPendingStepRef.current = index + 1;
         setAwaitingTeacherContinue(true);
+        setAwaitingDiscussionNote(true);
         setIsRunning(false);
         return;
       }
@@ -1124,6 +1132,7 @@ export function ScenarioRunner() {
     if (next == null) return;
     setRunError(null);
     setAwaitingTeacherContinue(false);
+    setAwaitingDiscussionNote(false);
     teacherPendingStepRef.current = null;
     setStepIndex(next);
     setIsRunning(true);
@@ -1138,6 +1147,22 @@ export function ScenarioRunner() {
     log.teacherActions.push({ type: "next", at: new Date().toISOString() });
     setSessionLog({ ...log });
   }, [sessionMode, awaitingChoice, done]);
+
+  const handleReplayScenario = useCallback(async () => {
+    await cancelLumiSpeak();
+    setRunError(null);
+    setDone(false);
+    setAwaitingChoice(false);
+    setAwaitingTeacherContinue(false);
+    setAwaitingDiscussionNote(false);
+    teacherPendingStepRef.current = null;
+    setLastVoteAppliedStep(-1);
+    setVotes({});
+    setSelectedEmoji(null);
+    setStepIndex(0);
+    setElapsedSec(0);
+    setIsRunning(true);
+  }, []);
 
   const handleFirmBoundary = useCallback(async () => {
     if (sessionMode !== "group_script") return;
@@ -1703,6 +1728,14 @@ export function ScenarioRunner() {
                 >
                   Alusta
                 </button>
+                <button
+                  type="button"
+                  onClick={() => void handleReplayScenario()}
+                  disabled={sessionMode !== "group_script"}
+                  className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
+                >
+                  Toista skenaario
+                </button>
               </div>
               <div className="grid min-w-0 grid-cols-3 gap-2">
                 <button
@@ -1729,6 +1762,9 @@ export function ScenarioRunner() {
                   Jatka seuraavaan
                 </button>
               </div>
+              {awaitingDiscussionNote && (
+                <p className="text-xs text-amber-200">Opettajan tauko: keskustele hetki, jatka kun ryhmä on valmis.</p>
+              )}
               <p className="text-xs text-slate-400">
                 {sessionMode !== "group_script"
                   ? "Yksilötila on käytössä."
