@@ -1724,6 +1724,19 @@ export function ScenarioRunner() {
           <div className="grid min-w-0 gap-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:grid-cols-2 md:p-4">
             <div className="min-w-0 space-y-3 md:col-span-2">
               <p className="text-sm font-medium text-slate-200">Istunto</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex items-center gap-2 rounded-xl border border-cyan-100/20 bg-slate-900/60 px-3 py-2 text-xs font-semibold text-slate-100">
+                  Ryhmäkoko
+                  <input
+                    type="number"
+                    min={1}
+                    max={24}
+                    value={groupSize}
+                    onChange={(e) => setGroupSize(Math.max(1, Math.min(24, Number(e.target.value) || 1)))}
+                    className="h-8 w-16 rounded-lg border border-cyan-200/40 bg-slate-950/70 px-2 text-center text-xs font-semibold text-slate-100 outline-none focus:border-cyan-300"
+                  />
+                </label>
+              </div>
               <div className="grid min-w-0 grid-cols-5 gap-2">
                 <button
                   type="button"
