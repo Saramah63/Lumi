@@ -242,7 +242,7 @@ export async function lumiSpeak(
     analyser.fftSize = 1024;
     analyser.smoothingTimeConstant = 0.82;
     silentGain = context.createGain();
-    silentGain.gain.value = 0; // keep graph alive without adding second audible path
+    silentGain.gain.value = 1;
     source.connect(analyser);
     analyser.connect(silentGain);
     silentGain.connect(context.destination);
