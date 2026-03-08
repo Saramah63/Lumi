@@ -1213,7 +1213,13 @@ export function ScenarioRunner() {
     log.votingEvents.push({ at: new Date().toISOString(), emoji: emojiId, countDelta: 1, totalVotes });
     setSessionLog({ ...log });
     const label = emojis.find((e) => e.id === emojiId)?.text ?? "Tunne";
-    setVoteEffect(`Ääni vastaanotettu: ${label}.`);
+    const supportive: Record<string, string> = {
+      happy: "He näyttävät iloisilta. Se tuntuu hyvältä!",
+      sad: "He näyttävät surullisilta. Ehkä he tarvitsevat apua.",
+      angry: "Tuo on vihaa. Hidastetaan yhdessä ja hengitetään.",
+      scared: "On ok olla peloissaan. Voimme kertoa aikuiselle.",
+    };
+    setVoteEffect(supportive[emojiId] ?? `Ääni vastaanotettu: ${label}.`);
   };
 
   const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0);
