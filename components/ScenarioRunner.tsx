@@ -2232,6 +2232,13 @@ export function ScenarioRunner() {
               </button>
               <button
                 type="button"
+                onClick={() => void handleReplayScenario()}
+                className="rounded-xl bg-cyan-600 px-3 py-1 text-xs font-semibold text-white"
+              >
+                Toista alusta
+              </button>
+              <button
+                type="button"
                 onClick={() => setSummaryOpen(true)}
                 className="rounded-xl bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-100"
               >
