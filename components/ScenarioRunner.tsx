@@ -1222,6 +1222,19 @@ export function ScenarioRunner() {
     await handleCalmSupport();
   }, [ensureSessionLog, handleCalmSupport]);
 
+  const handlePrevStep = useCallback(async () => {
+    if (sessionMode !== "group_script") return;
+    await cancelLumiSpeak();
+    setRunError(null);
+    setAwaitingChoice(false);
+    setDone(false);
+    setAwaitingTeacherContinue(false);
+    setAwaitingDiscussionNote(false);
+    teacherPendingStepRef.current = null;
+    setIsRunning(false);
+    setStepIndex((prev) => Math.max(0, prev - 1));
+  }, [sessionMode]);
+
   const handleOptionClick = async (next: number) => {
     await unlockAudio();
     setAwaitingChoice(false);
@@ -1730,6 +1743,14 @@ export function ScenarioRunner() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => void handlePrevStep()}
+                  disabled={sessionMode !== "group_script" || stepIndex === 0}
+                  className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
+                >
+                  Edellinen vaihe
+                </button>
+                <button
+                  type="button"
                   onClick={() => void handleReplayScenario()}
                   disabled={sessionMode !== "group_script"}
                   className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
@@ -1760,6 +1781,14 @@ export function ScenarioRunner() {
                   className="h-11 max-w-full rounded-xl bg-amber-600 px-2 text-xs font-semibold leading-tight text-white disabled:opacity-50 md:text-sm"
                 >
                   Jatka seuraavaan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleNextStep()}
+                  disabled={sessionMode !== "group_script" || awaitingChoice || done}
+                  className="h-11 max-w-full rounded-xl bg-cyan-700 px-2 text-xs font-semibold leading-tight text-white disabled:opacity-50 md:text-sm"
+                >
+                  Seuraava vaihe
                 </button>
               </div>
               {awaitingDiscussionNote && (
