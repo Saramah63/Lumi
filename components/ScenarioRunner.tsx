@@ -1735,14 +1735,6 @@ export function ScenarioRunner() {
                 >
                   Alusta
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void handleReplayScenario()}
-                  disabled={sessionMode !== "group_script"}
-                  className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
-                >
-                  Toista skenaario
-                </button>
               </div>
               {awaitingDiscussionNote && (
                 <p className="text-xs text-amber-200">Opettajan tauko: keskustele hetki, jatka kun ryhmä on valmis.</p>
