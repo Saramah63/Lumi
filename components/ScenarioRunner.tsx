@@ -713,6 +713,7 @@ export function ScenarioRunner() {
   );
   const avatarMouthState: MouthState =
     animationSource === "breath" ? (breathInhale ? 1 : 4) : mouthState;
+  const breathPulse = animationSource === "breath" && showBreathCue;
 
   const selectRandomScenario = useCallback(() => {
     const pool = availableScenarios.length > 0 ? availableScenarios : scenarios;
@@ -1719,7 +1720,14 @@ export function ScenarioRunner() {
   return (
     <div className="mx-auto grid h-full min-h-0 w-full max-w-6xl gap-6 text-slate-100 lg:grid-cols-[1.4fr_1fr]">
       <section className="flex min-h-0 flex-col items-center justify-center overflow-hidden rounded-3xl border border-cyan-200/20 bg-white/[0.04] p-4 backdrop-blur-sm md:min-h-[66vh] md:p-8">
-        <div className="aspect-square w-full max-w-[460px] md:max-w-[520px]">
+        <div
+          className={`aspect-square w-full max-w-[460px] md:max-w-[520px] ${breathPulse ? "animate-[breathPulse_1.8s_ease-in-out_infinite]" : ""}`}
+          style={
+            breathPulse
+              ? { boxShadow: "0 0 0 0 rgba(134, 239, 255, 0.35)", borderRadius: "40px" }
+              : undefined
+          }
+        >
           <LumiAvatar
             isSpeaking={isSpeaking}
             mouthState={avatarMouthState}
@@ -2272,6 +2280,22 @@ export function ScenarioRunner() {
         )}
         </div>
       </section>
+      <style jsx global>{`
+        @keyframes breathPulse {
+          0% {
+            transform: scale(0.98);
+            box-shadow: 0 0 0 0 rgba(134, 239, 255, 0.35);
+          }
+          50% {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 22px rgba(134, 239, 255, 0.02);
+          }
+          100% {
+            transform: scale(0.98);
+            box-shadow: 0 0 0 0 rgba(134, 239, 255, 0.35);
+          }
+        }
+      `}</style>
     </div>
   );
 }
