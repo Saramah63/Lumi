@@ -950,8 +950,8 @@ export function ScenarioRunner() {
       await new Promise((resolve) => window.setTimeout(resolve, pauseMs));
 
       if (current.options && current.options.length > 0) {
-        setIsRunning(false);
         setAwaitingChoice(true);
+        setIsRunning(false);
         return;
       }
 
@@ -1012,7 +1012,7 @@ export function ScenarioRunner() {
 
   useEffect(() => {
     if (sessionMode !== "group_script") return;
-    if (!isRunning || awaitingChoice || done) return;
+    if (!isRunning || done) return;
     let active = true;
 
     const run = async () => {
