@@ -1308,6 +1308,9 @@ export function ScenarioRunner() {
     if (sessionMode !== "group_script") return;
     await cancelLumiSpeak();
     setRunError(null);
+    const log = ensureSessionLog();
+    log.teacherActions.push({ type: "prev", at: new Date().toISOString() });
+    setSessionLog({ ...log });
     setAwaitingChoice(false);
     setDone(false);
     setAwaitingTeacherContinue(false);
@@ -1315,7 +1318,7 @@ export function ScenarioRunner() {
     teacherPendingStepRef.current = null;
     setIsRunning(false);
     setStepIndex((prev) => Math.max(0, prev - 1));
-  }, [sessionMode]);
+  }, [sessionMode, ensureSessionLog]);
 
   const handleOptionClick = async (next: number) => {
     await unlockAudio();
@@ -2118,7 +2121,7 @@ export function ScenarioRunner() {
             <div className="grid min-w-0 grid-cols-2 gap-2 md:grid-cols-3">
               <button
                 onClick={() => void handlePrevStep()}
-                disabled={stepIndex === 0 || awaitingChoice || isRunning === false || sessionMode !== "group_script"}
+                disabled={stepIndex === 0 || awaitingChoice || sessionMode !== "group_script"}
                 className="h-auto min-h-12 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl bg-slate-800 px-3 py-3 text-sm font-semibold leading-tight text-white md:min-h-14 md:text-base"
               >
                 Edellinen
