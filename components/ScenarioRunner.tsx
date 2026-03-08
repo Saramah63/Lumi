@@ -815,6 +815,23 @@ export function ScenarioRunner() {
       const breathingMode = isBreathingStep(current);
       let breathPhaseTimer: number | null = null;
       let breathRaf: number | null = null;
+      const runGuidedBreathing = async () => {
+        const cycles = 2;
+        for (let i = 0; i < cycles; i += 1) {
+          setBreathInhale(true);
+          setForceBlink(true);
+          setBreathGlow(0.12);
+          await speakLine("Hengitä sisään", "warm");
+          await new Promise((resolve) => window.setTimeout(resolve, 500));
+          setBreathInhale(false);
+          setForceBlink(false);
+          setBreathGlow(0.06);
+          await speakLine("Puhalla ulos", "regulation");
+          await new Promise((resolve) => window.setTimeout(resolve, 600));
+        }
+        setBreathGlow(0.05);
+        setBreathInhale(false);
+      };
       if (breathingMode) {
         setAnimationSource("breath");
         setShowBreathCue(true);
@@ -852,6 +869,9 @@ export function ScenarioRunner() {
       }
 
       await speakLine(current.text, current.mode as SpeakMode);
+      if (breathingMode) {
+        await runGuidedBreathing();
+      }
       if (breathingMode) {
         setGlowState("calm");
         await speakLine("Olen tässä. Hyvä rauha.", "warm");
