@@ -503,7 +503,7 @@ export function ScenarioRunner() {
   const [svgMismatchWarning, setSvgMismatchWarning] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [teacherMode, setTeacherMode] = useState(false);
-  const [teacherPauseBetweenSteps, setTeacherPauseBetweenSteps] = useState(true);
+  const teacherPauseBetweenSteps = true;
   const [awaitingTeacherContinue, setAwaitingTeacherContinue] = useState(false);
   const teacherPendingStepRef = useRef<number | null>(null);
   const [awaitingDiscussionNote, setAwaitingDiscussionNote] = useState(false);
@@ -616,11 +616,6 @@ export function ScenarioRunner() {
     setAwaitingTeacherContinue(false);
     teacherPendingStepRef.current = null;
     setAwaitingDiscussionNote(false);
-  }, [teacherMode]);
-
-  useEffect(() => {
-    if (!teacherMode) return;
-    setTeacherPauseBetweenSteps(true);
   }, [teacherMode]);
 
   useEffect(() => {
@@ -1007,7 +1002,7 @@ export function ScenarioRunner() {
         isPlayingStepRef.current = false;
       }
     },
-    [activeScenario, votingMode, lastVoteAppliedStep, votes, sessionMode, ensureSessionLog, endSession, performVoteResponse, speakLine, teacherMode, teacherPauseBetweenSteps, awaitingChoice, glowPinned]
+    [activeScenario, votingMode, lastVoteAppliedStep, votes, sessionMode, ensureSessionLog, endSession, performVoteResponse, speakLine, teacherMode, awaitingChoice, glowPinned]
   );
 
   useEffect(() => {
@@ -1747,15 +1742,6 @@ export function ScenarioRunner() {
                   className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
                 >
                   Toista skenaario
-                </button>
-              </div>
-              <div className="grid min-w-0 grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTeacherPauseBetweenSteps((v) => !v)}
-                  className={`h-11 max-w-full rounded-xl px-2 text-xs font-semibold leading-tight whitespace-normal break-words [overflow-wrap:anywhere] md:text-sm ${teacherPauseBetweenSteps ? "bg-cyan-700 text-white" : "bg-slate-800 text-slate-100"}`}
-                >
-                  {teacherPauseBetweenSteps ? "Tauko vaiheiden välissä" : "Etene automaattisesti"}
                 </button>
               </div>
               {awaitingDiscussionNote && (
