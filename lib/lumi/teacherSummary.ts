@@ -1,4 +1,4 @@
-type TeacherActionType = "next" | "prev" | "repeat" | "calm_support" | "firm_boundary" | "reset" | "start";
+export type TeacherActionType = "next" | "prev" | "repeat" | "calm_support" | "firm_boundary" | "reset" | "start";
 
 export type SessionLog = {
   sessionId: string;
