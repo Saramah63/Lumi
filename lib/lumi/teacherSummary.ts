@@ -9,7 +9,7 @@ export type SessionLog = {
   scenarioId: string;
   scenarioTitle: string;
   stepsPlayed: Array<{ stepIndex: number; mode: string; text: string; startedAt: string }>;
-  teacherActions: Array<{ type: "next" | "repeat" | "calm_support" | "firm_boundary" | "reset" | "start"; at: string }>;
+  teacherActions: Array<{ type: "next" | "prev" | "repeat" | "calm_support" | "firm_boundary" | "reset" | "start"; at: string }>;
   votingEvents: Array<{ at: string; emoji: string; countDelta: number; totalVotes: number }>;
   microPractices: Array<{ type: "breathing" | "pause" | "repair_phrase" | "body_check"; at: string }>;
   safetyEvents: Array<{ level: "ok" | "escalate"; reason: string; at: string }>;
