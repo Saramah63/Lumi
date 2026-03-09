@@ -1717,8 +1717,8 @@ export function ScenarioRunner() {
   }
 
   return (
-    <div className="mx-auto grid h-full min-h-0 w-full max-w-6xl gap-6 text-slate-100 lg:grid-cols-[1.4fr_1fr]">
-      <section className="flex min-h-0 flex-col items-center justify-center overflow-hidden rounded-3xl border border-cyan-200/20 bg-white/[0.04] p-4 backdrop-blur-sm md:min-h-[66vh] md:p-8">
+    <div className="mx-auto grid h-full min-h-0 w-full max-w-6xl gap-6 bg-gradient-to-br from-[#eaf7ff] via-white to-[#fdf0e7] p-4 text-slate-900 lg:grid-cols-[1.35fr_1fr]">
+      <section className="flex min-h-0 flex-col items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-white/85 p-4 shadow-sm backdrop-blur md:min-h-[66vh] md:p-8">
         <div
           className={`aspect-square w-full max-w-[460px] md:max-w-[520px] ${breathPulse ? "animate-[breathPulse_1.8s_ease-in-out_infinite]" : ""}`}
           style={
@@ -1741,19 +1741,20 @@ export function ScenarioRunner() {
             regulationActive={animationSource === "breath"}
           />
         </div>
-        <div className="mt-4 min-w-0 overflow-hidden text-center">
-          <p className="break-words text-sm font-semibold text-slate-50 [overflow-wrap:anywhere]">{activeScenario?.title ?? "-"} • {stepIndex + 1}/{activeScenario?.steps.length ?? 0}</p>
+        <div className="mt-5 min-w-0 overflow-hidden text-center">
+          <p className="break-words text-lg font-semibold text-slate-800 [overflow-wrap:anywhere]">{activeScenario?.title ?? "-"}</p>
+          <p className="mt-1 text-xs text-slate-500">Vaihe {stepIndex + 1}/{activeScenario?.steps.length ?? 0}</p>
           {showBreathCue ? (
-            <p className="mt-1 text-xs font-medium text-cyan-100">Hengitetään yhdessä</p>
+            <p className="mt-1 text-xs font-medium text-cyan-700">Hengitetään yhdessä</p>
           ) : null}
         </div>
       </section>
 
-      <section className="flex min-h-0 min-w-0 flex-col gap-4 overflow-hidden rounded-3xl border border-cyan-200/20 bg-white/[0.04] p-4 backdrop-blur-sm md:min-h-[66vh] md:p-6">
-            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-cyan-100/20 bg-slate-900/40 px-3 py-3 md:px-4">
+      <section className="flex min-h-0 min-w-0 flex-col gap-4 overflow-hidden rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur md:min-h-[66vh] md:p-6">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-3 md:px-4">
               <div className="min-w-0">
-                <p className="break-words text-sm font-semibold text-slate-100 [overflow-wrap:anywhere]">Opettajan ohjaus</p>
-                <p className="break-words text-xs text-slate-400 [overflow-wrap:anywhere]">Aika: {elapsedLabel}</p>
+                <p className="break-words text-base font-semibold text-slate-800 [overflow-wrap:anywhere]">Opettajan ohjaus</p>
+                <p className="break-words text-xs text-slate-500 [overflow-wrap:anywhere]">Aika: {elapsedLabel}</p>
               </div>
         </div>
 
@@ -1876,8 +1877,8 @@ export function ScenarioRunner() {
                 Rauhallinen tuki
               </button>
             </div>
-          </div>
-        )}
+            </div>
+        
 
         {groupSize === 1 && (
           <div className="min-w-0 space-y-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:p-4">
