@@ -1,4 +1,5 @@
-export type TeacherActionType = "next" | "prev" | "repeat" | "calm_support" | "firm_boundary" | "reset" | "start";
+export const teacherActionTypes = ["next", "prev", "repeat", "calm_support", "firm_boundary", "reset", "start"] as const;
+export type TeacherActionType = (typeof teacherActionTypes)[number];
 
 export type SessionLog = {
   sessionId: string;
