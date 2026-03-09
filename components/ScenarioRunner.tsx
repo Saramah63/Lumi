@@ -876,7 +876,6 @@ export function ScenarioRunner() {
         mode: current.mode,
         text: current.text,
         startedAt: new Date().toISOString(),
-        emotionTrend: emotionTrend ?? undefined,
       });
       setSessionLog({ ...log });
       const breathingMode = isBreathingStep(current);
@@ -2204,10 +2203,10 @@ export function ScenarioRunner() {
                 {emojis.map((emoji) => (
                   <button
                     key={emoji.id}
-                    className={`rounded-full border text-slate-700 shadow-sm transition active:scale-95 ${
+                    className={`rounded-2xl border active:scale-95 ${
                       selectedEmoji === emoji.id
-                        ? "border-sky-300 bg-sky-50 shadow"
-                        : "border-slate-200 bg-white"
+                        ? "border-cyan-300 bg-cyan-500/20"
+                        : "border-cyan-100/30 bg-slate-900/50"
                     } ${votingMode ? "h-20 text-4xl" : "h-14 text-2xl"} ${votingMode ? "" : "opacity-50"}`}
                     aria-label={emoji.id}
                     type="button"
@@ -2216,10 +2215,10 @@ export function ScenarioRunner() {
                   >
                     <span className="flex flex-col items-center justify-center gap-1 text-base">
                       <span className={votingMode ? "text-4xl" : "text-2xl"}>{emoji.label}</span>
-                      <span className="text-[11px] text-slate-600">{emoji.text}</span>
+                      <span className="text-[10px] text-slate-200">{emoji.text}</span>
                     </span>
                     {votingMode && (
-                      <span className="ml-2 inline-block rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-700 align-middle shadow-inner">
+                      <span className="ml-2 inline-block rounded-md bg-slate-900/60 px-2 py-0.5 text-xs align-middle">
                         {votes[emoji.id] ?? 0}
                       </span>
                     )}
@@ -2227,29 +2226,29 @@ export function ScenarioRunner() {
                 ))}
               </div>
               {selectedEmoji && (
-                <p className="break-words text-xs text-slate-600 [overflow-wrap:anywhere]">
+                <p className="break-words text-xs text-slate-400 [overflow-wrap:anywhere]">
                   Viimeisin tunne: {emojis.find((e) => e.id === selectedEmoji)?.text}
                 </p>
               )}
-              <p className="break-words text-xs text-slate-600 [overflow-wrap:anywhere]">{voteEffect}</p>
+              <p className="break-words text-xs text-cyan-200/90 [overflow-wrap:anywhere]">{voteEffect}</p>
             </div>
           </>
         ) : null}
 
         {runError && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 break-words [overflow-wrap:anywhere] shadow-sm">
+          <div className="rounded-2xl border border-red-300/60 bg-red-500/10 p-3 text-sm text-red-200 break-words [overflow-wrap:anywhere]">
             {runError}
           </div>
         )}
 
         {sessionMode === "group_script" && awaitingChoice && step?.options && (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-800">Valitse seuraava vaihe</p>
+            <p className="text-sm font-medium text-slate-200">Valitse seuraava vaihe</p>
             {step.options.map((opt) => (
               <button
                 key={`${opt.label}-${opt.next}`}
                 onClick={() => handleOptionClick(opt.next)}
-                className="h-auto min-h-14 w-full max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl bg-sky-500 px-4 py-3 text-base font-semibold leading-snug text-white shadow-md transition hover:bg-sky-600 active:scale-[0.98] md:text-lg"
+                className="h-auto min-h-14 w-full max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl bg-sky-600 px-4 py-3 text-base font-semibold leading-snug text-white active:scale-[0.98] md:text-lg"
               >
                 {opt.label}
               </button>
@@ -2258,20 +2257,20 @@ export function ScenarioRunner() {
         )}
 
         {sessionMode === "group_script" && done && (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 break-words [overflow-wrap:anywhere] shadow-sm">
+          <div className="rounded-2xl border border-emerald-300/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 break-words [overflow-wrap:anywhere]">
             <p>Istunto valmis. Voit aloittaa uuden istunnon.</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => void handleStartSession()}
-                className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-emerald-600"
+                className="rounded-xl bg-emerald-600 px-3 py-1 text-xs font-semibold text-white"
               >
                 Aloita uusi
               </button>
               <button
                 type="button"
                 onClick={() => setSummaryOpen(true)}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-800 shadow-sm hover:border-sky-200"
+                className="rounded-xl bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-100"
               >
                 Näytä yhteenveto
               </button>
