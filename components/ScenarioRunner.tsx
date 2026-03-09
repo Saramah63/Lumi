@@ -1717,10 +1717,10 @@ export function ScenarioRunner() {
   }
 
   return (
-    <div className="mx-auto grid h-full min-h-0 w-full max-w-6xl gap-6 text-slate-100 lg:grid-cols-[1.4fr_1fr]">
-      <section className="flex min-h-0 flex-col items-center justify-center overflow-hidden rounded-3xl border border-cyan-200/20 bg-white/[0.04] p-4 backdrop-blur-sm md:min-h-[66vh] md:p-8">
+    <div className="mx-auto grid h-full min-h-0 w-full max-w-7xl gap-8 text-slate-100 lg:grid-cols-[1.4fr_1fr]">
+      <section className="flex min-h-0 flex-col items-center justify-center overflow-hidden rounded-[32px] border border-white/15 bg-gradient-to-b from-white/10 via-white/6 to-sky-900/20 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl md:min-h-[66vh] md:p-10">
         <div
-          className={`aspect-square w-full max-w-[460px] md:max-w-[520px] ${breathPulse ? "animate-[breathPulse_1.8s_ease-in-out_infinite]" : ""}`}
+          className={`aspect-square w-full max-w-[500px] md:max-w-[560px] ${breathPulse ? "animate-[breathPulse_1.8s_ease-in-out_infinite]" : ""}`}
           style={
             breathPulse
               ? { boxShadow: "0 0 0 0 rgba(134, 239, 255, 0.35)", borderRadius: "40px" }
@@ -1741,19 +1741,19 @@ export function ScenarioRunner() {
             regulationActive={animationSource === "breath"}
           />
         </div>
-        <div className="mt-4 min-w-0 overflow-hidden text-center">
-          <p className="break-words text-sm font-semibold text-slate-50">{activeScenario?.title ?? "-"} • {stepIndex + 1}/{activeScenario?.steps.length ?? 0}</p>
+        <div className="mt-5 min-w-0 overflow-hidden text-center">
+          <p className="break-words text-base font-semibold text-white drop-shadow-sm">{activeScenario?.title ?? "-"} • {stepIndex + 1}/{activeScenario?.steps.length ?? 0}</p>
           {showBreathCue ? (
-            <p className="mt-1 text-xs font-medium text-cyan-100">Hengitetään yhdessä</p>
+            <p className="mt-1 text-sm font-medium text-cyan-100">Hengitetään yhdessä</p>
           ) : null}
         </div>
       </section>
 
-      <section className="flex min-h-0 min-w-0 flex-col gap-4 overflow-hidden rounded-3xl border border-cyan-200/20 bg-white/[0.04] p-4 backdrop-blur-sm md:min-h-[66vh] md:p-6">
-            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-cyan-100/20 bg-slate-900/40 px-3 py-3 md:px-4">
+      <section className="flex min-h-0 min-w-0 flex-col gap-5 overflow-hidden rounded-[32px] border border-white/15 bg-gradient-to-b from-slate-900/70 via-slate-900/60 to-slate-900/40 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl md:min-h-[66vh] md:p-7">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 shadow-inner">
               <div className="min-w-0">
-                <p className="break-words text-sm font-semibold text-slate-100">Opettajan ohjaus</p>
-                <p className="break-words text-xs text-slate-400">Aika: {elapsedLabel}</p>
+                <p className="break-words text-base font-semibold text-white">Opettajan ohjaus</p>
+                <p className="break-words text-xs font-medium text-cyan-100/80">Aika: {elapsedLabel}</p>
               </div>
         </div>
 
@@ -1779,7 +1779,7 @@ export function ScenarioRunner() {
                   type="button"
                   onClick={() => void handleStartSession()}
                   disabled={isRunning || sessionMode !== "group_script"}
-                  className="h-11 max-w-full rounded-xl bg-cyan-600 px-2 text-xs font-semibold leading-tight text-white disabled:opacity-60 md:text-sm"
+                  className="h-12 max-w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-3 text-sm font-semibold leading-tight text-slate-900 shadow-lg shadow-cyan-500/30 transition hover:translate-y-[-1px] disabled:opacity-60 md:text-base"
                 >
                   Aloita
                 </button>
@@ -1787,7 +1787,7 @@ export function ScenarioRunner() {
                   type="button"
                   onClick={() => void handleStop()}
                   disabled={sessionMode !== "group_script"}
-                  className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
+                  className="h-12 max-w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-3 text-sm font-semibold leading-tight text-white shadow-lg shadow-indigo-500/30 transition hover:translate-y-[-1px] disabled:opacity-60 md:text-base"
                 >
                   Lopeta
                 </button>
@@ -1795,7 +1795,7 @@ export function ScenarioRunner() {
                   type="button"
                   onClick={() => void handleRestart()}
                   disabled={sessionMode !== "group_script"}
-                  className="h-11 max-w-full rounded-xl bg-slate-800 px-2 text-xs font-semibold leading-tight text-slate-100 disabled:opacity-60 md:text-sm"
+                  className="h-12 max-w-full rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-3 text-sm font-semibold leading-tight text-slate-900 shadow-lg shadow-orange-400/30 transition hover:translate-y-[-1px] disabled:opacity-60 md:text-base"
                 >
                   Alusta
                 </button>
@@ -1819,14 +1819,14 @@ export function ScenarioRunner() {
                 <button
                   type="button"
                   onClick={() => setTheme("turvataidot")}
-                  className={`h-11 max-w-full whitespace-normal break-words leading-tight rounded-xl border px-2 text-xs md:text-sm ${theme === "turvataidot" ? "border-cyan-300 bg-cyan-500/15" : "border-cyan-100/30 bg-slate-900/50"}`}
+                  className={`h-12 max-w-full whitespace-normal break-words leading-tight rounded-2xl border px-3 text-sm font-semibold shadow-sm transition ${theme === "turvataidot" ? "border-cyan-300 bg-cyan-100/70 text-slate-900" : "border-white/15 bg-white/5 text-slate-100 hover:border-cyan-200/60"}`}
                 >
                   Turvataidot
                 </button>
                 <button
                   type="button"
                   onClick={() => setTheme("toveritaidot")}
-                  className={`h-11 max-w-full whitespace-normal break-words leading-tight rounded-xl border px-2 text-xs md:text-sm ${theme === "toveritaidot" ? "border-cyan-300 bg-cyan-500/15" : "border-cyan-100/30 bg-slate-900/50"}`}
+                  className={`h-12 max-w-full whitespace-normal break-words leading-tight rounded-2xl border px-3 text-sm font-semibold shadow-sm transition ${theme === "toveritaidot" ? "border-pink-200 bg-pink-100/80 text-slate-900" : "border-white/15 bg-white/5 text-slate-100 hover:border-pink-200/60"}`}
                 >
                   Toveritaidot
                 </button>
@@ -1854,7 +1854,7 @@ export function ScenarioRunner() {
               <button
                 type="button"
                 onClick={() => setVoiceEnabled((v) => !v)}
-                className={`h-11 w-full max-w-full whitespace-normal break-words rounded-xl px-2 text-xs font-semibold leading-tight md:text-sm ${voiceEnabled ? "bg-emerald-600 text-white" : "bg-slate-700 text-slate-100"}`}
+                className={`h-12 w-full max-w-full whitespace-normal break-words rounded-2xl px-3 text-sm font-semibold leading-tight shadow-md transition hover:translate-y-[-1px] md:text-base ${voiceEnabled ? "bg-gradient-to-r from-emerald-400 to-lime-300 text-slate-900 shadow-emerald-400/30" : "bg-white/8 text-white border border-white/10"}`}
               >
                 {voiceEnabled ? "Ääni päällä" : "Ääni pois"}
               </button>
@@ -1864,14 +1864,14 @@ export function ScenarioRunner() {
               <button
                 type="button"
                 onClick={() => void handleRepeatStep()}
-                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-xl bg-slate-800 px-2 py-2 text-xs font-semibold leading-tight text-white md:text-sm"
+                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-2xl bg-gradient-to-r from-sky-400 to-indigo-400 px-3 py-2 text-sm font-semibold leading-tight text-slate-900 shadow-md shadow-sky-400/30 transition hover:translate-y-[-1px] md:text-base"
               >
                 Toista vaihe
               </button>
               <button
                 type="button"
                 onClick={() => void handleCalmSupportLogged()}
-                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-xl bg-amber-600 px-2 py-2 text-xs font-semibold leading-tight text-white md:text-sm"
+                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-3 py-2 text-sm font-semibold leading-tight text-slate-900 shadow-md shadow-orange-300/40 transition hover:translate-y-[-1px] md:text-base"
               >
                 Rauhallinen tuki
               </button>
@@ -2149,20 +2149,20 @@ export function ScenarioRunner() {
               <button
                 onClick={() => void handlePrevStep()}
                 disabled={stepIndex === 0 || awaitingChoice || sessionMode !== "group_script"}
-                className="h-auto min-h-12 max-w-full whitespace-normal break-words rounded-2xl bg-slate-800 px-3 py-3 text-sm font-semibold leading-tight text-white md:min-h-14 md:text-base"
+                className="h-auto min-h-12 max-w-full whitespace-normal break-words rounded-2xl bg-white/8 px-3 py-3 text-sm font-semibold leading-tight text-white shadow-inner md:min-h-14 md:text-base disabled:opacity-50"
               >
                 Edellinen
               </button>
               <button
                 onClick={() => void handleNextStep()}
                 disabled={done}
-                className="h-auto min-h-12 max-w-full whitespace-normal break-words rounded-2xl px-3 py-3 text-sm font-semibold leading-tight text-white disabled:opacity-60 md:min-h-14 md:text-base bg-indigo-600"
+                className="h-auto min-h-12 max-w-full whitespace-normal break-words rounded-2xl bg-gradient-to-r from-indigo-400 to-fuchsia-500 px-3 py-3 text-sm font-semibold leading-tight text-white shadow-lg shadow-fuchsia-500/30 transition hover:translate-y-[-1px] disabled:opacity-60 md:min-h-14 md:text-base"
               >
                 Seuraava
               </button>
               <button
                 onClick={() => void handleRepeatStep()}
-                className="h-auto min-h-12 max-w-full whitespace-normal break-words rounded-2xl bg-slate-800 px-3 py-3 text-sm font-semibold leading-tight text-white md:min-h-14 md:text-base"
+                className="h-auto min-h-12 max-w-full whitespace-normal break-words rounded-2xl bg-gradient-to-r from-sky-300 to-cyan-400 px-3 py-3 text-sm font-semibold leading-tight text-slate-900 shadow-lg shadow-cyan-300/30 transition hover:translate-y-[-1px] md:min-h-14 md:text-base"
               >
                 Toista
               </button>
@@ -2179,8 +2179,8 @@ export function ScenarioRunner() {
                   <button
                     type="button"
                     onClick={() => setVotingMode((v) => !v)}
-                    className={`h-10 max-w-full whitespace-normal break-words rounded-xl px-3 text-xs font-semibold leading-tight md:text-sm ${
-                      votingMode ? "bg-cyan-600 text-white" : "bg-slate-800 text-slate-100"
+                    className={`h-10 max-w-full whitespace-normal break-words rounded-xl px-3 text-xs font-semibold leading-tight shadow transition md:text-sm ${
+                      votingMode ? "bg-gradient-to-r from-emerald-300 to-cyan-400 text-slate-900 shadow-emerald-300/30" : "bg-white/10 text-white border border-white/15"
                     }`}
                   >
                     {votingMode ? "Päällä" : "Pois"}
@@ -2191,7 +2191,7 @@ export function ScenarioRunner() {
                       setVotes({});
                       setSelectedEmoji(null);
                     }}
-                    className="h-10 max-w-full whitespace-normal break-words rounded-xl bg-slate-800 px-3 text-xs font-semibold leading-tight text-slate-100 md:text-sm"
+                    className="h-10 max-w-full whitespace-normal break-words rounded-xl bg-white/10 px-3 text-xs font-semibold leading-tight text-white border border-white/15 md:text-sm"
                   >
                     Tyhjennä
                   </button>
@@ -2202,10 +2202,10 @@ export function ScenarioRunner() {
                 {emojis.map((emoji) => (
                   <button
                     key={emoji.id}
-                    className={`rounded-2xl border active:scale-95 ${
+                    className={`rounded-2xl border active:scale-95 transition shadow-sm ${
                       selectedEmoji === emoji.id
-                        ? "border-cyan-300 bg-cyan-500/20"
-                        : "border-cyan-100/30 bg-slate-900/50"
+                        ? "border-white/70 bg-white/90 text-slate-900 shadow-lg shadow-white/40"
+                        : "border-white/10 bg-white/5 text-white hover:border-white/40"
                     } ${votingMode ? "h-20 text-4xl" : "h-14 text-2xl"} ${votingMode ? "" : "opacity-50"}`}
                     aria-label={emoji.id}
                     type="button"
