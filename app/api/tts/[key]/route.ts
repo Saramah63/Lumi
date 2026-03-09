@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { resolveTTSAudioByKey } from "../../../../src/server/tts-core";
 
-type Params = { params: { key: string } };
+type Params = { params: Promise<{ key: string }> };
 
-export async function GET(_: Request, context: Params) {
-  const { key } = context.params;
+export async function GET(_: NextRequest, context: Params) {
+  const { key } = await context.params;
 
   if (!key) {
     return NextResponse.json({ error: "Missing key" }, { status: 400 });
