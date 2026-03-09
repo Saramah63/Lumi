@@ -1718,15 +1718,17 @@ export function ScenarioRunner() {
 
   return (
     <div className="mx-auto grid h-full min-h-0 w-full max-w-7xl gap-8 text-slate-100 lg:grid-cols-[1.4fr_1fr]">
-      <section className="flex min-h-0 flex-col items-center justify-center overflow-hidden rounded-[32px] border border-white/15 bg-gradient-to-b from-white/10 via-white/6 to-sky-900/20 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl md:min-h-[66vh] md:p-10">
+      <section className="flex min-h-0 flex-col items-center justify-center overflow-hidden rounded-[34px] border border-white/12 bg-gradient-to-b from-white/8 via-white/5 to-sky-900/18 p-7 shadow-[0_28px_80px_rgba(0,0,0,0.36)] backdrop-blur-2xl md:min-h-[66vh] md:p-12">
         <div
-          className={`aspect-square w-full max-w-[500px] md:max-w-[560px] ${breathPulse ? "animate-[breathPulse_1.8s_ease-in-out_infinite]" : ""}`}
+          className={`relative aspect-square w-full max-w-[520px] md:max-w-[580px] ${breathPulse ? "animate-[breathPulse_2s_ease-in-out_infinite]" : ""}`}
           style={
             breathPulse
-              ? { boxShadow: "0 0 0 0 rgba(134, 239, 255, 0.35)", borderRadius: "40px" }
+              ? { boxShadow: "0 0 0 0 rgba(134, 239, 255, 0.38), 0 0 40px 20px rgba(134, 239, 255, 0.12)" }
               : undefined
           }
         >
+          <div className="absolute inset-0 rounded-[44px] bg-[radial-gradient(circle_at_50%_38%,rgba(255,255,255,0.16),transparent_45%),radial-gradient(circle_at_48%_65%,rgba(132,189,255,0.12),transparent_55%)] blur-3xl" />
+          <div className="absolute inset-[-16%] animate-[pulseGlow_6s_ease-in-out_infinite] rounded-full bg-[radial-gradient(circle,rgba(120,210,255,0.12)_0%,rgba(120,210,255,0)_60%)]" />
           <LumiAvatar
             isSpeaking={isSpeaking}
             mouthState={avatarMouthState}
@@ -1741,18 +1743,18 @@ export function ScenarioRunner() {
             regulationActive={animationSource === "breath"}
           />
         </div>
-        <div className="mt-5 min-w-0 overflow-hidden text-center">
-          <p className="break-words text-base font-semibold text-white drop-shadow-sm">{activeScenario?.title ?? "-"} • {stepIndex + 1}/{activeScenario?.steps.length ?? 0}</p>
+        <div className="mt-6 min-w-0 overflow-hidden text-center">
+          <p className="break-words text-base font-semibold text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.35)]">{activeScenario?.title ?? "-"} • {stepIndex + 1}/{activeScenario?.steps.length ?? 0}</p>
           {showBreathCue ? (
             <p className="mt-1 text-sm font-medium text-cyan-100">Hengitetään yhdessä</p>
           ) : null}
         </div>
       </section>
 
-      <section className="flex min-h-0 min-w-0 flex-col gap-5 overflow-hidden rounded-[32px] border border-white/15 bg-gradient-to-b from-slate-900/70 via-slate-900/60 to-slate-900/40 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl md:min-h-[66vh] md:p-7">
-            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 shadow-inner">
+      <section className="flex min-h-0 min-w-0 flex-col gap-5 overflow-hidden rounded-[34px] border border-white/12 bg-gradient-to-b from-slate-900/70 via-slate-900/58 to-slate-900/42 p-6 shadow-[0_26px_80px_rgba(0,0,0,0.4)] backdrop-blur-2xl md:min-h-[66vh] md:p-8">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/8 px-4 py-3 shadow-inner shadow-black/30">
               <div className="min-w-0">
-                <p className="break-words text-base font-semibold text-white">Opettajan ohjaus</p>
+                <p className="break-words text-base font-semibold text-white drop-shadow-sm">Opettajan ohjaus</p>
                 <p className="break-words text-xs font-medium text-cyan-100/80">Aika: {elapsedLabel}</p>
               </div>
         </div>
@@ -1814,7 +1816,7 @@ export function ScenarioRunner() {
               </p>
             </div>
             <div className="min-w-0 space-y-3">
-              <p className="text-sm font-medium text-slate-200">Teema</p>
+              <p className="text-sm font-semibold text-white">Teema</p>
               <div className="grid min-w-0 grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -1834,12 +1836,12 @@ export function ScenarioRunner() {
             </div>
 
             <div className="min-w-0 space-y-3">
-              <p className="text-sm font-medium text-slate-200">Skenaario</p>
+              <p className="text-sm font-semibold text-white">Skenaario</p>
               <select
                 value={scenarioId}
                 onChange={(e) => void switchScenario(e.target.value)}
                 disabled={groupSize === 1}
-                className="h-11 min-w-0 w-full max-w-full rounded-xl border border-cyan-100/30 bg-slate-900/60 px-3 text-sm text-slate-100 disabled:opacity-60"
+                className="h-11 min-w-0 w-full max-w-full rounded-2xl border border-white/12 bg-white/6 px-3 text-sm font-semibold text-white outline-none ring-0 focus:border-cyan-300 focus:bg-white/10 disabled:opacity-60"
               >
                 {availableScenarios.map((item) => (
                   <option key={item.id} value={item.id}>
