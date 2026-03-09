@@ -1877,8 +1877,8 @@ export function ScenarioRunner() {
                 Rauhallinen tuki
               </button>
             </div>
-            </div>
-        
+          </div>
+        )}
 
         {groupSize === 1 && (
           <div className="min-w-0 space-y-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:p-4">
