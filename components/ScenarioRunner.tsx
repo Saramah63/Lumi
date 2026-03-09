@@ -1718,17 +1718,17 @@ export function ScenarioRunner() {
 
   return (
     <div className="mx-auto grid h-full min-h-0 w-full max-w-7xl gap-8 text-slate-100 lg:grid-cols-[1.4fr_1fr]">
-      <section className="flex min-h-0 flex-col items-center justify-center overflow-hidden rounded-[34px] border border-white/12 bg-gradient-to-b from-white/8 via-white/5 to-sky-900/18 p-7 shadow-[0_28px_80px_rgba(0,0,0,0.36)] backdrop-blur-2xl md:min-h-[66vh] md:p-12">
+      <section className="flex min-h-0 flex-col items-center justify-center overflow-hidden rounded-[34px] border border-white/10 bg-gradient-to-b from-white/10 via-white/6 to-[#1A2452]/24 p-7 shadow-[0_32px_96px_rgba(0,0,0,0.48)] backdrop-blur-[16px] md:min-h-[66vh] md:p-12">
         <div
-          className={`relative aspect-square w-full max-w-[520px] md:max-w-[580px] ${breathPulse ? "animate-[breathPulse_2s_ease-in-out_infinite]" : ""}`}
+          className={`relative aspect-square w-full max-w-[520px] md:max-w-[580px] ${breathPulse ? "animate-[breathPulse_3.6s_ease-in-out_infinite]" : ""}`}
           style={
             breathPulse
-              ? { boxShadow: "0 0 0 0 rgba(134, 239, 255, 0.38), 0 0 40px 20px rgba(134, 239, 255, 0.12)" }
+              ? { boxShadow: "0 0 0 0 rgba(126, 231, 255, 0.4), 0 0 55px 26px rgba(182, 156, 255, 0.2)" }
               : undefined
           }
         >
-          <div className="absolute inset-0 rounded-[44px] bg-[radial-gradient(circle_at_50%_38%,rgba(255,255,255,0.16),transparent_45%),radial-gradient(circle_at_48%_65%,rgba(132,189,255,0.12),transparent_55%)] blur-3xl" />
-          <div className="absolute inset-[-16%] animate-[pulseGlow_6s_ease-in-out_infinite] rounded-full bg-[radial-gradient(circle,rgba(120,210,255,0.12)_0%,rgba(120,210,255,0)_60%)]" />
+          <div className="absolute inset-0 rounded-[44px] bg-[radial-gradient(circle_at_50%_38%,rgba(255,255,255,0.18),transparent_46%),radial-gradient(circle_at_48%_65%,rgba(126,231,255,0.16),transparent_58%),radial-gradient(circle_at_50%_55%,rgba(182,156,255,0.14),transparent_60%)] blur-3xl" />
+          <div className="absolute inset-[-18%] animate-[pulseGlow_7.2s_ease-in-out_infinite] rounded-full bg-[radial-gradient(circle,rgba(126,231,255,0.18)_0%,rgba(182,156,255,0.14)_30%,rgba(126,231,255,0)_64%)]" />
           <LumiAvatar
             isSpeaking={isSpeaking}
             mouthState={avatarMouthState}
@@ -1751,8 +1751,8 @@ export function ScenarioRunner() {
         </div>
       </section>
 
-      <section className="flex min-h-0 min-w-0 flex-col gap-5 overflow-hidden rounded-[34px] border border-white/12 bg-gradient-to-b from-slate-900/70 via-slate-900/58 to-slate-900/42 p-6 shadow-[0_26px_80px_rgba(0,0,0,0.4)] backdrop-blur-2xl md:min-h-[66vh] md:p-8">
-            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/8 px-4 py-3 shadow-inner shadow-black/30">
+      <section className="flex min-h-0 min-w-0 flex-col gap-5 overflow-hidden rounded-[34px] border border-white/10 bg-[rgba(20,25,50,0.65)] p-6 shadow-[0_26px_80px_rgba(0,0,0,0.42)] backdrop-blur-[12px] md:min-h-[66vh] md:p-8">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/12 bg-white/6 px-4 py-3 shadow-inner shadow-black/30">
               <div className="min-w-0">
                 <p className="break-words text-base font-semibold text-white drop-shadow-sm">Opettajan ohjaus</p>
                 <p className="break-words text-xs font-medium text-cyan-100/80">Aika: {elapsedLabel}</p>
@@ -1777,30 +1777,30 @@ export function ScenarioRunner() {
                 </label>
               </div>
               <div className="grid min-w-0 grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => void handleStartSession()}
-                  disabled={isRunning || sessionMode !== "group_script"}
-                  className="h-12 max-w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-3 text-sm font-semibold leading-tight text-slate-900 shadow-lg shadow-cyan-500/30 transition hover:translate-y-[-1px] disabled:opacity-60 md:text-base"
-                >
-                  Aloita
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleStop()}
-                  disabled={sessionMode !== "group_script"}
-                  className="h-12 max-w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-3 text-sm font-semibold leading-tight text-white shadow-lg shadow-indigo-500/30 transition hover:translate-y-[-1px] disabled:opacity-60 md:text-base"
-                >
-                  Lopeta
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleRestart()}
-                  disabled={sessionMode !== "group_script"}
-                  className="h-12 max-w-full rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-3 text-sm font-semibold leading-tight text-slate-900 shadow-lg shadow-orange-400/30 transition hover:translate-y-[-1px] disabled:opacity-60 md:text-base"
-                >
-                  Alusta
-                </button>
+              <button
+                type="button"
+                onClick={() => void handleStartSession()}
+                disabled={isRunning || sessionMode !== "group_script"}
+                className="h-12 max-w-full rounded-2xl bg-[linear-gradient(135deg,#2DD4BF,#14B8A6)] px-3 text-sm font-semibold leading-tight text-slate-900 shadow-lg shadow-cyan-500/35 transition hover:-translate-y-[1px] hover:shadow-cyan-400/40 disabled:opacity-60 md:text-base"
+              >
+                Aloita
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleStop()}
+                disabled={sessionMode !== "group_script"}
+                className="h-12 max-w-full rounded-2xl bg-[linear-gradient(135deg,#F87171,#EF4444)] px-3 text-sm font-semibold leading-tight text-white shadow-lg shadow-red-400/35 transition hover:-translate-y-[1px] hover:shadow-red-400/45 disabled:opacity-60 md:text-base"
+              >
+                Lopeta
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleRestart()}
+                disabled={sessionMode !== "group_script"}
+                className="h-12 max-w-full rounded-2xl bg-[linear-gradient(135deg,#FBBF24,#F59E0B)] px-3 text-sm font-semibold leading-tight text-slate-900 shadow-lg shadow-amber-300/35 transition hover:-translate-y-[1px] hover:shadow-amber-200/45 disabled:opacity-60 md:text-base"
+              >
+                Alusta
+              </button>
               </div>
               {awaitingDiscussionNote && (
                 <p className="text-xs text-amber-200">Opettajan tauko: keskustele hetki, jatka kun ryhmä on valmis.</p>
@@ -1866,14 +1866,14 @@ export function ScenarioRunner() {
               <button
                 type="button"
                 onClick={() => void handleRepeatStep()}
-                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-2xl bg-gradient-to-r from-sky-400 to-indigo-400 px-3 py-2 text-sm font-semibold leading-tight text-slate-900 shadow-md shadow-sky-400/30 transition hover:translate-y-[-1px] md:text-base"
+                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-2xl bg-[linear-gradient(135deg,#60A5FA,#4F8CFF)] px-3 py-2 text-sm font-semibold leading-tight text-white shadow-md shadow-sky-400/35 transition hover:-translate-y-[1px] md:text-base"
               >
                 Toista vaihe
               </button>
               <button
                 type="button"
                 onClick={() => void handleCalmSupportLogged()}
-                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-3 py-2 text-sm font-semibold leading-tight text-slate-900 shadow-md shadow-orange-300/40 transition hover:translate-y-[-1px] md:text-base"
+                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-2xl bg-[linear-gradient(135deg,#60A5FA,#4F8CFF)] px-3 py-2 text-sm font-semibold leading-tight text-white shadow-md shadow-indigo-300/35 transition hover:-translate-y-[1px] md:text-base"
               >
                 Rauhallinen tuki
               </button>
@@ -2206,9 +2206,9 @@ export function ScenarioRunner() {
                     key={emoji.id}
                     className={`rounded-2xl border active:scale-95 transition shadow-sm ${
                       selectedEmoji === emoji.id
-                        ? "border-white/70 bg-white/90 text-slate-900 shadow-lg shadow-white/40"
-                        : "border-white/10 bg-white/5 text-white hover:border-white/40"
-                    } ${votingMode ? "h-20 text-4xl" : "h-14 text-2xl"} ${votingMode ? "" : "opacity-50"}`}
+                        ? "border-white/70 bg-white/90 text-slate-900 shadow-[0_10px_30px_rgba(126,231,255,0.35)]"
+                        : "border-white/12 bg-white/6 text-white hover:border-white/35"
+                    } ${votingMode ? "h-[88px] text-4xl" : "h-14 text-2xl"} ${votingMode ? "" : "opacity-50"}`}
                     aria-label={emoji.id}
                     type="button"
                     onClick={() => handleVote(emoji.id)}
