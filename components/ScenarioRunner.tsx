@@ -1304,7 +1304,7 @@ export function ScenarioRunner() {
     await cancelLumiSpeak();
     setRunError(null);
     const log = ensureSessionLog();
-    log.teacherActions.push({ type: "prev", at: new Date().toISOString() });
+    log.teacherActions.push({ type: "repeat", at: new Date().toISOString() });
     setSessionLog({ ...log });
     setAwaitingChoice(false);
     setDone(false);
