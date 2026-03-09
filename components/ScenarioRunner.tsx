@@ -1742,7 +1742,7 @@ export function ScenarioRunner() {
           />
         </div>
         <div className="mt-4 min-w-0 overflow-hidden text-center">
-          <p className="break-words text-sm font-semibold text-slate-50 [overflow-wrap:anywhere]">{activeScenario?.title ?? "-"} • {stepIndex + 1}/{activeScenario?.steps.length ?? 0}</p>
+          <p className="break-words text-sm font-semibold text-slate-50">{activeScenario?.title ?? "-"} • {stepIndex + 1}/{activeScenario?.steps.length ?? 0}</p>
           {showBreathCue ? (
             <p className="mt-1 text-xs font-medium text-cyan-100">Hengitetään yhdessä</p>
           ) : null}
@@ -1752,8 +1752,8 @@ export function ScenarioRunner() {
       <section className="flex min-h-0 min-w-0 flex-col gap-4 overflow-hidden rounded-3xl border border-cyan-200/20 bg-white/[0.04] p-4 backdrop-blur-sm md:min-h-[66vh] md:p-6">
             <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-cyan-100/20 bg-slate-900/40 px-3 py-3 md:px-4">
               <div className="min-w-0">
-                <p className="break-words text-sm font-semibold text-slate-100 [overflow-wrap:anywhere]">Opettajan ohjaus</p>
-                <p className="break-words text-xs text-slate-400 [overflow-wrap:anywhere]">Aika: {elapsedLabel}</p>
+                <p className="break-words text-sm font-semibold text-slate-100">Opettajan ohjaus</p>
+                <p className="break-words text-xs text-slate-400">Aika: {elapsedLabel}</p>
               </div>
         </div>
 
@@ -1819,14 +1819,14 @@ export function ScenarioRunner() {
                 <button
                   type="button"
                   onClick={() => setTheme("turvataidot")}
-                  className={`h-11 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] leading-tight rounded-xl border px-2 text-xs md:text-sm ${theme === "turvataidot" ? "border-cyan-300 bg-cyan-500/15" : "border-cyan-100/30 bg-slate-900/50"}`}
+                  className={`h-11 max-w-full whitespace-normal break-words leading-tight rounded-xl border px-2 text-xs md:text-sm ${theme === "turvataidot" ? "border-cyan-300 bg-cyan-500/15" : "border-cyan-100/30 bg-slate-900/50"}`}
                 >
                   Turvataidot
                 </button>
                 <button
                   type="button"
                   onClick={() => setTheme("toveritaidot")}
-                  className={`h-11 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] leading-tight rounded-xl border px-2 text-xs md:text-sm ${theme === "toveritaidot" ? "border-cyan-300 bg-cyan-500/15" : "border-cyan-100/30 bg-slate-900/50"}`}
+                  className={`h-11 max-w-full whitespace-normal break-words leading-tight rounded-xl border px-2 text-xs md:text-sm ${theme === "toveritaidot" ? "border-cyan-300 bg-cyan-500/15" : "border-cyan-100/30 bg-slate-900/50"}`}
                 >
                   Toveritaidot
                 </button>
@@ -1854,7 +1854,7 @@ export function ScenarioRunner() {
               <button
                 type="button"
                 onClick={() => setVoiceEnabled((v) => !v)}
-                className={`h-11 w-full max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-xl px-2 text-xs font-semibold leading-tight md:text-sm ${voiceEnabled ? "bg-emerald-600 text-white" : "bg-slate-700 text-slate-100"}`}
+                className={`h-11 w-full max-w-full whitespace-normal break-words rounded-xl px-2 text-xs font-semibold leading-tight md:text-sm ${voiceEnabled ? "bg-emerald-600 text-white" : "bg-slate-700 text-slate-100"}`}
               >
                 {voiceEnabled ? "Ääni päällä" : "Ääni pois"}
               </button>
@@ -1864,14 +1864,14 @@ export function ScenarioRunner() {
               <button
                 type="button"
                 onClick={() => void handleRepeatStep()}
-                className="h-auto min-h-11 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-xl bg-slate-800 px-2 py-2 text-xs font-semibold leading-tight text-white md:text-sm"
+                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-xl bg-slate-800 px-2 py-2 text-xs font-semibold leading-tight text-white md:text-sm"
               >
                 Toista vaihe
               </button>
               <button
                 type="button"
                 onClick={() => void handleCalmSupportLogged()}
-                className="h-auto min-h-11 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-xl bg-amber-600 px-2 py-2 text-xs font-semibold leading-tight text-white md:text-sm"
+                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-xl bg-amber-600 px-2 py-2 text-xs font-semibold leading-tight text-white md:text-sm"
               >
                 Rauhallinen tuki
               </button>
@@ -1893,7 +1893,7 @@ export function ScenarioRunner() {
                     className={`rounded-xl px-3 py-2 ${turn.role === "kid" ? "bg-slate-800/70 text-slate-100" : "bg-cyan-500/10 text-cyan-100"}`}
                   >
                     <p className="text-[11px] uppercase tracking-wide text-slate-400">{turn.role === "kid" ? "Lapsi" : "Lumi"}</p>
-                    <p className="break-words [overflow-wrap:anywhere]">{turn.text}</p>
+                    <p className="break-words">{turn.text}</p>
                   </div>
                 ))}
               </div>
@@ -1925,7 +1925,7 @@ export function ScenarioRunner() {
                       type="button"
                       onClick={() => void handleSoloSend()}
                       disabled={soloBusy}
-                      className="h-11 w-full max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-xl bg-emerald-600 px-3 text-xs font-semibold leading-tight text-white disabled:opacity-60 md:text-sm"
+                      className="h-11 w-full max-w-full whitespace-normal break-words rounded-xl bg-emerald-600 px-3 text-xs font-semibold leading-tight text-white disabled:opacity-60 md:text-sm"
                     >
                       {soloBusy ? "Lumi miettii..." : "Lähetä"}
                     </button>
@@ -1999,7 +1999,7 @@ export function ScenarioRunner() {
                 </span>
               ) : null}
             </div>
-            <p className="break-words text-xs text-cyan-200/90 [overflow-wrap:anywhere]">
+            <p className="break-words text-xs text-cyan-200/90">
               {customAssistantStatus || "Lumi kuuntelee ja vastaa henkilökohtaisesti."}
             </p>
           </div>
@@ -2033,13 +2033,13 @@ export function ScenarioRunner() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-300">Mitä tapahtui</p>
-                  <p className="break-words text-sm text-slate-100 [overflow-wrap:anywhere]">{summary.whatHappened}</p>
+                  <p className="break-words text-sm text-slate-100">{summary.whatHappened}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-300">Lumin toiminta</p>
                   <ul className="min-w-0 list-disc pl-5 text-sm text-slate-100">
                     {summary.whatLumiDid.map((item) => (
-                      <li key={item} className="break-words [overflow-wrap:anywhere]">{item}</li>
+                      <li key={item} className="break-words">{item}</li>
                     ))}
                   </ul>
                 </div>
@@ -2047,7 +2047,7 @@ export function ScenarioRunner() {
                   <p className="text-xs font-semibold text-slate-300">Harjoittelimme</p>
                   <ul className="min-w-0 list-disc pl-5 text-sm text-slate-100">
                     {summary.whatWePracticed.map((item) => (
-                      <li key={item} className="break-words [overflow-wrap:anywhere]">{item}</li>
+                      <li key={item} className="break-words">{item}</li>
                     ))}
                   </ul>
                 </div>
@@ -2059,11 +2059,11 @@ export function ScenarioRunner() {
                   <p className="text-xs font-semibold text-slate-300">Seuraavat askeleet</p>
                   <ul className="min-w-0 list-disc pl-5 text-sm text-slate-100">
                     {summary.nextSteps.map((item) => (
-                      <li key={item} className="break-words [overflow-wrap:anywhere]">{item}</li>
+                      <li key={item} className="break-words">{item}</li>
                     ))}
-                    {emotionTrend === "angry" ? <li className="break-words [overflow-wrap:anywhere]">Kokeile seuraavaksi rauhoittavaa tai vuorottelua tukevaa skenaariota.</li> : null}
-                    {emotionTrend === "scared" ? <li className="break-words [overflow-wrap:anywhere]">Kokeile turva- tai rohkaisuskenaariota.</li> : null}
-                    {emotionTrend === "sad" ? <li className="break-words [overflow-wrap:anywhere]">Valitse lohduttava tai ystävyysteemainen skenaario.</li> : null}
+                    {emotionTrend === "angry" ? <li className="break-words">Kokeile seuraavaksi rauhoittavaa tai vuorottelua tukevaa skenaariota.</li> : null}
+                    {emotionTrend === "scared" ? <li className="break-words">Kokeile turva- tai rohkaisuskenaariota.</li> : null}
+                    {emotionTrend === "sad" ? <li className="break-words">Valitse lohduttava tai ystävyysteemainen skenaario.</li> : null}
                   </ul>
                 </div>
                 <div>
@@ -2138,9 +2138,9 @@ export function ScenarioRunner() {
             <div className="min-w-0 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/60 p-4">
               <p className="text-xs uppercase tracking-wide text-slate-400">Vaihe {Math.min(stepIndex + 1, activeScenario?.steps.length ?? 0)} / {activeScenario?.steps.length ?? 0}</p>
               <div className="mt-2 min-w-0 max-h-36 overflow-y-auto pr-1">
-                <p className="break-words text-base leading-relaxed [overflow-wrap:anywhere] md:text-lg">{stepTextClean ?? "-"}</p>
+                <p className="break-words text-base leading-relaxed md:text-lg">{stepTextClean ?? "-"}</p>
                 {step?.teacherHint ? (
-                  <p className="mt-2 break-words text-xs text-cyan-200/80 [overflow-wrap:anywhere]">{step.teacherHint}</p>
+                  <p className="mt-2 break-words text-xs text-cyan-200/80">{step.teacherHint}</p>
                 ) : null}
               </div>
             </div>
@@ -2149,20 +2149,20 @@ export function ScenarioRunner() {
               <button
                 onClick={() => void handlePrevStep()}
                 disabled={stepIndex === 0 || awaitingChoice || sessionMode !== "group_script"}
-                className="h-auto min-h-12 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl bg-slate-800 px-3 py-3 text-sm font-semibold leading-tight text-white md:min-h-14 md:text-base"
+                className="h-auto min-h-12 max-w-full whitespace-normal break-words rounded-2xl bg-slate-800 px-3 py-3 text-sm font-semibold leading-tight text-white md:min-h-14 md:text-base"
               >
                 Edellinen
               </button>
               <button
                 onClick={() => void handleNextStep()}
                 disabled={done}
-                className="h-auto min-h-12 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl px-3 py-3 text-sm font-semibold leading-tight text-white disabled:opacity-60 md:min-h-14 md:text-base bg-indigo-600"
+                className="h-auto min-h-12 max-w-full whitespace-normal break-words rounded-2xl px-3 py-3 text-sm font-semibold leading-tight text-white disabled:opacity-60 md:min-h-14 md:text-base bg-indigo-600"
               >
                 Seuraava
               </button>
               <button
                 onClick={() => void handleRepeatStep()}
-                className="h-auto min-h-12 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl bg-slate-800 px-3 py-3 text-sm font-semibold leading-tight text-white md:min-h-14 md:text-base"
+                className="h-auto min-h-12 max-w-full whitespace-normal break-words rounded-2xl bg-slate-800 px-3 py-3 text-sm font-semibold leading-tight text-white md:min-h-14 md:text-base"
               >
                 Toista
               </button>
@@ -2171,7 +2171,7 @@ export function ScenarioRunner() {
             <div className="space-y-3">
               <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="min-w-0 break-words text-sm font-semibold text-slate-100 [overflow-wrap:anywhere]">Valitse tunne</p>
+                  <p className="min-w-0 break-words text-sm font-semibold text-slate-100">Valitse tunne</p>
                   <p className="text-xs text-slate-300">Lapset valitsevat miltä tuntuu</p>
                 </div>
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -2179,7 +2179,7 @@ export function ScenarioRunner() {
                   <button
                     type="button"
                     onClick={() => setVotingMode((v) => !v)}
-                    className={`h-10 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-xl px-3 text-xs font-semibold leading-tight md:text-sm ${
+                    className={`h-10 max-w-full whitespace-normal break-words rounded-xl px-3 text-xs font-semibold leading-tight md:text-sm ${
                       votingMode ? "bg-cyan-600 text-white" : "bg-slate-800 text-slate-100"
                     }`}
                   >
@@ -2191,7 +2191,7 @@ export function ScenarioRunner() {
                       setVotes({});
                       setSelectedEmoji(null);
                     }}
-                    className="h-10 max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-xl bg-slate-800 px-3 text-xs font-semibold leading-tight text-slate-100 md:text-sm"
+                    className="h-10 max-w-full whitespace-normal break-words rounded-xl bg-slate-800 px-3 text-xs font-semibold leading-tight text-slate-100 md:text-sm"
                   >
                     Tyhjennä
                   </button>
@@ -2225,17 +2225,17 @@ export function ScenarioRunner() {
                 ))}
               </div>
               {selectedEmoji && (
-                <p className="break-words text-xs text-slate-400 [overflow-wrap:anywhere]">
+                <p className="break-words text-xs text-slate-400">
                   Viimeisin tunne: {emojis.find((e) => e.id === selectedEmoji)?.text}
                 </p>
               )}
-              <p className="break-words text-xs text-cyan-200/90 [overflow-wrap:anywhere]">{voteEffect}</p>
+              <p className="break-words text-xs text-cyan-200/90">{voteEffect}</p>
             </div>
           </>
         ) : null}
 
         {runError && (
-          <div className="rounded-2xl border border-red-300/60 bg-red-500/10 p-3 text-sm text-red-200 break-words [overflow-wrap:anywhere]">
+          <div className="rounded-2xl border border-red-300/60 bg-red-500/10 p-3 text-sm text-red-200 break-words">
             {runError}
           </div>
         )}
@@ -2247,7 +2247,7 @@ export function ScenarioRunner() {
               <button
                 key={`${opt.label}-${opt.next}`}
                 onClick={() => handleOptionClick(opt.next)}
-                className="h-auto min-h-14 w-full max-w-full whitespace-normal break-words [overflow-wrap:anywhere] rounded-2xl bg-sky-600 px-4 py-3 text-base font-semibold leading-snug text-white active:scale-[0.98] md:text-lg"
+                className="h-auto min-h-14 w-full max-w-full whitespace-normal break-words rounded-2xl bg-sky-600 px-4 py-3 text-base font-semibold leading-snug text-white active:scale-[0.98] md:text-lg"
               >
                 {opt.label}
               </button>
@@ -2256,7 +2256,7 @@ export function ScenarioRunner() {
         )}
 
         {sessionMode === "group_script" && done && (
-          <div className="rounded-2xl border border-emerald-300/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 break-words [overflow-wrap:anywhere]">
+          <div className="rounded-2xl border border-emerald-300/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 break-words">
             <p>Istunto valmis. Voit aloittaa uuden istunnon.</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <button
