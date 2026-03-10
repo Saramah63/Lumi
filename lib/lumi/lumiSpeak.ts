@@ -1,4 +1,4 @@
-import { mouthStateFromRms, stabilizeMouthState } from "./lipSync";
+import { mouthStateFromRms, computeRmsFromTimeDomain } from "./lipSync";
 import { getAudioContext, markAudioError } from "./audioContext";
 import type { MouthState } from "../../src/app/components/lumi/LumiAvatarRive";
 
@@ -37,17 +37,15 @@ export async function lumiSpeak(params: {
     let raf = 0;
     let stopped = false;
     const startedAt = performance.now();
-    const tickFallback = () => {
-      if (stopped) return;
-      const t = (performance.now() - startedAt) / 1000;
-      const rms = Math.max(
-        0,
-        Math.min(1, 0.1 + 0.08 * Math.abs(Math.sin(t * 11)) + 0.03 * Math.abs(Math.sin(t * 29)))
-      );
-      const mouth = mouthStateFromRms(rms * 2.2);
-      onMouthState(mouth);
-      raf = requestAnimationFrame(tickFallback);
-    };
+  const tickFallback = () => {
+    if (stopped) return;
+    const t = (performance.now() - startedAt) / 1000;
+    const rmsRaw = Math.max(0, Math.min(1, 0.08 + 0.1 * Math.abs(Math.sin(t * 9)) + 0.05 * Math.abs(Math.sin(t * 17))));
+    smoothed = smoothed * 0.7 + rmsRaw * 0.3;
+    const mouth = mouthStateFromRms(smoothed);
+    onMouthState(mouth);
+    raf = requestAnimationFrame(tickFallback);
+  };
 
     try {
       onSpeakingChange(true);
@@ -61,7 +59,7 @@ export async function lumiSpeak(params: {
       stopped = true;
       cancelAnimationFrame(raf);
       onSpeakingChange(false);
-      onMouthState(0);
+      onMouthState(4);
       audio.src = "";
       audio.load();
       releaseObjectUrl();
@@ -73,7 +71,7 @@ export async function lumiSpeak(params: {
   let analyser: AnalyserNode | null = null;
   const data = new Uint8Array(1024);
   let raf = 0;
-  let prevState: MouthState = 0;
+  let smoothed = 0;
 
   try {
     source = ctx.createMediaElementSource(audio);
@@ -88,23 +86,20 @@ export async function lumiSpeak(params: {
     return;
   }
 
-  const tick = () => {
+  let lastUpdate = 0;
+  const tick = (now?: number) => {
     if (!analyser) return;
-    analyser.getByteTimeDomainData(data);
-
-    let sum = 0;
-    for (let i = 0; i < data.length; i += 1) {
-      const v = (data[i] - 128) / 128;
-      sum += v * v;
+    const ts = now ?? performance.now();
+    if (ts - lastUpdate < 45) {
+      raf = requestAnimationFrame(tick);
+      return;
     }
-    const rms = Math.sqrt(sum / data.length);
-
-    const next = mouthStateFromRms(rms * 2.8);
-    const stable = stabilizeMouthState(prevState, next);
-    prevState = stable;
-
-    onMouthState(stable);
-
+    lastUpdate = ts;
+    analyser.getByteTimeDomainData(data);
+    const rms = computeRmsFromTimeDomain(data);
+    smoothed = smoothed * 0.7 + rms * 0.3;
+    const next = mouthStateFromRms(smoothed);
+    onMouthState(next);
     raf = requestAnimationFrame(tick);
   };
 
@@ -113,13 +108,14 @@ export async function lumiSpeak(params: {
       await ctx.resume();
     }
     onSpeakingChange(true);
+    onMouthState(1);
     tick();
   };
 
   audio.onended = () => {
     cancelAnimationFrame(raf);
     onSpeakingChange(false);
-    onMouthState(0);
+    onMouthState(4);
     audio.src = "";
     audio.load();
     releaseObjectUrl();
@@ -136,6 +132,6 @@ export async function lumiSpeak(params: {
   } catch (error) {
     markAudioError(error);
     onSpeakingChange(false);
-    onMouthState(0);
+    onMouthState(4);
   }
 }

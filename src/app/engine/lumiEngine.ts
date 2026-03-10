@@ -167,7 +167,7 @@ export class LumiEngine {
     }
   }
 
-  async speakLines(lines: string[], mode: LumiSpeakMode = "baseline", pauseMs = 800): Promise<void> {
+  async speakLines(lines: string[], mode: LumiSpeakMode = "baseline", pauseMs = 1100): Promise<void> {
     for (const line of lines) {
       await this.speak(line, mode);
       await new Promise((resolve) => window.setTimeout(resolve, pauseMs));

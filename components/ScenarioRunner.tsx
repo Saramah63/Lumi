@@ -489,7 +489,7 @@ export function ScenarioRunner() {
   const [awaitingChoice, setAwaitingChoice] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [mouthState, setMouthState] = useState<MouthState>(0);
+  const [mouthState, setMouthState] = useState<MouthState>(4);
   const [audioIntensity, setAudioIntensity] = useState(0);
   const [glowState, setGlowState] = useState<GlowState>("alert");
   const [glowPinned, setGlowPinned] = useState<GlowState | null>(null);
@@ -511,7 +511,7 @@ export function ScenarioRunner() {
 
   useEffect(() => {
     if (!isSpeaking) {
-      setMouthState(0);
+      setMouthState(4);
     }
   }, [isSpeaking]);
 
@@ -533,6 +533,16 @@ export function ScenarioRunner() {
   const [lastVoteAppliedStep, setLastVoteAppliedStep] = useState(-1);
   const [voteEffect, setVoteEffect] = useState("Odotetaan tunteita.");
   const [runError, setRunError] = useState<string | null>(null);
+  const supportSequenceRef = useRef(0);
+  const [reactionTick, setReactionTick] = useState(0);
+  const lastGroupResponseRef = useRef<{ step: number; trend: "happy" | "sad" | "angry" | "scared" | "confused" | null; total: number }>({
+    step: -1,
+    trend: null,
+    total: 0,
+  });
+  const speechBusyRef = useRef(false);
+  const lastSpeechAtRef = useRef(0);
+  const lastEmojiAtRef = useRef(0);
 
   const sessionMode: SessionMode = groupSize === 1 ? "solo_personalized" : "group_script";
   const childLanguage = "fi";
@@ -711,8 +721,7 @@ export function ScenarioRunner() {
     () => decideAwarenessGlowState(step?.mode, votes, votingMode, theme),
     [step?.mode, votes, votingMode, theme]
   );
-  const avatarMouthState: MouthState =
-    animationSource === "breath" ? (breathInhale ? 1 : 4) : mouthState;
+  const avatarMouthState: MouthState = mouthState;
   const breathPulse = animationSource === "breath" && showBreathCue;
 
   const selectRandomScenario = useCallback(() => {
@@ -751,7 +760,7 @@ export function ScenarioRunner() {
 
   const resetAvatarState = useCallback(() => {
     setIsSpeaking(false);
-    setMouthState(0);
+    setMouthState(4);
     setAudioIntensity(0);
     setAnimationSource("audio");
     setBreathInhale(true);
@@ -783,7 +792,7 @@ export function ScenarioRunner() {
         return;
       }
       setIsSpeaking(false);
-      setMouthState(0);
+      setMouthState(4);
       setAudioIntensity(0);
       const silentMs = Math.max(900, Math.min(2500, text.length * 40));
       await new Promise((resolve) => window.setTimeout(resolve, silentMs));
@@ -795,7 +804,7 @@ export function ScenarioRunner() {
     if (voiceEnabled) return;
     void cancelLumiSpeak();
     setIsSpeaking(false);
-    setMouthState(0);
+    setMouthState(4);
     setAudioIntensity(0);
   }, [voiceEnabled]);
 
@@ -1347,9 +1356,138 @@ export function ScenarioRunner() {
     []
   );
 
+  const empathyLines: Record<string, string[]> = {
+    happy: ["Ihana kuulla!", "Sinä olet iloinen.", "Ilo tuntuu hyvältä."],
+    sad: ["Olen tässä.", "Saat olla surullinen.", "Se on ihan ok."],
+    angry: ["Huomaan kiukun.", "Hengitetään yhdessä.", "Rauhassa nyt."],
+    scared: ["Olet turvassa.", "Minä olen täällä.", "Pidän sinusta huolta."],
+    confused: ["Näen ihmetystä.", "Mietitään yhdessä.", "Ei kiirettä."],
+  };
+
+  const encouragementLines: Record<string, string[]> = {
+    happy: ["Hienoa!", "Jatketaan ilolla.", "Kiitos jakamisesta."],
+    sad: ["Hyvin sanoit.", "Olen kanssasi.", "Otetaan rauhassa."],
+    angry: ["Hyvä pysähdys.", "Kiitos kun kerroit.", "Hengitys auttaa."],
+    scared: ["Olet turvassa.", "Hyvin kerroit.", "Ollaan rauhassa."],
+    confused: ["Hyvä kysymys.", "Mietitään yhdessä.", "Otetaan hetki."],
+  };
+
+  const speakSupport = useCallback(
+    async (text: string, mode: SpeakMode = "warm") => {
+      setVoteEffect(text);
+      if (!voiceEnabled) return;
+      if (speechBusyRef.current) {
+        await cancelLumiSpeak();
+        speechBusyRef.current = false;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      speechBusyRef.current = true;
+      lastSpeechAtRef.current = Date.now();
+      try {
+        await speakLine(text, mode);
+      } finally {
+        speechBusyRef.current = false;
+      }
+    },
+    [speakLine, voiceEnabled]
+  );
+
+  const runEmotionFlow = useCallback(
+    async (
+      emojiId: string,
+      preset?: { empathy?: string; encouragement?: string }
+    ) => {
+      const seq = supportSequenceRef.current + 1;
+      supportSequenceRef.current = seq;
+      const checkCancelled = () => supportSequenceRef.current !== seq;
+      const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+      const listenLines: Record<string, string> = {
+        happy: "Näen iloa",
+        sad: "Näen surua",
+        angry: "Huomaan kiukkua",
+        scared: "Huomaan pelkoa",
+        confused: "Näen ihmetystä",
+      };
+      const pick = (arr: string[] | undefined) => (arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : "");
+      const empathyLine = preset?.empathy ?? pick(empathyLines[emojiId]);
+      const encouragementLine = preset?.encouragement ?? pick(encouragementLines[emojiId]);
+
+      const intentGlow: Record<string, GlowState> = {
+        happy: "calm",
+        sad: "calm",
+        angry: "strong",
+        scared: "alert",
+        confused: "calm",
+      };
+      const startGlow = intentGlow[emojiId] ?? "calm";
+
+      setGlowPinned(startGlow);
+      setGlowState(startGlow);
+      setAnimationSource("audio");
+      const hearLine = listenLines[emojiId] ?? "Minä kuulen sinua";
+      await speakSupport(hearLine, "warm");
+      if (checkCancelled()) return;
+      await pause(220);
+
+      const empathy = empathyLine || listenLines[emojiId] || "Olen täällä.";
+      const empathyMode: SpeakMode =
+        emojiId === "angry" ? "firm_calm" :
+        emojiId === "scared" ? "regulation" :
+        emojiId === "sad" ? "warm" :
+        "warm";
+      setGlowState(startGlow);
+      setAnimationSource("audio");
+      await speakSupport(empathy, empathyMode);
+      if (checkCancelled()) return;
+
+      const needsRegulation = emojiId === "angry" || emojiId === "scared" || emojiId === "sad";
+      if (needsRegulation) {
+        setGlowState("calm");
+        setAnimationSource("breath");
+        await pause(220);
+        await speakSupport("Hengitetään yhdessä", "regulation");
+        if (checkCancelled()) return;
+        await pause(420);
+        await speakSupport("Yksi", "regulation");
+        if (checkCancelled()) return;
+        await pause(520);
+        await speakSupport("Kaksi", "regulation");
+        if (checkCancelled()) return;
+        await pause(520);
+        await speakSupport("Kolme", "regulation");
+        if (emojiId === "angry" || emojiId === "scared") {
+          setCalmUsed(true);
+        }
+      }
+
+      setGlowState("calm");
+      setAnimationSource("audio");
+      await pause(180);
+      const encourage = encouragementLine || empathy;
+      const encourageMode: SpeakMode =
+        emojiId === "happy" ? "warm" :
+        emojiId === "sad" ? "warm" :
+        emojiId === "angry" ? "firm_calm" :
+        emojiId === "scared" ? "warm" :
+        "warm";
+      await speakSupport(encourage, encourageMode);
+      setGlowState("calm");
+      setGlowPinned(null);
+      setAnimationSource("audio");
+    },
+    [speakSupport]
+  );
+
   const handleVote = async (emojiId: string) => {
     if (!votingMode) return;
+    const now = Date.now();
+    if (now - lastEmojiAtRef.current < 250) return;
+    const totalBefore = Object.values(votes).reduce((sum, n) => sum + n, 0);
+    if (totalBefore >= groupSize) return;
+    lastEmojiAtRef.current = now;
     setSelectedEmoji(emojiId);
+    setReactionTick((v) => v + 1);
     void playSfx(emojiId);
     setVotes((prev) => ({ ...prev, [emojiId]: (prev[emojiId] ?? 0) + 1 }));
     setEmotionHistory((prev) => {
@@ -1363,38 +1501,51 @@ export function ScenarioRunner() {
       return next;
     });
     const log = ensureSessionLog();
-    const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0) + 1;
+    const totalVotes = totalBefore + 1;
     log.votingEvents.push({ at: new Date().toISOString(), emoji: emojiId, countDelta: 1, totalVotes });
     setSessionLog({ ...log });
     const label = emojis.find((e) => e.id === emojiId)?.text ?? "Tunne";
-    const supportive: Record<string, string> = {
-      happy: "Iloista energiaa, hienoa!",
-      sad: "Näen surua, olen tässä.",
-      angry: "Huomaan kiukkua, hengitetään hitaasti.",
-      scared: "On ok pelätä, olet turvassa.",
-      confused: "Jos on noloa, kokeillaan yhdessä.",
-    };
-    const line = supportive[emojiId] ?? `Ääni: ${label}`;
+    const empathyPick = randomItem(empathyLines[emojiId]) || `Ääni: ${label}`;
+    const encouragePick = randomItem(encouragementLines[emojiId]);
+    setVoteEffect(empathyPick);
+    lastGroupResponseRef.current = { step: stepIndex, trend: emojiId as any, total: totalVotes };
     if (!glowPinned) {
       const glowMap: Record<string, GlowState> = { angry: "strong", scared: "alert", sad: "calm", happy: "calm", confused: "alert" };
       setGlowState(glowMap[emojiId] ?? "alert");
     }
-    setVoteEffect(line);
-    if (voiceEnabled) {
-      const mode = emojiId === "angry" ? "firm_calm" : emojiId === "scared" ? "regulation" : "warm";
-      await speakLine(line, mode);
-      if (emojiId === "angry" || emojiId === "scared") {
-        await speakLine("Hengitä sisään… ja ulos.", "regulation");
-        setCalmUsed(true);
-      }
-    }
+    setAnimationSource("audio");
+    await runEmotionFlow(emojiId, { empathy: empathyPick, encouragement: encouragePick || undefined });
   };
 
   const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0);
+
+  useEffect(() => {
+    if (sessionMode !== "group_script") return;
+    if (!votingMode) return;
+    if (!emotionTrend) return;
+    if (totalVotes === 0) return;
+    const last = lastGroupResponseRef.current;
+    if (last.step === stepIndex && last.trend === emotionTrend && last.total === totalVotes) return;
+    lastGroupResponseRef.current = { step: stepIndex, trend: emotionTrend, total: totalVotes };
+  }, [sessionMode, votingMode, emotionTrend, totalVotes, stepIndex, runEmotionFlow]);
+
   const elapsedLabel = `${String(Math.floor(elapsedSec / 60)).padStart(2, "0")}:${String(elapsedSec % 60).padStart(2, "0")}`;
   const dominantEmotionText = emotionTrend ? (emojis.find((e) => e.id === emotionTrend)?.text ?? "—") : "—";
   const skillHighlight = scenarioSkill[scenarioId] ?? "Tunnetaitojen harjoittelu";
   const reflectionList = reflectionPrompts[scenarioId] ?? ["Mikä auttoi Lumi-ystävää?", "Mitä teemme, kun tunne on iso?"];
+  const emotionTone: "happy" | "sad" | "angry" | "scared" | "confused" | "idle" =
+    (selectedEmoji as any) ??
+    (emotionTrend as any) ??
+    "idle";
+  const haloTone: Record<typeof emotionTone, { glow: string; ring: string }> = {
+    happy: { glow: "rgba(250,212,112,0.28)", ring: "rgba(250,212,112,0.18)" },
+    sad: { glow: "rgba(126,187,255,0.26)", ring: "rgba(126,187,255,0.14)" },
+    angry: { glow: "rgba(255,149,130,0.3)", ring: "rgba(255,149,130,0.18)" },
+    scared: { glow: "rgba(190,170,255,0.28)", ring: "rgba(190,170,255,0.16)" },
+    confused: { glow: "rgba(140,238,255,0.28)", ring: "rgba(140,238,255,0.16)" },
+    idle: { glow: "rgba(126,231,255,0.24)", ring: "rgba(126,231,255,0.14)" },
+  };
+  const halo = haloTone[emotionTone] ?? haloTone.idle;
 
   const handleListenQuestion = useCallback(async () => {
     setIsListeningQuestion(true);
@@ -1648,7 +1799,7 @@ export function ScenarioRunner() {
           },
           onEnd: () => {
             setIsSpeaking(false);
-            setMouthState(0);
+            setMouthState(4);
             setAudioIntensity(0);
           },
         });
@@ -1717,18 +1868,59 @@ export function ScenarioRunner() {
   }
 
   return (
-    <div className="mx-auto grid h-full min-h-0 w-full max-w-7xl gap-8 text-slate-100 lg:grid-cols-[1.4fr_1fr]">
-      <section className="flex min-h-0 flex-col items-center justify-center overflow-hidden rounded-[34px] border border-white/10 bg-gradient-to-b from-white/10 via-white/6 to-[#1A2452]/24 p-7 shadow-[0_32px_96px_rgba(0,0,0,0.48)] backdrop-blur-[16px] md:min-h-[66vh] md:p-12">
+    <div className="mx-auto grid h-full min-h-0 w-full max-w-7xl gap-8 text-slate-100 lg:grid-cols-[1.2fr_1fr]">
+      <section className="relative flex min-h-0 flex-col items-center justify-center overflow-visible rounded-[34px] border border-transparent bg-transparent p-7 shadow-none md:min-h-[66vh] md:p-12">
         <div
-          className={`relative aspect-square w-full max-w-[520px] md:max-w-[580px] ${breathPulse ? "animate-[breathPulse_3.6s_ease-in-out_infinite]" : ""}`}
-          style={
-            breathPulse
-              ? { boxShadow: "0 0 0 0 rgba(126, 231, 255, 0.4), 0 0 55px 26px rgba(182, 156, 255, 0.2)" }
-              : undefined
-          }
+          className="pointer-events-none absolute inset-0 rounded-[34px]"
+          style={{
+            background: `radial-gradient(48% 48% at 50% 50%, ${halo.glow} 0%, transparent 68%)`,
+            filter: "blur(24px)",
+          }}
+        />
+        <div
+          className={`relative aspect-square w-full max-w-[520px] md:max-w-[580px] overflow-visible ${breathPulse ? "animate-[breathPulse_4.2s_ease-in-out_infinite]" : ""}`}
+          style={{
+            boxShadow:
+              glowState === "calm"
+                ? "0 0 68px 34px rgba(126, 231, 255, 0.32)"
+                : glowState === "alert"
+                  ? "0 0 74px 38px rgba(255, 188, 120, 0.32)"
+                  : "0 0 78px 40px rgba(255, 140, 140, 0.34)",
+            transition: "box-shadow 320ms ease, filter 320ms ease",
+            WebkitMaskImage: "radial-gradient(circle at 50% 50%, black 72%, transparent 100%)",
+            maskImage: "radial-gradient(circle at 50% 50%, black 72%, transparent 100%)",
+          }}
         >
-          <div className="absolute inset-0 rounded-[44px] bg-[radial-gradient(circle_at_50%_38%,rgba(255,255,255,0.18),transparent_46%),radial-gradient(circle_at_48%_65%,rgba(126,231,255,0.16),transparent_58%),radial-gradient(circle_at_50%_55%,rgba(182,156,255,0.14),transparent_60%)] blur-3xl" />
-          <div className="absolute inset-[-18%] animate-[pulseGlow_7.2s_ease-in-out_infinite] rounded-full bg-[radial-gradient(circle,rgba(126,231,255,0.18)_0%,rgba(182,156,255,0.14)_30%,rgba(126,231,255,0)_64%)]" />
+          <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.18),transparent_58%)] blur-3xl" />
+          <div
+            className="absolute inset-[-18%] animate-[pulseGlow_9s_ease-in-out_infinite] rounded-full"
+            style={{
+              background: `radial-gradient(circle, ${halo.glow} 0%, ${halo.ring} 28%, transparent 68%)`,
+            }}
+          />
+          <div
+            className="pointer-events-none absolute inset-[-10%] rounded-full mix-blend-screen"
+            style={{
+              background:
+                glowState === "calm"
+                  ? "radial-gradient(circle at 50% 42%, rgba(126,231,255,0.16) 0%, rgba(0,0,0,0) 64%)"
+                  : glowState === "alert"
+                    ? "radial-gradient(circle at 50% 42%, rgba(255,188,120,0.16) 0%, rgba(0,0,0,0) 64%)"
+                    : "radial-gradient(circle at 50% 42%, rgba(255,140,140,0.16) 0%, rgba(0,0,0,0) 64%)",
+              filter: "blur(22px)",
+              opacity: 0.9,
+              transition: "opacity 260ms ease, background 260ms ease",
+            }}
+          />
+          {animationSource === "breath" && (
+            <div
+              className="pointer-events-none absolute inset-[-14%] rounded-full bg-[radial-gradient(circle,rgba(126,231,255,0.18)_0%,rgba(182,156,255,0.14)_38%,rgba(255,188,120,0.08)_54%,rgba(126,231,255,0)_74%)] opacity-85 animate-[breathAura_3.8s_ease-in-out_infinite]"
+              style={{
+                WebkitMaskImage: "radial-gradient(circle at 50% 50%, white 68%, transparent 100%)",
+                maskImage: "radial-gradient(circle at 50% 50%, white 68%, transparent 100%)",
+              }}
+            />
+          )}
           <LumiAvatar
             isSpeaking={isSpeaking}
             mouthState={avatarMouthState}
@@ -1741,6 +1933,8 @@ export function ScenarioRunner() {
             debugOverlay={false}
             glowDisabled={false}
             regulationActive={animationSource === "breath"}
+            emotionTone={emotionTone}
+            reactionTick={reactionTick}
           />
         </div>
         <div className="mt-6 min-w-0 overflow-hidden text-center">
@@ -1777,30 +1971,30 @@ export function ScenarioRunner() {
                 </label>
               </div>
               <div className="grid min-w-0 grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => void handleStartSession()}
-                disabled={isRunning || sessionMode !== "group_script"}
-                className="h-12 max-w-full rounded-2xl bg-[linear-gradient(135deg,#2DD4BF,#14B8A6)] px-3 text-sm font-semibold leading-tight text-slate-900 shadow-lg shadow-cyan-500/35 transition hover:-translate-y-[1px] hover:shadow-cyan-400/40 disabled:opacity-60 md:text-base"
-              >
-                Aloita
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleStop()}
-                disabled={sessionMode !== "group_script"}
-                className="h-12 max-w-full rounded-2xl bg-[linear-gradient(135deg,#F87171,#EF4444)] px-3 text-sm font-semibold leading-tight text-white shadow-lg shadow-red-400/35 transition hover:-translate-y-[1px] hover:shadow-red-400/45 disabled:opacity-60 md:text-base"
-              >
-                Lopeta
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleRestart()}
-                disabled={sessionMode !== "group_script"}
-                className="h-12 max-w-full rounded-2xl bg-[linear-gradient(135deg,#FBBF24,#F59E0B)] px-3 text-sm font-semibold leading-tight text-slate-900 shadow-lg shadow-amber-300/35 transition hover:-translate-y-[1px] hover:shadow-amber-200/45 disabled:opacity-60 md:text-base"
-              >
-                Alusta
-              </button>
+                <button
+                  type="button"
+                  onClick={() => void handleStartSession()}
+                  disabled={isRunning || sessionMode !== "group_script"}
+                  className="h-12 max-w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-3 text-sm font-semibold leading-tight text-slate-900 shadow-lg shadow-cyan-500/30 transition hover:translate-y-[-1px] disabled:opacity-60 md:text-base"
+                >
+                  Aloita
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleStop()}
+                  disabled={sessionMode !== "group_script"}
+                  className="h-12 max-w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-3 text-sm font-semibold leading-tight text-white shadow-lg shadow-indigo-500/30 transition hover:translate-y-[-1px] disabled:opacity-60 md:text-base"
+                >
+                  Lopeta
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleRestart()}
+                  disabled={sessionMode !== "group_script"}
+                  className="h-12 max-w-full rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-3 text-sm font-semibold leading-tight text-slate-900 shadow-lg shadow-orange-400/30 transition hover:translate-y-[-1px] disabled:opacity-60 md:text-base"
+                >
+                  Alusta
+                </button>
               </div>
               {awaitingDiscussionNote && (
                 <p className="text-xs text-amber-200">Opettajan tauko: keskustele hetki, jatka kun ryhmä on valmis.</p>
@@ -1866,14 +2060,14 @@ export function ScenarioRunner() {
               <button
                 type="button"
                 onClick={() => void handleRepeatStep()}
-                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-2xl bg-[linear-gradient(135deg,#60A5FA,#4F8CFF)] px-3 py-2 text-sm font-semibold leading-tight text-white shadow-md shadow-sky-400/35 transition hover:-translate-y-[1px] md:text-base"
+                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-2xl bg-gradient-to-r from-sky-400 to-indigo-400 px-3 py-2 text-sm font-semibold leading-tight text-slate-900 shadow-md shadow-sky-400/30 transition hover:translate-y-[-1px] md:text-base"
               >
                 Toista vaihe
               </button>
               <button
                 type="button"
                 onClick={() => void handleCalmSupportLogged()}
-                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-2xl bg-[linear-gradient(135deg,#60A5FA,#4F8CFF)] px-3 py-2 text-sm font-semibold leading-tight text-white shadow-md shadow-indigo-300/35 transition hover:-translate-y-[1px] md:text-base"
+                className="h-auto min-h-11 max-w-full whitespace-normal break-words rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-3 py-2 text-sm font-semibold leading-tight text-slate-900 shadow-md shadow-orange-300/40 transition hover:translate-y-[-1px] md:text-base"
               >
                 Rauhallinen tuki
               </button>
@@ -2201,30 +2395,39 @@ export function ScenarioRunner() {
               </div>
 
               <div className={`grid min-w-0 ${votingMode ? "grid-cols-3 md:grid-cols-5" : "grid-cols-5"} gap-2`}>
-                {emojis.map((emoji) => (
-                  <button
-                    key={emoji.id}
-                    className={`rounded-2xl border active:scale-95 transition shadow-sm ${
-                      selectedEmoji === emoji.id
-                        ? "border-white/70 bg-white/90 text-slate-900 shadow-[0_10px_30px_rgba(126,231,255,0.35)]"
-                        : "border-white/12 bg-white/6 text-white hover:border-white/35"
-                    } ${votingMode ? "h-[88px] text-4xl" : "h-14 text-2xl"} ${votingMode ? "" : "opacity-50"}`}
-                    aria-label={emoji.id}
-                    type="button"
+                {emojis.map((emoji) => {
+                  const isSelected = selectedEmoji === emoji.id;
+                  return (
+                    <button
+                      key={emoji.id}
+                      className={`rounded-2xl border active:scale-95 transition shadow-sm ${
+                      isSelected
+                        ? "border-cyan-200/70 bg-[radial-gradient(circle_at_50%_38%,rgba(126,231,255,0.38),rgba(182,156,255,0.34)),linear-gradient(135deg,rgba(126,231,255,0.32),rgba(182,156,255,0.28))] text-slate-900 shadow-[0_12px_28px_rgba(126,231,255,0.28),0_0_0_1px_rgba(255,255,255,0.4)]"
+                        : "border-white/14 bg-[radial-gradient(circle_at_50%_26%,rgba(255,255,255,0.08),rgba(255,255,255,0.02)),rgba(12,22,45,0.55)] text-white hover:border-cyan-200/35 hover:shadow-[0_10px_24px_rgba(126,231,255,0.14)]"
+                    } ${votingMode ? "h-[92px] text-4xl" : "h-14 text-2xl"} ${votingMode ? "" : "opacity-60"}`}
+                      aria-label={emoji.id}
+                      type="button"
                     onClick={() => handleVote(emoji.id)}
                     disabled={!votingMode}
                   >
                     <span className="flex flex-col items-center justify-center gap-1 text-base">
-                      <span className={votingMode ? "text-4xl" : "text-2xl"}>{emoji.label}</span>
-                      <span className="text-[10px] text-slate-200">{emoji.text}</span>
+                      <span className={`${votingMode ? "text-4xl" : "text-2xl"} ${isSelected ? "text-slate-900" : ""}`}>{emoji.label}</span>
+                      <span className={`text-[10px] ${isSelected ? "text-slate-800" : "text-slate-200"}`}>{emoji.text}</span>
                     </span>
                     {votingMode && (
-                      <span className="ml-2 inline-block rounded-md bg-slate-900/60 px-2 py-0.5 text-xs align-middle">
+                      <span
+                        className={`ml-2 inline-block rounded-md px-2 py-0.5 text-xs align-middle ${
+                          isSelected
+                            ? "bg-white/80 text-slate-900 shadow-sm shadow-cyan-200/40"
+                            : "bg-slate-900/65 text-slate-100"
+                        }`}
+                      >
                         {votes[emoji.id] ?? 0}
                       </span>
                     )}
                   </button>
-                ))}
+                  );
+                })}
               </div>
               {selectedEmoji && (
                 <p className="break-words text-xs text-slate-400">

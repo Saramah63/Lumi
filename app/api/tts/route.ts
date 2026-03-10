@@ -34,6 +34,15 @@ function openAiVoiceForMode(mode: Mode): string {
   return "alloy";
 }
 
+const MODE_SPEED: Record<Mode, number> = {
+  baseline: 0.9,
+  listening: 0.95,
+  firm: 0.95,
+  firm_calm: 0.92,
+  warm: 0.88,
+  regulation: 0.9,
+};
+
 async function fetchWithTimeoutRetry(
   url: string,
   init: RequestInit,
@@ -154,6 +163,7 @@ export async function POST(req: Request) {
               voice: openAiVoiceForMode(mode),
               input: text,
               format: "mp3",
+              speed: MODE_SPEED[mode] ?? 0.9,
             }),
           },
           { timeoutMs: 9500, retries: 1 }

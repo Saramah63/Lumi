@@ -86,48 +86,47 @@ async function playWithBrowserSpeech(
     utter.voice = fiVoice;
   }
 
-  let raf = 0;
+  let interval: number | null = null;
   let stopped = false;
-  let prevMouth: MouthState = 0;
-  const startedAt = performance.now();
+  let smoothed = 0;
 
   const stop = async () => {
     if (stopped) return;
     stopped = true;
-    if (raf) cancelAnimationFrame(raf);
+    if (interval) window.clearInterval(interval);
     synth.cancel();
     callbacks.onSpeakingChange?.(false);
-    callbacks.onMouthStateChange?.(0);
+    callbacks.onMouthStateChange?.(4);
     callbacks.onLightIntensityChange?.(0);
   };
 
   activePlayback = { stop };
 
-  const tick = () => {
-    if (stopped) return;
-    const t = (performance.now() - startedAt) / 1000;
-    const base = mode === "firm" ? 0.08 : mode === "firm_calm" ? 0.085 : 0.1;
-    const wave = 0.08 * Math.abs(Math.sin(t * 10.5));
-    const jitter = 0.03 * Math.abs(Math.sin(t * 27.1));
-    const rms = Math.max(0, Math.min(1, base + wave + jitter));
-
-    const next = mouthStateFromRms(rms * 2.8);
-    const stable = stabilizeMouthState(prevMouth, next);
-    prevMouth = stable;
-
-    callbacks.onMouthStateChange?.(stable);
-    callbacks.onLightIntensityChange?.(Math.max(0, Math.min(1, rms * 1.8)));
-    raf = requestAnimationFrame(tick);
+  const startCycle = () => {
+    callbacks.onMouthStateChange?.(1);
+    callbacks.onLightIntensityChange?.(0.6);
+    const tick = () => {
+      if (stopped) return;
+      const rmsRaw = Math.random() * 0.35 + 0.05;
+      smoothed = smoothed * 0.7 + rmsRaw * 0.3;
+      const mouth = mouthStateFromRms(smoothed);
+      callbacks.onMouthStateChange?.(mouth);
+      callbacks.onLightIntensityChange?.(Math.max(0, Math.min(1, smoothed * 2)));
+    };
+    interval = window.setInterval(tick, 45);
   };
 
   try {
     await new Promise<void>((resolve, reject) => {
       utter.onstart = () => {
         callbacks.onSpeakingChange?.(true);
-        tick();
+        startCycle();
       };
       utter.onend = () => resolve();
-      utter.onerror = () => reject(new Error(originalError ?? "Browser speech fallback failed."));
+      utter.onerror = () => {
+        console.warn("Browser speech fallback error; resolving silently", originalError);
+        resolve();
+      };
       synth.speak(utter);
     });
     await stop();
@@ -135,6 +134,7 @@ async function playWithBrowserSpeech(
     if (activePlayback?.stop === stop) {
       activePlayback = null;
     }
+    if (interval) window.clearInterval(interval);
   }
 }
 
@@ -250,7 +250,7 @@ export async function lumiSpeak(
   } catch (error) {
     markAudioError(error);
     callbacks.onSpeakingChange?.(false);
-    callbacks.onMouthStateChange?.(0);
+    callbacks.onMouthStateChange?.(4);
     callbacks.onLightIntensityChange?.(0);
     return playWithBrowserSpeech(
       text,
@@ -294,7 +294,7 @@ export async function lumiSpeak(
     analyser.getByteTimeDomainData(data);
     const rms = computeRmsFromTimeDomain(data);
 
-    const next = mouthStateFromRms(rms * 2.8);
+    const next = mouthStateFromRms(rms * 3.6);
     const stable = stabilizeMouthState(prevMouth, next);
     if (stable !== prevMouth) {
       prevMouth = stable;
