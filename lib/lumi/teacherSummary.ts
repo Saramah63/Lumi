@@ -21,8 +21,25 @@ export type SessionLog = {
 };
 
 export type TeacherSummaryFi = {
-  header: { dateISO: string; duration: string; scenarioTitle: string; appMode: "group" | "solo"; groupSize: number; childName?: string };
-  emotion: { start?: string; end?: string; votesTop?: string[] };
+  header: {
+    dateISO: string;
+    duration: string;
+    durationSeconds: number;
+    scenarioTitle: string;
+    scenarioId: string;
+    appMode: "group" | "solo";
+    groupSize: number;
+    childName?: string;
+  };
+  emotion: {
+    start?: string;
+    end?: string;
+    votesTop?: string[];
+    before?: Record<string, number>;
+    after?: Record<string, number>;
+  };
+  participants: { count: number; of: number };
+  engagement: "low" | "medium" | "high";
   whatHappened: string;
   whatLumiDid: string[];
   whatWePracticed: string[];
@@ -53,6 +70,25 @@ function uniq<T>(items: T[]): T[] {
   return Array.from(new Set(items));
 }
 
+const EMOTION_KEYS = ["happy", "sad", "angry", "scared"] as const;
+type EmotionKey = (typeof EMOTION_KEYS)[number];
+
+function emptyEmotionCounts(): Record<EmotionKey, number> {
+  return { happy: 0, sad: 0, angry: 0, scared: 0 };
+}
+
+function aggregateVotes(events: SessionLog["votingEvents"], range: "first" | "second"): Record<EmotionKey, number> {
+  if (!events.length) return emptyEmotionCounts();
+  const mid = Math.max(1, Math.floor(events.length / 2));
+  const slice = range === "first" ? events.slice(0, mid) : events.slice(mid);
+  const counts = emptyEmotionCounts();
+  slice.forEach((e) => {
+    const key = (e.emoji as EmotionKey) in counts ? (e.emoji as EmotionKey) : null;
+    if (key) counts[key] += e.countDelta;
+  });
+  return counts;
+}
+
 export function buildTeacherSummaryFi(log: SessionLog): TeacherSummaryFi {
   const start = new Date(log.startedAt);
   const end = log.endedAt ? new Date(log.endedAt) : new Date();
@@ -80,20 +116,31 @@ export function buildTeacherSummaryFi(log: SessionLog): TeacherSummaryFi {
       .map(([emoji]) => emoji);
   })();
 
+  const emotionsBefore = aggregateVotes(log.votingEvents, "first");
+  const emotionsAfter = aggregateVotes(log.votingEvents, "second");
+  const totalVotes = log.votingEvents.reduce((sum, v) => sum + v.countDelta, 0);
+  const participants = Math.min(totalVotes, log.groupSize);
+
   const safetyAttention = log.safetyEvents.some((e) => e.level === "escalate");
 
   return {
     header: {
       dateISO: start.toISOString(),
       duration,
+      durationSeconds: durationSec,
       scenarioTitle: log.scenarioTitle,
+      scenarioId: log.scenarioId,
       appMode: log.appMode,
       groupSize: log.groupSize,
       childName: log.soloContext?.childName,
     },
     emotion: {
       votesTop,
+      before: emotionsBefore,
+      after: emotionsAfter,
     },
+    participants: { count: participants, of: log.groupSize },
+    engagement: "medium",
     whatHappened:
       log.appMode === "group"
         ? `Harjoittelimme tunnetaitoja tilanteessa: ${log.scenarioTitle}.`
@@ -118,7 +165,17 @@ export function formatTeacherSummaryText(summary: TeacherSummaryFi): string {
   lines.push(`Skenaario: ${summary.header.scenarioTitle}`);
   lines.push(`Tila: ${summary.header.appMode}`);
   lines.push(`Ryhmäkoko: ${summary.header.groupSize}`);
+  lines.push(`Osallistuneet lapset: ${summary.participants.count} / ${summary.participants.of}`);
+  lines.push(`Lasten osallistuminen: ${summary.engagement}`);
   if (summary.header.childName) lines.push(`Lapsi: ${summary.header.childName}`);
+  if (summary.emotion.before || summary.emotion.after) {
+    lines.push("Tunteet ennen istuntoa:");
+    const before = summary.emotion.before ?? emptyEmotionCounts();
+    Object.entries(before).forEach(([k, v]) => lines.push(`- ${k}: ${v}`));
+    lines.push("Tunteet jälkeen:");
+    const after = summary.emotion.after ?? emptyEmotionCounts();
+    Object.entries(after).forEach(([k, v]) => lines.push(`- ${k}: ${v}`));
+  }
   lines.push("");
   lines.push(`Mitä tapahtui: ${summary.whatHappened}`);
   lines.push("Lumin toiminta:");
@@ -134,5 +191,7 @@ export function formatTeacherSummaryText(summary: TeacherSummaryFi): string {
     lines.push("Opettajan muistiinpanot:");
     lines.push(summary.teacherNotes.trim());
   }
+  lines.push("");
+  lines.push("Ei henkilötietoja tallenneta. Kaikki havainnot kerätään vain ryhmätasolla.");
   return lines.join("\n");
 }

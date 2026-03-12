@@ -18,7 +18,6 @@ const emojis = [
   { id: "sad", label: "😢", text: "Surullinen" },
   { id: "angry", label: "😠", text: "Vihainen" },
   { id: "scared", label: "😨", text: "Pelokas" },
-  { id: "confused", label: "😳", text: "Nolo / Hämmentynyt" },
 ];
 
 const scenarioSkill: Record<string, string> = {
@@ -61,7 +60,6 @@ type DetectedEmotion =
   | "ashamed"
   | "jealous"
   | "frustrated"
-  | "confused"
   | "calm"
   | "unknown";
 type DetectedTopic =
@@ -82,7 +80,7 @@ type SoloQuickButtons = {
   phrases: Array<{ id: string; label: string }>;
 };
 type VoteAction = {
-  dominant: "happy" | "sad" | "angry" | "scared" | "confused";
+  dominant: "happy" | "sad" | "angry" | "scared" | "mixed";
   responseText: string;
   responseMode: SpeakMode;
   calmSupport: boolean;
@@ -350,6 +348,99 @@ function findNextStepByMode(steps: ScenarioStep[], startIndex: number, mode: Spe
   return -1;
 }
 
+function countVotesMap(v: Record<string, number>): Record<string, number> {
+  return {
+    happy: v.happy ?? 0,
+    sad: v.sad ?? 0,
+    angry: v.angry ?? 0,
+    scared: v.scared ?? 0,
+  };
+}
+
+function dominantEmotions(counts: Record<string, number>) {
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((s, [, c]) => s + c, 0);
+  const top = entries[0];
+  const second = entries[1];
+  return { entries, total, top, second };
+}
+
+function selectGroupResponse(counts: Record<string, number>): string[] {
+  const { total, top, second } = dominantEmotions(counts);
+  if (!total || !top || top[1] === 0) {
+    return ["Voit näyttää tunteen, kun olet valmis.", "Aloitetaan rauhassa yhdessä."];
+  }
+
+  const diff = top[1] - (second?.[1] ?? 0);
+  const dominantShare = top[1] / total;
+
+  const lineFor = (key: string): string[] => {
+    switch (key) {
+      case "happy":
+        return ["Näen paljon iloisia tunteita.", "Se on ihanaa.", "Aloitetaan yhdessä."];
+      case "sad":
+        return ["Näen, että joillakin on surullinen olo.", "Suru on sallittu tunne.", "Harjoitellaan yhdessä."];
+      case "angry":
+        return ["Näen, että monella on vihainen olo.", "Viha on iso tunne.", "Harjoitellaan yhdessä rauhoittumista."];
+      case "scared":
+        return ["Näen pelokkaita tunteita.", "Pelko on tärkeä tunne.", "Täällä on turvallista."];
+      default:
+        return ["Näen monta erilaista tunnetta.", "Jotkut ovat iloisia, jotkut surullisia tai vihaisia.", "Kaikki tunteet ovat sallittuja.", "Harjoitellaan yhdessä."];
+    }
+  };
+
+  const mixedTwo = (a: string, b: string, lines: string[]) => lines;
+
+  if (dominantShare >= 0.5 && diff >= 2) {
+    return lineFor(top[0]);
+  }
+
+  if (second && top[1] >= 1 && Math.abs(top[1] - second[1]) <= 1) {
+    const pair = new Set([top[0], second[0]]);
+    if (pair.has("happy") && pair.has("sad")) return mixedTwo("happy", "sad", ["Näen iloisia ja surullisia tunteita.", "Ihmisillä voi olla eri tunteita.", "Kaikki tunteet ovat sallittuja."]);
+    if (pair.has("angry") && pair.has("sad")) return mixedTwo("angry", "sad", ["Näen vihaisia ja surullisia tunteita.", "Ne ovat isoja tunteita.", "Hengitetään yhdessä rauhassa."]);
+    if (pair.has("angry") && pair.has("scared")) return mixedTwo("angry", "scared", ["Näen vihaisia ja pelokkaita tunteita.", "Joskus vaikea tilanne tuntuu isona.", "Harjoitellaan yhdessä turvallisesti."]);
+    if (pair.has("happy") && pair.has("angry")) return mixedTwo("happy", "angry", ["Näen iloisia ja vihaisia tunteita.", "Ryhmässä voi olla monta tunnetta.", "Harjoitellaan yhdessä."]);
+  }
+
+  return [
+    "Näen monta erilaista tunnetta.",
+    "Jotkut ovat iloisia, jotkut surullisia, vihaisia tai pelokkaita.",
+    "Kaikki tunteet ovat sallittuja.",
+    "Harjoitellaan yhdessä.",
+  ];
+}
+
+function aggregateBeforeAfter(events: SessionLog["votingEvents"], half: "first" | "second"): Record<string, number> {
+  if (!events.length) return { happy: 0, sad: 0, angry: 0, scared: 0 };
+  const mid = Math.max(1, Math.floor(events.length / 2));
+  const slice = half === "first" ? events.slice(0, mid) : events.slice(mid);
+  const counts: Record<string, number> = { happy: 0, sad: 0, angry: 0, scared: 0 };
+  slice.forEach((e) => {
+    if (counts[e.emoji] !== undefined) counts[e.emoji] += e.countDelta;
+  });
+  return counts;
+}
+
+function selectClosingResponse(before: Record<string, number>, after: Record<string, number>): string[] {
+  const negKeys = ["angry", "sad", "scared"];
+  const negBefore = negKeys.reduce((s, k) => s + (before[k] ?? 0), 0);
+  const negAfter = negKeys.reduce((s, k) => s + (after[k] ?? 0), 0);
+  const happyBefore = before.happy ?? 0;
+  const happyAfter = after.happy ?? 0;
+
+  if (negAfter < negBefore && happyAfter >= happyBefore) {
+    return ["Nyt näen rauhallisempia tunteita.", "Hyvä harjoittelu.", "Kiitos."];
+  }
+  if (happyAfter > happyBefore + 1) {
+    return ["Nyt näen enemmän iloisia tunteita.", "Hienoa.", "Harjoittelimme yhdessä."];
+  }
+  if (negAfter >= negBefore && negAfter > 0) {
+    return ["Näen, että osa tunteista on vielä isoja.", "Se on ihan okei.", "Voimme hengittää vielä yhdessä tai pyytää aikuista lähelle."];
+  }
+  return ["Nytkin ryhmässä on monta tunnetta.", "Kaikki tunteet ovat sallittuja.", "Kiitos, kun harjoittelitte yhdessä."];
+}
+
 function decideVoteAction(votes: Record<string, number>): VoteAction | null {
   const total = Object.values(votes).reduce((sum, n) => sum + n, 0);
   if (total < 2) return null;
@@ -359,14 +450,13 @@ function decideVoteAction(votes: Record<string, number>): VoteAction | null {
     sad: votes.sad ?? 0,
     angry: votes.angry ?? 0,
     scared: votes.scared ?? 0,
-    confused: votes.confused ?? 0,
   };
 
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const top = sorted[0];
   const second = sorted[1];
   const tie = top && second && top[1] === second[1];
-  const dominant = tie ? "confused" : ((top?.[0] as VoteAction["dominant"]) ?? "confused");
+  const dominant = tie ? null : ((top?.[0] as VoteAction["dominant"]) ?? null);
 
   if (dominant === "happy") {
     return {
@@ -416,27 +506,36 @@ function decideVoteAction(votes: Record<string, number>): VoteAction | null {
     };
   }
 
-  if (dominant === "confused") {
-    return {
-      dominant: "confused",
-      responseText: "Jos on noloa tai outoa, yritetään rauhassa uudestaan.",
-      responseMode: "warm",
-      calmSupport: true,
-      repeatStep: true,
-      jumpMode: null,
-      message: "Hämmennys huomattu, hidastetaan.",
-    };
-  }
-
   return {
-    dominant: "confused",
-    responseText: "Tämä on hämmentävää. Sanon sen vielä lyhyesti.",
-    responseMode: "listening",
-    calmSupport: false,
-    repeatStep: true,
+    dominant: "mixed",
+    responseText: "Nyt on monta tunnetta. Otetaan rauhassa.",
+    responseMode: "warm",
+    calmSupport: true,
+    repeatStep: false,
     jumpMode: null,
-    message: "Hämmennys huomattu, selkeytetään.",
+    message: "Sekoitus tunteita, rauhoitetaan.",
   };
+}
+
+function EmotionList({ counts }: { counts?: Record<string, number> }) {
+  const data = counts ?? {};
+  const order: Array<{ key: string; label: string; icon: string }> = [
+    { key: "happy", label: "Iloinen", icon: "😊" },
+    { key: "sad", label: "Surullinen", icon: "😢" },
+    { key: "angry", label: "Vihainen", icon: "😡" },
+    { key: "scared", label: "Pelokas", icon: "😨" },
+  ];
+  return (
+    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-200">
+      {order.map((item) => (
+        <div key={item.key} className="flex items-center gap-2">
+          <span className="text-sm">{item.icon}</span>
+          <span className="min-w-0 flex-1 break-words">{item.label}</span>
+          <span className="rounded bg-white/10 px-2 py-[1px] text-[11px] text-white">{data[item.key] ?? 0}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function ScenarioRunner() {
@@ -470,6 +569,10 @@ export function ScenarioRunner() {
   const [summary, setSummary] = useState<TeacherSummaryFi | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [teacherNotes, setTeacherNotes] = useState("");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const saveErrorRef = useRef<string | null>(null);
+  const [engagement, setEngagement] = useState<"low" | "medium" | "high">("medium");
+  const closingResponseSentRef = useRef(false);
 
   const sessionLogRef = useRef<SessionLog | null>(null);
 
@@ -528,14 +631,14 @@ export function ScenarioRunner() {
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [votes, setVotes] = useState<Record<string, number>>({});
   const [emotionHistory, setEmotionHistory] = useState<string[]>([]);
-  const [emotionTrend, setEmotionTrend] = useState<"happy" | "sad" | "angry" | "scared" | "confused" | null>(null);
+  const [emotionTrend, setEmotionTrend] = useState<"happy" | "sad" | "angry" | "scared" | null>(null);
   const [calmUsed, setCalmUsed] = useState(false);
   const [lastVoteAppliedStep, setLastVoteAppliedStep] = useState(-1);
   const [voteEffect, setVoteEffect] = useState("Odotetaan tunteita.");
   const [runError, setRunError] = useState<string | null>(null);
   const supportSequenceRef = useRef(0);
   const [reactionTick, setReactionTick] = useState(0);
-  const lastGroupResponseRef = useRef<{ step: number; trend: "happy" | "sad" | "angry" | "scared" | "confused" | null; total: number }>({
+  const lastGroupResponseRef = useRef<{ step: number; trend: "happy" | "sad" | "angry" | "scared" | null; total: number }>({
     step: -1,
     trend: null,
     total: 0,
@@ -577,6 +680,8 @@ export function ScenarioRunner() {
     setSummary(null);
     setSummaryOpen(false);
     setTeacherNotes("");
+    setEngagement("medium");
+    closingResponseSentRef.current = false;
     return created;
   }, [sessionMode, groupSize, scenarioId, scenario?.title, soloChildName, soloSafeAdultName]);
 
@@ -587,10 +692,10 @@ export function ScenarioRunner() {
     const finalized = { ...sessionLog, endedAt, durationSeconds };
     const nextSummary = buildTeacherSummaryFi(finalized);
     setSessionLog(finalized);
-    setSummary(nextSummary);
+    setSummary({ ...nextSummary, engagement });
     setTeacherNotes(nextSummary.teacherNotes);
     setSummaryOpen(true);
-  }, [sessionLog]);
+  }, [sessionLog, engagement]);
 
   const availableScenarios = useMemo(
     () => scenarios.filter((s) => isScenarioInTheme(theme, s.id)),
@@ -834,8 +939,7 @@ export function ScenarioRunner() {
   const performVoteResponse = useCallback(
     async (action: VoteAction, currentText: string | undefined) => {
       setVoteEffect(action.message);
-      const glow =
-        action.dominant === "angry" ? "strong" : action.dominant === "confused" ? "alert" : "calm";
+      const glow = action.dominant === "angry" ? "strong" : action.dominant === "scared" ? "alert" : "calm";
       setGlowPinned(glow);
       setGlowState(glow);
 
@@ -1134,24 +1238,6 @@ export function ScenarioRunner() {
     resetAvatarState,
   ]);
 
-  const handleStop = useCallback(async () => {
-    await cancelLumiSpeak();
-    setIsRunning(false);
-    setAwaitingChoice(false);
-    if (sessionMode === "group_script") {
-      setConversationHistory([]);
-      setCustomAssistantStatus("");
-    }
-    const log = ensureSessionLog();
-    log.teacherActions.push({ type: "reset", at: new Date().toISOString() });
-    setSessionLog({ ...log });
-    setRunError(null);
-    resetAvatarState();
-    setAwaitingTeacherContinue(false);
-    teacherPendingStepRef.current = null;
-    endSession();
-  }, [sessionMode, resetAvatarState, ensureSessionLog, endSession]);
-
   const handleRestart = useCallback(async () => {
     await cancelLumiSpeak();
     if (sessionMode === "solo_personalized") {
@@ -1207,9 +1293,152 @@ export function ScenarioRunner() {
     setIsRunning(true);
   }, [awaitingTeacherContinue]);
 
+  const empathyLines: Record<string, string[]> = {
+    happy: ["Ihana kuulla!", "Sinä olet iloinen.", "Ilo tuntuu hyvältä."],
+    sad: ["Olen tässä.", "Saat olla surullinen.", "Se on ihan ok."],
+    angry: ["Huomaan kiukun.", "Hengitetään yhdessä.", "Rauhassa nyt."],
+    scared: ["Olet turvassa.", "Minä olen täällä.", "Pidän sinusta huolta."],
+  };
+
+  const encouragementLines: Record<string, string[]> = {
+    happy: ["Hienoa!", "Jatketaan ilolla.", "Kiitos jakamisesta."],
+    sad: ["Hyvin sanoit.", "Olen kanssasi.", "Otetaan rauhassa."],
+    angry: ["Hyvä pysähdys.", "Kiitos kun kerroit.", "Hengitys auttaa."],
+    scared: ["Olet turvassa.", "Hyvin kerroit.", "Ollaan rauhassa."],
+  };
+
+  const speakSupport = useCallback(
+    async (text: string, mode: SpeakMode = "warm") => {
+      setVoteEffect(text);
+      if (!voiceEnabled) return;
+      if (speechBusyRef.current) {
+        await cancelLumiSpeak();
+        speechBusyRef.current = false;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      speechBusyRef.current = true;
+      lastSpeechAtRef.current = Date.now();
+      try {
+        await speakLine(text, mode);
+      } finally {
+        speechBusyRef.current = false;
+      }
+    },
+    [speakLine, voiceEnabled]
+  );
+
+  const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0);
+
+  const respondToGroupVotes = useCallback(async () => {
+    const counts = countVotesMap(votes);
+    const lines = selectGroupResponse(counts);
+    for (const line of lines) {
+      await speakSupport(line, "warm");
+    }
+    const total = Object.values(counts).reduce((s, n) => s + n, 0);
+    lastGroupResponseRef.current = { step: stepIndex, trend: "group" as any, total };
+  }, [votes, speakSupport, stepIndex]);
+
+  const respondToClosingVotes = useCallback(async () => {
+    const log = sessionLogRef.current;
+    if (!log || log.votingEvents.length === 0) return;
+    const before = aggregateBeforeAfter(log.votingEvents, "first");
+    const after = aggregateBeforeAfter(log.votingEvents, "second");
+    const lines = selectClosingResponse(before, after);
+    for (const line of lines) {
+      await speakSupport(line, "warm");
+    }
+  }, [speakSupport]);
+
+  useEffect(() => {
+    if (done && summary) {
+      setSummaryOpen(true);
+      if (!closingResponseSentRef.current) {
+        closingResponseSentRef.current = true;
+        void respondToClosingVotes();
+      }
+    }
+  }, [done, summary, respondToClosingVotes]);
+
+  const dominantFromCounts = (counts?: Record<string, number>) => {
+    if (!counts) return null;
+    const entries = Object.entries(counts).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0));
+    if (!entries.length || entries[0][1] === 0) return null;
+    const top = entries[0];
+    const second = entries[1];
+    if (second && second[1] === top[1]) return null;
+    return top[0];
+  };
+
+  const mapEmotionsForSave = (counts?: Record<string, number>) => ({
+    happy: counts?.happy ?? 0,
+    sad: counts?.sad ?? 0,
+    angry: counts?.angry ?? 0,
+    afraid: counts?.scared ?? 0,
+  });
+
+  const persistSummary = useCallback(
+    async (auto = false) => {
+      if (!summary) return;
+      try {
+        setSaveState((prev) => (prev === "saved" && auto ? prev : "saving"));
+        const emotionsBefore = mapEmotionsForSave(summary.emotion.before);
+        const emotionsAfter = mapEmotionsForSave(summary.emotion.after);
+        const payload = {
+          sessionId: sessionLogRef.current?.sessionId ?? null,
+          sessionDate: summary.header.dateISO,
+          scenarioId: summary.header.scenarioId,
+          scenarioTitle: summary.header.scenarioTitle,
+          mode: summary.header.appMode,
+          groupSize: summary.header.groupSize,
+          participants: summary.participants.count,
+          durationSeconds: summary.header.durationSeconds,
+          durationLabel: summary.header.duration,
+          emotionsBefore,
+          emotionsAfter,
+          dominantEmotionBefore: dominantFromCounts(emotionsBefore),
+          dominantEmotionAfter: dominantFromCounts(emotionsAfter),
+          engagementLevel: summary.engagement,
+          calmingSupportUsed: calmUsed,
+          sessionCompleted: done,
+          practicedSkill: skillHighlight,
+          nextSteps: summary.nextSteps?.[0] ?? null,
+          safetyNotes: summary.safety.note,
+          teacherNotes,
+        };
+        const res = await fetch("/api/lumi/session-report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(`save_failed_${res.status}`);
+        setSaveState("saved");
+        saveErrorRef.current = null;
+      } catch (error) {
+        saveErrorRef.current = error instanceof Error ? error.message : "save_failed";
+        setSaveState("error");
+      }
+    },
+    [summary, calmUsed, done, skillHighlight, teacherNotes]
+  );
+
+  useEffect(() => {
+    if (summary && done && saveState === "idle") {
+      void persistSummary(true);
+    }
+  }, [summary, done, saveState, persistSummary]);
+
   const handleNextStep = useCallback(async () => {
     if (sessionMode !== "group_script") return;
     if (done) return;
+
+    const currentTotal = Object.values(votes).reduce((sum, n) => sum + n, 0);
+    const last = lastGroupResponseRef.current;
+    if (votingMode && currentTotal > 0 && !(last.step === stepIndex && last.total === currentTotal)) {
+      await respondToGroupVotes();
+      setVotes({});
+      setSelectedEmoji(null);
+    }
 
     if (awaitingTeacherContinue && teacherPendingStepRef.current != null) {
       setAwaitingTeacherContinue(false);
@@ -1231,12 +1460,35 @@ export function ScenarioRunner() {
     const log = ensureSessionLog();
     log.teacherActions.push({ type: "next", at: new Date().toISOString() });
     setSessionLog({ ...log });
-  }, [sessionMode, awaitingChoice, done, awaitingTeacherContinue, activeScenario, ensureSessionLog]);
+  }, [sessionMode, awaitingChoice, done, awaitingTeacherContinue, activeScenario, ensureSessionLog, votingMode, votes, respondToGroupVotes, stepIndex]);
+
+  const handleStop = useCallback(async () => {
+    await cancelLumiSpeak();
+    setIsRunning(false);
+    setAwaitingChoice(false);
+    setSaveState("idle");
+    saveErrorRef.current = null;
+    if (sessionMode === "group_script") {
+      setConversationHistory([]);
+      setCustomAssistantStatus("");
+    }
+    const log = ensureSessionLog();
+    log.teacherActions.push({ type: "reset", at: new Date().toISOString() });
+    setSessionLog({ ...log });
+    setRunError(null);
+    resetAvatarState();
+    setAwaitingTeacherContinue(false);
+    teacherPendingStepRef.current = null;
+    endSession();
+    void respondToClosingVotes();
+  }, [sessionMode, resetAvatarState, ensureSessionLog, endSession, respondToClosingVotes]);
 
   const handleReplayScenario = useCallback(async () => {
     await cancelLumiSpeak();
     setRunError(null);
     setDone(false);
+    setSaveState("idle");
+    saveErrorRef.current = null;
     setAwaitingChoice(false);
     setAwaitingTeacherContinue(false);
     setAwaitingDiscussionNote(false);
@@ -1342,8 +1594,7 @@ export function ScenarioRunner() {
         kind === "happy" ? 720 :
         kind === "sad" ? 420 :
         kind === "angry" ? 260 :
-        kind === "scared" ? 340 :
-        kind === "confused" ? 500 : 600;
+        kind === "scared" ? 340 : 600;
       osc.frequency.setValueAtTime(base, now);
       osc.type = "sine";
       gain.gain.setValueAtTime(0.001, now);
@@ -1354,129 +1605,6 @@ export function ScenarioRunner() {
       osc.stop(now + 0.2);
     },
     []
-  );
-
-  const empathyLines: Record<string, string[]> = {
-    happy: ["Ihana kuulla!", "Sinä olet iloinen.", "Ilo tuntuu hyvältä."],
-    sad: ["Olen tässä.", "Saat olla surullinen.", "Se on ihan ok."],
-    angry: ["Huomaan kiukun.", "Hengitetään yhdessä.", "Rauhassa nyt."],
-    scared: ["Olet turvassa.", "Minä olen täällä.", "Pidän sinusta huolta."],
-    confused: ["Näen ihmetystä.", "Mietitään yhdessä.", "Ei kiirettä."],
-  };
-
-  const encouragementLines: Record<string, string[]> = {
-    happy: ["Hienoa!", "Jatketaan ilolla.", "Kiitos jakamisesta."],
-    sad: ["Hyvin sanoit.", "Olen kanssasi.", "Otetaan rauhassa."],
-    angry: ["Hyvä pysähdys.", "Kiitos kun kerroit.", "Hengitys auttaa."],
-    scared: ["Olet turvassa.", "Hyvin kerroit.", "Ollaan rauhassa."],
-    confused: ["Hyvä kysymys.", "Mietitään yhdessä.", "Otetaan hetki."],
-  };
-
-  const speakSupport = useCallback(
-    async (text: string, mode: SpeakMode = "warm") => {
-      setVoteEffect(text);
-      if (!voiceEnabled) return;
-      if (speechBusyRef.current) {
-        await cancelLumiSpeak();
-        speechBusyRef.current = false;
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
-      speechBusyRef.current = true;
-      lastSpeechAtRef.current = Date.now();
-      try {
-        await speakLine(text, mode);
-      } finally {
-        speechBusyRef.current = false;
-      }
-    },
-    [speakLine, voiceEnabled]
-  );
-
-  const runEmotionFlow = useCallback(
-    async (
-      emojiId: string,
-      preset?: { empathy?: string; encouragement?: string }
-    ) => {
-      const seq = supportSequenceRef.current + 1;
-      supportSequenceRef.current = seq;
-      const checkCancelled = () => supportSequenceRef.current !== seq;
-      const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-      const listenLines: Record<string, string> = {
-        happy: "Näen iloa",
-        sad: "Näen surua",
-        angry: "Huomaan kiukkua",
-        scared: "Huomaan pelkoa",
-        confused: "Näen ihmetystä",
-      };
-      const pick = (arr: string[] | undefined) => (arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : "");
-      const empathyLine = preset?.empathy ?? pick(empathyLines[emojiId]);
-      const encouragementLine = preset?.encouragement ?? pick(encouragementLines[emojiId]);
-
-      const intentGlow: Record<string, GlowState> = {
-        happy: "calm",
-        sad: "calm",
-        angry: "strong",
-        scared: "alert",
-        confused: "calm",
-      };
-      const startGlow = intentGlow[emojiId] ?? "calm";
-
-      setGlowPinned(startGlow);
-      setGlowState(startGlow);
-      setAnimationSource("audio");
-      const hearLine = listenLines[emojiId] ?? "Minä kuulen sinua";
-      await speakSupport(hearLine, "warm");
-      if (checkCancelled()) return;
-      await pause(220);
-
-      const empathy = empathyLine || listenLines[emojiId] || "Olen täällä.";
-      const empathyMode: SpeakMode =
-        emojiId === "angry" ? "firm_calm" :
-        emojiId === "scared" ? "regulation" :
-        emojiId === "sad" ? "warm" :
-        "warm";
-      setGlowState(startGlow);
-      setAnimationSource("audio");
-      await speakSupport(empathy, empathyMode);
-      if (checkCancelled()) return;
-
-      const needsRegulation = emojiId === "angry" || emojiId === "scared" || emojiId === "sad";
-      if (needsRegulation) {
-        setGlowState("calm");
-        setAnimationSource("breath");
-        await pause(220);
-        await speakSupport("Hengitetään yhdessä", "regulation");
-        if (checkCancelled()) return;
-        await pause(420);
-        await speakSupport("Yksi", "regulation");
-        if (checkCancelled()) return;
-        await pause(520);
-        await speakSupport("Kaksi", "regulation");
-        if (checkCancelled()) return;
-        await pause(520);
-        await speakSupport("Kolme", "regulation");
-        if (emojiId === "angry" || emojiId === "scared") {
-          setCalmUsed(true);
-        }
-      }
-
-      setGlowState("calm");
-      setAnimationSource("audio");
-      await pause(180);
-      const encourage = encouragementLine || empathy;
-      const encourageMode: SpeakMode =
-        emojiId === "happy" ? "warm" :
-        emojiId === "sad" ? "warm" :
-        emojiId === "angry" ? "firm_calm" :
-        emojiId === "scared" ? "warm" :
-        "warm";
-      await speakSupport(encourage, encourageMode);
-      setGlowState("calm");
-      setGlowPinned(null);
-      setAnimationSource("audio");
-    },
-    [speakSupport]
   );
 
   const handleVote = async (emojiId: string) => {
@@ -1497,7 +1625,7 @@ export function ScenarioRunner() {
       const top = sorted[0];
       const second = sorted[1];
       const tie = top && second && top[1] === second[1];
-      setEmotionTrend(tie ? "confused" : ((top?.[0] as any) ?? null));
+      setEmotionTrend(tie ? null : ((top?.[0] as any) ?? null));
       return next;
     });
     const log = ensureSessionLog();
@@ -1510,30 +1638,17 @@ export function ScenarioRunner() {
     setVoteEffect(empathyPick);
     lastGroupResponseRef.current = { step: stepIndex, trend: emojiId as any, total: totalVotes };
     if (!glowPinned) {
-      const glowMap: Record<string, GlowState> = { angry: "strong", scared: "alert", sad: "calm", happy: "calm", confused: "alert" };
+      const glowMap: Record<string, GlowState> = { angry: "strong", scared: "alert", sad: "calm", happy: "calm" };
       setGlowState(glowMap[emojiId] ?? "alert");
     }
     setAnimationSource("audio");
-    await runEmotionFlow(emojiId, { empathy: empathyPick, encouragement: encouragePick || undefined });
   };
-
-  const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0);
-
-  useEffect(() => {
-    if (sessionMode !== "group_script") return;
-    if (!votingMode) return;
-    if (!emotionTrend) return;
-    if (totalVotes === 0) return;
-    const last = lastGroupResponseRef.current;
-    if (last.step === stepIndex && last.trend === emotionTrend && last.total === totalVotes) return;
-    lastGroupResponseRef.current = { step: stepIndex, trend: emotionTrend, total: totalVotes };
-  }, [sessionMode, votingMode, emotionTrend, totalVotes, stepIndex, runEmotionFlow]);
 
   const elapsedLabel = `${String(Math.floor(elapsedSec / 60)).padStart(2, "0")}:${String(elapsedSec % 60).padStart(2, "0")}`;
   const dominantEmotionText = emotionTrend ? (emojis.find((e) => e.id === emotionTrend)?.text ?? "—") : "—";
   const skillHighlight = scenarioSkill[scenarioId] ?? "Tunnetaitojen harjoittelu";
   const reflectionList = reflectionPrompts[scenarioId] ?? ["Mikä auttoi Lumi-ystävää?", "Mitä teemme, kun tunne on iso?"];
-  const emotionTone: "happy" | "sad" | "angry" | "scared" | "confused" | "idle" =
+  const emotionTone: "happy" | "sad" | "angry" | "scared" | "idle" =
     (selectedEmoji as any) ??
     (emotionTrend as any) ??
     "idle";
@@ -1542,7 +1657,6 @@ export function ScenarioRunner() {
     sad: { glow: "rgba(126,187,255,0.26)", ring: "rgba(126,187,255,0.14)" },
     angry: { glow: "rgba(255,149,130,0.3)", ring: "rgba(255,149,130,0.18)" },
     scared: { glow: "rgba(190,170,255,0.28)", ring: "rgba(190,170,255,0.16)" },
-    confused: { glow: "rgba(140,238,255,0.28)", ring: "rgba(140,238,255,0.16)" },
     idle: { glow: "rgba(126,231,255,0.24)", ring: "rgba(126,231,255,0.14)" },
   };
   const halo = haloTone[emotionTone] ?? haloTone.idle;
@@ -2138,7 +2252,6 @@ export function ScenarioRunner() {
                     { id: "sad", label: "Surullinen" },
                     { id: "angry", label: "Vihainen" },
                     { id: "scared", label: "Pelkään" },
-                    { id: "confused", label: "Hämmentynyt" },
                     { id: "frustrated", label: "Turhautunut" },
                     { id: "calm", label: "Rauhallinen" },
                   ]).map((item) => (
@@ -2221,9 +2334,35 @@ export function ScenarioRunner() {
                   <div>Skenaario: {summary.header.scenarioTitle}</div>
                   <div>Tila: {summary.header.appMode}</div>
                   <div>Ryhmäkoko: {summary.header.groupSize}</div>
+                  <div>Osallistuneet lapset: {summary.participants.count} / {summary.participants.of}</div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span>Lasten osallistuminen:</span>
+                    {["low", "medium", "high"].map((lvl) => (
+                      <button
+                        key={lvl}
+                        type="button"
+                        onClick={() => {
+                          setEngagement(lvl as any);
+                          setSummary((prev) => (prev ? { ...prev, engagement: lvl as any } : prev));
+                        }}
+                        className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
+                          summary.engagement === lvl
+                            ? "bg-emerald-300 text-slate-900"
+                            : "bg-white/10 text-slate-100"
+                        }`}
+                      >
+                        {lvl === "low" ? "Matala" : lvl === "medium" ? "Keskitaso" : "Korkea"}
+                      </button>
+                    ))}
+                  </div>
                   {summary.header.childName ? <div>Lapsi: {summary.header.childName}</div> : null}
-                  <div>Ääniä: {totalVotes}</div>
-                  <div>Yleisin tunne: {dominantEmotionText}</div>
+                  <div className="space-y-1 pt-2">
+                    <p className="text-xs font-semibold text-slate-200">Tunteet ennen istuntoa</p>
+                    <EmotionList counts={summary.emotion.before} />
+                    <p className="text-xs font-semibold text-slate-200">Tunteet jälkeen</p>
+                    <EmotionList counts={summary.emotion.after} />
+                  </div>
+                  <div className="pt-1">Yleisin tunne: {dominantEmotionText}</div>
                   <div>Rauhoittava tuki: {calmUsed ? "Käytettiin" : "Ei käytetty"}</div>
                   <div>Istunto valmis: {done ? "Kyllä" : "Kesken"}</div>
                 </div>
@@ -2273,13 +2412,28 @@ export function ScenarioRunner() {
                     onChange={(e) => {
                       const value = e.target.value;
                       setTeacherNotes(value);
+                      setSaveState("idle");
                       setSummary((prev) => (prev ? { ...prev, teacherNotes: value } : prev));
                     }}
                     className="mt-1 h-20 w-full rounded-lg border border-cyan-100/20 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
                     placeholder="Kirjoita omat muistiinpanot tähän"
                   />
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void persistSummary(false)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold shadow transition ${
+                      saveState === "saved"
+                        ? "bg-emerald-300 text-slate-900 shadow-emerald-300/40"
+                        : "bg-gradient-to-r from-sky-300 to-cyan-400 text-slate-900 shadow-cyan-300/40 hover:translate-y-[-1px]"
+                    }`}
+                  >
+                    {saveState === "saved" ? "Tallennettu" : saveState === "saving" ? "Tallennetaan..." : "Tallenna raportti"}
+                  </button>
+                  {saveState === "error" ? (
+                    <span className="text-xs text-rose-200">Tallennus epäonnistui. Yritä uudelleen.</span>
+                  ) : null}
                   <button
                     type="button"
                     onClick={async () => {
@@ -2302,7 +2456,20 @@ export function ScenarioRunner() {
                     type="button"
                     onClick={() => {
                       if (!summary) return;
-                      const blob = new Blob([JSON.stringify({ ...summary, teacherNotes }, null, 2)], { type: "application/json" });
+                      const exportObj = {
+                        date: summary.header.dateISO,
+                        duration: summary.header.duration,
+                        scenario: summary.header.scenarioTitle,
+                        scenario_id: summary.header.scenarioId,
+                        group_size: summary.header.groupSize,
+                        participants: summary.participants.count,
+                        emotions_before: summary.emotion.before,
+                        emotions_after: summary.emotion.after,
+                        engagement: summary.engagement,
+                        teacher_notes: teacherNotes,
+                        safety: summary.safety.level,
+                      };
+                      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: "application/json" });
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement("a");
                       a.href = url;
@@ -2324,6 +2491,9 @@ export function ScenarioRunner() {
                   </ul>
                   <p className="text-[11px] text-slate-400">Lumi on varhaiskasvatuksen tunneopas: tukee tunnetaitoja, turvaa, empatiaa ja rauhoittumista.</p>
                 </div>
+                <p className="text-[11px] text-slate-400">
+                  Ei henkilötietoja tallenneta. Kaikki havainnot kerätään vain ryhmätasolla. / No personal child data is stored. All observations are collected at group level only.
+                </p>
               </div>
             ) : null}
           </div>
@@ -2367,8 +2537,8 @@ export function ScenarioRunner() {
             <div className="space-y-3">
               <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="min-w-0 break-words text-sm font-semibold text-slate-100">Valitse tunne</p>
-                  <p className="text-xs text-slate-300">Lapset valitsevat miltä tuntuu</p>
+                  <p className="min-w-0 break-words text-sm font-semibold text-slate-100">Näytä tunne</p>
+                  <p className="text-xs text-slate-300">Valitse kuva joka näyttää tunteesi</p>
                 </div>
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <span className="text-xs text-slate-400">Ääniä: {totalVotes}</span>

@@ -23,7 +23,7 @@ type LumiChatResponse = {
   choices: string[];
   micro_practice: { type: "none" | "breathing" | "body_check" | "repair_phrase" | "pause"; script: string };
   safety: { level: "ok" | "escalate"; action: "none" | "tell_safe_adult"; reason: string };
-  emotion_guess: "calm" | "happy" | "sad" | "angry" | "scared" | "ashamed" | "jealous" | "frustrated" | "confused";
+  emotion_guess: "calm" | "happy" | "sad" | "angry" | "scared" | "ashamed" | "jealous" | "frustrated";
   glow_state: "calm" | "alert" | "strong";
 };
 
@@ -108,7 +108,7 @@ function detectEmotion(text: string): string {
   if (/(häpeä|nolo)/i.test(t)) return "ashamed";
   if (/(kateus|kateellinen)/i.test(t)) return "jealous";
   if (/(turhaut|ärsyttää)/i.test(t)) return "frustrated";
-  if (/(sekaisin|en tiedä|hämmennys)/i.test(t)) return "confused";
+  if (/(sekaisin|en tiedä|hämmennys)/i.test(t)) return "sad";
   if (/(rauha|calm|hyvä)/i.test(t)) return "calm";
   return "unknown";
 }
@@ -209,7 +209,7 @@ Vastaa aina JSON-muodossa, ilman muuta tekstiä. Käytä tätä skeemaa:
      "action": "none|tell_safe_adult",
      "reason": "… (lyhyt, opettajalle; suomeksi)"
   },
-  "emotion_guess": "calm|happy|sad|angry|scared|ashamed|jealous|frustrated|confused",
+  "emotion_guess": "calm|happy|sad|angry|scared|ashamed|jealous|frustrated",
   "glow_state": "calm|alert|strong"
 }
 
@@ -248,7 +248,6 @@ function coerceEmotion(value: string | undefined): string {
     "ashamed",
     "jealous",
     "frustrated",
-    "confused",
   ]);
   return value && allowed.has(value) ? value : "unknown";
 }
@@ -341,7 +340,7 @@ export async function POST(req: Request) {
       "  \"choices\": [\"\", \"\"],\n" +
       "  \"micro_practice\": {\"type\": \"none|breathing|body_check|repair_phrase|pause\", \"script\": \"\"},\n" +
       "  \"safety\": {\"level\": \"ok|escalate\", \"action\": \"none|tell_safe_adult\", \"reason\": \"\"},\n" +
-      "  \"emotion_guess\": \"calm|happy|sad|angry|scared|ashamed|jealous|frustrated|confused\",\n" +
+      "  \"emotion_guess\": \"calm|happy|sad|angry|scared|ashamed|jealous|frustrated\",\n" +
       "  \"glow_state\": \"calm|alert|strong\"\n" +
       "}\n";
 

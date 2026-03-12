@@ -5,7 +5,6 @@
       { "id": "sad", "label": "Surullinen" },
       { "id": "angry", "label": "Vihainen" },
       { "id": "scared", "label": "Pelkään" },
-      { "id": "confused", "label": "Hämmentynyt" },
       { "id": "frustrated", "label": "Turhautunut" },
       { "id": "calm", "label": "Rauhallinen" }
     ],

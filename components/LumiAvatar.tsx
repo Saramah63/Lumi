@@ -35,7 +35,7 @@ export function LumiAvatar({
   debugOverlay?: boolean;
   glowDisabled?: boolean;
   regulationActive?: boolean;
-  emotionTone?: "idle" | "happy" | "sad" | "angry" | "scared" | "confused";
+  emotionTone?: "idle" | "happy" | "sad" | "angry" | "scared";
   reactionTick?: number;
 }) {
   const baseSrc = useMemo(() => {
@@ -175,31 +175,31 @@ export function LumiAvatar({
     emotionTone === "sad" ? 0.4 :
     emotionTone === "angry" ? 0.3 :
     emotionTone === "scared" ? 0.6 :
-    emotionTone === "confused" ? 0.9 : 0.8;
+    0.8;
   const toneLift =
     emotionTone === "happy" ? 2.2 :
     emotionTone === "sad" ? -0.8 :
     emotionTone === "angry" ? 0.4 :
     emotionTone === "scared" ? -0.2 :
-    emotionTone === "confused" ? 0.3 : 0;
+    0;
   const reactionLift =
     !reactionActive ? 0 :
     emotionTone === "happy" ? -3 :
     emotionTone === "sad" ? -1 :
     emotionTone === "angry" ? -0.6 :
     emotionTone === "scared" ? -0.8 :
-    emotionTone === "confused" ? -0.5 : -0.6;
+    -0.6;
   const reactionTilt =
     !reactionActive ? 0 :
     emotionTone === "happy" ? 0.35 :
     emotionTone === "sad" ? -0.35 :
     emotionTone === "angry" ? 0.12 :
     emotionTone === "scared" ? -0.15 :
-    emotionTone === "confused" ? -0.25 : 0;
+    0;
   const translateY = (((breath - 0.5) * 2.4) + Math.sin(lifePhase * 0.7) * 0.2 + toneLift + reactionLift) * breathAmp;
   const scale = 1 + (((breath - 0.5) * 0.007) + Math.sin(lifePhase * 1.05) * 0.0012) * breathAmp + (emotionTone === "happy" ? 0.004 : 0);
   const swayX = Math.sin(lifePhase * 1.35) * (isSpeaking ? 0.65 : toneSway);
-  const tiltDeg = Math.sin(lifePhase * 0.9 + 0.5) * (isSpeaking ? 0.22 : 0.45) + (emotionTone === "sad" || emotionTone === "confused" ? -0.25 : 0) + reactionTilt;
+  const tiltDeg = Math.sin(lifePhase * 0.9 + 0.5) * (isSpeaking ? 0.22 : 0.45) + (emotionTone === "sad" ? -0.25 : 0) + reactionTilt;
 
   const handWave = Math.sin(lifePhase * 2.1 + 0.5);
   const legWave = Math.sin(lifePhase * 1.7 + 1.1);
@@ -259,7 +259,7 @@ export function LumiAvatar({
     emotionTone === "sad" ? 0.85 :
     emotionTone === "angry" ? 1.0 :
     emotionTone === "scared" ? 1.05 :
-    emotionTone === "confused" ? 1.0 : 1.0;
+    1.0;
   const chestGlow = glowDisabled
     ? 0
     : clamp01((0.06 + breath * 0.1 + clamp01(audioIntensity) * 0.12) * toneChest);
@@ -283,7 +283,6 @@ export function LumiAvatar({
     sad: "rgba(126, 187, 255, 0.9)",
     angry: "rgba(255, 149, 130, 0.95)",
     scared: "rgba(190, 170, 255, 0.92)",
-    confused: "rgba(140, 238, 255, 0.95)",
     idle: "rgba(180, 225, 255, 0.9)",
   };
   const antennaColor = antennaColors[emotionTone] ?? antennaColors.idle;
@@ -292,10 +291,10 @@ export function LumiAvatar({
     emotionTone === "happy" ? 1.12 :
     emotionTone === "sad" ? 0.94 :
     emotionTone === "scared" ? 1.05 :
-    emotionTone === "confused" ? 1.08 : 1;
+    1;
   const antennaFlicker =
     emotionTone === "scared" ? 0.18 :
-    emotionTone === "confused" ? 0.12 : 0;
+    0;
   const antennaSparkle =
     emotionTone === "happy" ? 0.2 :
     emotionTone === "angry" ? 0.16 : 0.08;
