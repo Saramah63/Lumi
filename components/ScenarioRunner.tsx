@@ -573,12 +573,14 @@ export function ScenarioRunner() {
   const saveErrorRef = useRef<string | null>(null);
   const [engagement, setEngagement] = useState<"low" | "medium" | "high">("medium");
   const closingResponseSentRef = useRef(false);
+  const votePromptStageRef = useRef<"before" | "after" | null>(null);
 
   const sessionLogRef = useRef<SessionLog | null>(null);
 
   useEffect(() => {
     sessionLogRef.current = sessionLog;
   }, [sessionLog]);
+
   const [customScenario, setCustomScenario] = useState<{
     id: string;
     title: string;
@@ -628,6 +630,8 @@ export function ScenarioRunner() {
   }, [animationSource, breathInhale]);
 
   const [votingMode, setVotingMode] = useState(true);
+  const [sessionVoteStage, setSessionVoteStage] = useState<"before" | "after" | null>(null);
+  const [introVotePending, setIntroVotePending] = useState(false);
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [votes, setVotes] = useState<Record<string, number>>({});
   const [emotionHistory, setEmotionHistory] = useState<string[]>([]);
@@ -648,6 +652,7 @@ export function ScenarioRunner() {
   const lastEmojiAtRef = useRef(0);
 
   const sessionMode: SessionMode = groupSize === 1 ? "solo_personalized" : "group_script";
+  const canCollectVotes = votingMode && sessionMode === "group_script" && sessionVoteStage !== null;
   const childLanguage = "fi";
   const showDevTools = false;
 
@@ -962,6 +967,38 @@ export function ScenarioRunner() {
     [speakLine, startBreathingPractice, ensureSessionLog, awarenessGlowState]
   );
 
+  const speakSupport = useCallback(
+    async (text: string, mode: SpeakMode = "warm") => {
+      setVoteEffect(text);
+      if (!voiceEnabled) return;
+      if (speechBusyRef.current) {
+        await cancelLumiSpeak();
+        speechBusyRef.current = false;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      speechBusyRef.current = true;
+      lastSpeechAtRef.current = Date.now();
+      try {
+        await speakLine(text, mode);
+      } finally {
+        speechBusyRef.current = false;
+      }
+    },
+    [speakLine, voiceEnabled]
+  );
+
+  useEffect(() => {
+    if (sessionVoteStage === null) {
+      votePromptStageRef.current = null;
+      return;
+    }
+    if (votePromptStageRef.current === sessionVoteStage) return;
+    votePromptStageRef.current = sessionVoteStage;
+    const prompt = sessionVoteStage === "after" ? "Entä nyt? Näytä tunne." : "Näytä tunne.";
+    setVoteEffect(prompt);
+    void speakSupport(prompt, "warm");
+  }, [sessionVoteStage, speakSupport]);
+
   const playCurrentStep = useCallback(
     async (index: number) => {
       if (isPlayingStepRef.current) return;
@@ -1063,42 +1100,29 @@ export function ScenarioRunner() {
       const pauseMs = current.pauseMs ?? 500;
       await new Promise((resolve) => window.setTimeout(resolve, pauseMs));
 
+      if (sessionMode === "group_script" && introVotePending && index === 0) {
+        setStepIndex(Math.min(1, activeScenario.steps.length - 1));
+        setIsRunning(false);
+        setSessionVoteStage("before");
+        setVotingMode(true);
+        return;
+      }
+
       if (current.options && current.options.length > 0) {
         setAwaitingChoice(true);
         setIsRunning(false);
         return;
       }
 
-      if (votingMode && lastVoteAppliedStep !== index) {
-        const action = decideVoteAction(votes);
-        if (action) {
-          setLastVoteAppliedStep(index);
-          await performVoteResponse(action, current.text);
-
-          if (action.jumpMode) {
-            const jumpTo = findNextStepByMode(activeScenario.steps, index + 1, action.jumpMode);
-            if (jumpTo >= 0) {
-              setVotes({});
-              setSelectedEmoji(null);
-              setStepIndex(jumpTo);
-              return;
-            }
-          }
-
-          setVotes({});
-          setSelectedEmoji(null);
-        }
-      }
-
       if (index >= activeScenario.steps.length - 1) {
         setIsRunning(false);
-        setDone(true);
-        endSession();
+        setSessionVoteStage("after");
+        setVotingMode(true);
+        setVoteEffect("Entä nyt? Näytä tunne.");
         return;
       }
 
       if (
-        teacherMode &&
         teacherPauseBetweenSteps &&
         sessionMode === "group_script" &&
         !awaitingChoice
@@ -1111,7 +1135,6 @@ export function ScenarioRunner() {
       }
 
       if (sessionMode === "group_script") {
-        setIsRunning(false);
         setStepIndex((prev) => prev + 1);
         return;
       }
@@ -1121,7 +1144,7 @@ export function ScenarioRunner() {
         isPlayingStepRef.current = false;
       }
     },
-    [activeScenario, votingMode, lastVoteAppliedStep, votes, sessionMode, ensureSessionLog, endSession, performVoteResponse, speakLine, teacherMode, awaitingChoice, glowPinned]
+    [activeScenario, sessionMode, ensureSessionLog, speakLine, awaitingChoice, glowPinned]
   );
 
   useEffect(() => {
@@ -1159,6 +1182,8 @@ export function ScenarioRunner() {
       setElapsedSec(0);
       setIsRunning(false);
       setDone(false);
+      setSessionVoteStage(null);
+      setIntroVotePending(false);
       setAwaitingChoice(false);
       setCustomScenario(null);
       setConversationHistory([]);
@@ -1222,9 +1247,14 @@ export function ScenarioRunner() {
     setStepIndex(0);
     setElapsedSec(0);
     setDone(false);
+    setSessionVoteStage(null);
+    setIntroVotePending(sessionMode === "group_script");
+    setVotingMode(true);
     setAwaitingChoice(false);
     setLastVoteAppliedStep(-1);
-    setVoteEffect("Odotetaan tunteita.");
+    setVotes({});
+    setSelectedEmoji(null);
+    setVoteEffect(sessionMode === "group_script" ? "Hei. Olen Lumi." : "Näytä tunne.");
     setIsRunning(true);
     resetAvatarState();
   }, [
@@ -1250,12 +1280,17 @@ export function ScenarioRunner() {
     setStepIndex(0);
     setElapsedSec(0);
     setDone(false);
+    setSessionVoteStage(null);
+    setIntroVotePending(sessionMode === "group_script");
+    setVotingMode(true);
     setAwaitingChoice(false);
     setCustomScenario(groupSize === 1 ? customScenario : null);
     setConversationHistory([]);
     setCustomAssistantStatus("");
     setLastVoteAppliedStep(-1);
-    setVoteEffect("Odotetaan tunteita.");
+    setVotes({});
+    setSelectedEmoji(null);
+    setVoteEffect(sessionMode === "group_script" ? "Hei. Olen Lumi." : "Näytä tunne.");
     setAwaitingTeacherContinue(false);
     teacherPendingStepRef.current = null;
     setIsRunning(true);
@@ -1307,26 +1342,6 @@ export function ScenarioRunner() {
     scared: ["Olet turvassa.", "Hyvin kerroit.", "Ollaan rauhassa."],
   };
 
-  const speakSupport = useCallback(
-    async (text: string, mode: SpeakMode = "warm") => {
-      setVoteEffect(text);
-      if (!voiceEnabled) return;
-      if (speechBusyRef.current) {
-        await cancelLumiSpeak();
-        speechBusyRef.current = false;
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
-      speechBusyRef.current = true;
-      lastSpeechAtRef.current = Date.now();
-      try {
-        await speakLine(text, mode);
-      } finally {
-        speechBusyRef.current = false;
-      }
-    },
-    [speakLine, voiceEnabled]
-  );
-
   const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0);
 
   const respondToGroupVotes = useCallback(async () => {
@@ -1377,67 +1392,43 @@ export function ScenarioRunner() {
     afraid: counts?.scared ?? 0,
   });
 
-  const persistSummary = useCallback(
-    async (auto = false) => {
-      if (!summary) return;
-      try {
-        setSaveState((prev) => (prev === "saved" && auto ? prev : "saving"));
-        const emotionsBefore = mapEmotionsForSave(summary.emotion.before);
-        const emotionsAfter = mapEmotionsForSave(summary.emotion.after);
-        const payload = {
-          sessionId: sessionLogRef.current?.sessionId ?? null,
-          sessionDate: summary.header.dateISO,
-          scenarioId: summary.header.scenarioId,
-          scenarioTitle: summary.header.scenarioTitle,
-          mode: summary.header.appMode,
-          groupSize: summary.header.groupSize,
-          participants: summary.participants.count,
-          durationSeconds: summary.header.durationSeconds,
-          durationLabel: summary.header.duration,
-          emotionsBefore,
-          emotionsAfter,
-          dominantEmotionBefore: dominantFromCounts(emotionsBefore),
-          dominantEmotionAfter: dominantFromCounts(emotionsAfter),
-          engagementLevel: summary.engagement,
-          calmingSupportUsed: calmUsed,
-          sessionCompleted: done,
-          practicedSkill: skillHighlight,
-          nextSteps: summary.nextSteps?.[0] ?? null,
-          safetyNotes: summary.safety.note,
-          teacherNotes,
-        };
-        const res = await fetch("/api/lumi/session-report", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error(`save_failed_${res.status}`);
-        setSaveState("saved");
-        saveErrorRef.current = null;
-      } catch (error) {
-        saveErrorRef.current = error instanceof Error ? error.message : "save_failed";
-        setSaveState("error");
-      }
-    },
-    [summary, calmUsed, done, skillHighlight, teacherNotes]
-  );
-
-  useEffect(() => {
-    if (summary && done && saveState === "idle") {
-      void persistSummary(true);
-    }
-  }, [summary, done, saveState, persistSummary]);
-
   const handleNextStep = useCallback(async () => {
     if (sessionMode !== "group_script") return;
     if (done) return;
-
+    if (isRunning) return;
     const currentTotal = Object.values(votes).reduce((sum, n) => sum + n, 0);
-    const last = lastGroupResponseRef.current;
-    if (votingMode && currentTotal > 0 && !(last.step === stepIndex && last.total === currentTotal)) {
+    const log = ensureSessionLog();
+    log.teacherActions.push({ type: "next", at: new Date().toISOString() });
+    setSessionLog({ ...log });
+
+    if (sessionVoteStage === "before") {
+      if (currentTotal <= 0) {
+        setVoteEffect("Näytä tunne ennen aloitusta.");
+        return;
+      }
       await respondToGroupVotes();
       setVotes({});
       setSelectedEmoji(null);
+      setSessionVoteStage(null);
+      setIntroVotePending(false);
+      await unlockAudio();
+      setIsRunning(true);
+      return;
+    }
+
+    if (sessionVoteStage === "after") {
+      if (currentTotal <= 0) {
+        setVoteEffect("Näytä tunne vielä lopuksi.");
+        return;
+      }
+      closingResponseSentRef.current = true;
+      await respondToClosingVotes();
+      setVotes({});
+      setSelectedEmoji(null);
+      setSessionVoteStage(null);
+      setDone(true);
+      endSession();
+      return;
     }
 
     if (awaitingTeacherContinue && teacherPendingStepRef.current != null) {
@@ -1445,27 +1436,34 @@ export function ScenarioRunner() {
       setAwaitingDiscussionNote(false);
       const next = teacherPendingStepRef.current;
       teacherPendingStepRef.current = null;
+      await unlockAudio();
       setStepIndex(next);
-    } else if (awaitingChoice) {
+      setIsRunning(true);
+      return;
+    }
+
+    if (awaitingChoice) {
       setAwaitingChoice(false);
       setVotes({});
       setSelectedEmoji(null);
+      await unlockAudio();
       setStepIndex((prev) => Math.min(prev + 1, activeScenario?.steps.length ?? prev + 1));
-    } else if (activeScenario) {
-      setStepIndex((prev) => Math.min(prev + 1, activeScenario.steps.length - 1));
+      setIsRunning(true);
+      return;
     }
 
-    await unlockAudio();
-    setIsRunning(true);
-    const log = ensureSessionLog();
-    log.teacherActions.push({ type: "next", at: new Date().toISOString() });
-    setSessionLog({ ...log });
-  }, [sessionMode, awaitingChoice, done, awaitingTeacherContinue, activeScenario, ensureSessionLog, votingMode, votes, respondToGroupVotes, stepIndex]);
+    if (activeScenario) {
+      await unlockAudio();
+      setStepIndex((prev) => Math.min(prev + 1, activeScenario.steps.length - 1));
+      setIsRunning(true);
+    }
+  }, [sessionMode, awaitingChoice, done, awaitingTeacherContinue, activeScenario, ensureSessionLog, votingMode, votes, respondToGroupVotes, stepIndex, sessionVoteStage, respondToClosingVotes, endSession, isRunning]);
 
   const handleStop = useCallback(async () => {
     await cancelLumiSpeak();
     setIsRunning(false);
     setAwaitingChoice(false);
+    setSessionVoteStage(null);
     setSaveState("idle");
     saveErrorRef.current = null;
     if (sessionMode === "group_script") {
@@ -1608,7 +1606,7 @@ export function ScenarioRunner() {
   );
 
   const handleVote = async (emojiId: string) => {
-    if (!votingMode) return;
+    if (!canCollectVotes) return;
     const now = Date.now();
     if (now - lastEmojiAtRef.current < 250) return;
     const totalBefore = Object.values(votes).reduce((sum, n) => sum + n, 0);
@@ -1660,6 +1658,57 @@ export function ScenarioRunner() {
     idle: { glow: "rgba(126,231,255,0.24)", ring: "rgba(126,231,255,0.14)" },
   };
   const halo = haloTone[emotionTone] ?? haloTone.idle;
+
+  const persistSummary = useCallback(
+    async (auto = false) => {
+      if (!summary) return;
+      try {
+        setSaveState((prev) => (prev === "saved" && auto ? prev : "saving"));
+        const emotionsBefore = mapEmotionsForSave(summary.emotion.before);
+        const emotionsAfter = mapEmotionsForSave(summary.emotion.after);
+        const payload = {
+          sessionId: sessionLogRef.current?.sessionId ?? null,
+          sessionDate: summary.header.dateISO,
+          scenarioId: summary.header.scenarioId,
+          scenarioTitle: summary.header.scenarioTitle,
+          mode: summary.header.appMode,
+          groupSize: summary.header.groupSize,
+          participants: summary.participants.count,
+          durationSeconds: summary.header.durationSeconds,
+          durationLabel: summary.header.duration,
+          emotionsBefore,
+          emotionsAfter,
+          dominantEmotionBefore: dominantFromCounts(emotionsBefore),
+          dominantEmotionAfter: dominantFromCounts(emotionsAfter),
+          engagementLevel: summary.engagement,
+          calmingSupportUsed: calmUsed,
+          sessionCompleted: done,
+          practicedSkill: skillHighlight,
+          nextSteps: summary.nextSteps?.[0] ?? null,
+          safetyNotes: summary.safety.note,
+          teacherNotes,
+        };
+        const res = await fetch("/api/lumi/session-report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(`save_failed_${res.status}`);
+        setSaveState("saved");
+        saveErrorRef.current = null;
+      } catch (error) {
+        saveErrorRef.current = error instanceof Error ? error.message : "save_failed";
+        setSaveState("error");
+      }
+    },
+    [summary, calmUsed, done, skillHighlight, teacherNotes]
+  );
+
+  useEffect(() => {
+    if (summary && done && saveState === "idle") {
+      void persistSummary(true);
+    }
+  }, [summary, done, saveState, persistSummary]);
 
   const handleListenQuestion = useCallback(async () => {
     setIsListeningQuestion(true);
@@ -2521,7 +2570,7 @@ export function ScenarioRunner() {
               </button>
               <button
                 onClick={() => void handleNextStep()}
-                disabled={done}
+                disabled={done || isRunning}
                 className="h-auto min-h-12 max-w-full whitespace-normal break-words rounded-2xl bg-gradient-to-r from-indigo-400 to-fuchsia-500 px-3 py-3 text-sm font-semibold leading-tight text-white shadow-lg shadow-fuchsia-500/30 transition hover:translate-y-[-1px] disabled:opacity-60 md:min-h-14 md:text-base"
               >
                 Seuraava
@@ -2537,8 +2586,12 @@ export function ScenarioRunner() {
             <div className="space-y-3">
               <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="min-w-0 break-words text-sm font-semibold text-slate-100">Näytä tunne</p>
-                  <p className="text-xs text-slate-300">Valitse kuva joka näyttää tunteesi</p>
+                  <p className="min-w-0 break-words text-sm font-semibold text-slate-100">
+                    {sessionVoteStage === "after" ? "Entä nyt? Näytä tunne" : "Näytä tunne"}
+                  </p>
+                  <p className="text-xs text-slate-300">
+                    {sessionVoteStage === "after" ? "Valitse kuva joka näyttää tunteesi nyt" : "Valitse kuva joka näyttää tunteesi"}
+                  </p>
                 </div>
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <span className="text-xs text-slate-400">Ääniä: {totalVotes}</span>
@@ -2564,7 +2617,7 @@ export function ScenarioRunner() {
                 </div>
               </div>
 
-              <div className={`grid min-w-0 ${votingMode ? "grid-cols-3 md:grid-cols-5" : "grid-cols-5"} gap-2`}>
+              <div className={`grid min-w-0 ${canCollectVotes ? "grid-cols-3 md:grid-cols-5" : "grid-cols-5"} gap-2`}>
                 {emojis.map((emoji) => {
                   const isSelected = selectedEmoji === emoji.id;
                   return (
@@ -2574,17 +2627,17 @@ export function ScenarioRunner() {
                       isSelected
                         ? "border-cyan-200/70 bg-[radial-gradient(circle_at_50%_38%,rgba(126,231,255,0.38),rgba(182,156,255,0.34)),linear-gradient(135deg,rgba(126,231,255,0.32),rgba(182,156,255,0.28))] text-slate-900 shadow-[0_12px_28px_rgba(126,231,255,0.28),0_0_0_1px_rgba(255,255,255,0.4)]"
                         : "border-white/14 bg-[radial-gradient(circle_at_50%_26%,rgba(255,255,255,0.08),rgba(255,255,255,0.02)),rgba(12,22,45,0.55)] text-white hover:border-cyan-200/35 hover:shadow-[0_10px_24px_rgba(126,231,255,0.14)]"
-                    } ${votingMode ? "h-[92px] text-4xl" : "h-14 text-2xl"} ${votingMode ? "" : "opacity-60"}`}
+                    } ${canCollectVotes ? "h-[92px] text-4xl" : "h-14 text-2xl"} ${canCollectVotes ? "" : "opacity-60"}`}
                       aria-label={emoji.id}
                       type="button"
                     onClick={() => handleVote(emoji.id)}
-                    disabled={!votingMode}
+                    disabled={!canCollectVotes}
                   >
                     <span className="flex flex-col items-center justify-center gap-1 text-base">
-                      <span className={`${votingMode ? "text-4xl" : "text-2xl"} ${isSelected ? "text-slate-900" : ""}`}>{emoji.label}</span>
+                      <span className={`${canCollectVotes ? "text-4xl" : "text-2xl"} ${isSelected ? "text-slate-900" : ""}`}>{emoji.label}</span>
                       <span className={`text-[10px] ${isSelected ? "text-slate-800" : "text-slate-200"}`}>{emoji.text}</span>
                     </span>
-                    {votingMode && (
+                    {canCollectVotes && (
                       <span
                         className={`ml-2 inline-block rounded-md px-2 py-0.5 text-xs align-middle ${
                           isSelected

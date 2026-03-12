@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionReport, insertSessionReport, listSessionReports } from "../../../lib/db";
+import { getSessionReport, insertSessionReport, isDatabaseConfigured, listSessionReports } from "../../../../lib/db";
 
 type ReportPayload = {
   sessionId?: string | null;
@@ -50,6 +50,9 @@ function dominantEmotion(counts: Record<string, number> | undefined) {
 
 export async function POST(req: NextRequest) {
   try {
+    if (!isDatabaseConfigured()) {
+      return NextResponse.json({ ok: false, skipped: true, reason: "database_not_configured" }, { status: 200 });
+    }
     const body = (await req.json()) as ReportPayload;
     if (!body.sessionDate || !body.scenarioId || !body.scenarioTitle || !body.mode || !body.groupSize) {
       return NextResponse.json({ error: "missing_fields" }, { status: 400 });
@@ -88,6 +91,9 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    if (!isDatabaseConfigured()) {
+      return NextResponse.json({ ok: true, reports: [], skipped: true, reason: "database_not_configured" });
+    }
     const { searchParams } = req.nextUrl;
     const format = searchParams.get("format");
     const id = searchParams.get("id");
