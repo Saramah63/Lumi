@@ -8,6 +8,6 @@
     { "mode": "regulation", "text": "Hengitä sisään… ja ulos.", "pauseMs": 800 },
     { "mode": "warm", "text": "Harjoitellaan: Saanko vuoron? Kun sinä olet valmis. Kiitos.", "pauseMs": 500 },
     { "mode": "baseline", "text": "Jos kuulet ei: sano Okei, valitse toinen lelu, pyydä aikuista.", "pauseMs": 500 },
-    { "mode": "baseline", "text": "Vuoro tekee pelistä reilun. Kiitos.", "pauseMs": 400 }
+    { "mode": "baseline", "text": "Vuoro tekee pelistä reilun. Kiitos että odotat.", "pauseMs": 400 }
   ]
 }

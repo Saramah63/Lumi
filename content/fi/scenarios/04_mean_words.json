@@ -4,7 +4,7 @@
   "durationTarget": "3-4min",
   "steps": [
     { "mode": "baseline", "text": "Hei. Olen Lumi. Tänään puhumme sanoista.", "pauseMs": 400 },
-    { "mode": "listening", "text": "Sanat voivat satuttaa. Sydän voi tuntua pieneltä.", "pauseMs": 500 },
+    { "mode": "listening", "text": "Sanat voivat satuttaa. Se voi tuntua pahalta ja tehdä surulliseksi.", "pauseMs": 500 },
     { "mode": "firm", "text": "Pysähdy. Ei ilkeitä sanoja.", "pauseMs": 500 },
     { "mode": "listening", "text": "Miltä sinusta tuntuu, kun kuulee ilkeitä sanoja?", "pauseMs": 600 },
     { "mode": "regulation", "text": "Hengitä sisään… ja ulos.", "pauseMs": 800 },
