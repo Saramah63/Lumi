@@ -8,7 +8,7 @@
     { "mode": "baseline", "text": "Täällä on turvallista.", "pauseMs": 400 },
     { "mode": "listening", "text": "Tänään tapahtui jotain vaikeaa. Joku löi.", "pauseMs": 400 },
     { "mode": "listening", "text": "Tunne oli varmaan iso. Joskus käsi lyö, kun on tosi vihainen tai satuttaa.", "pauseMs": 500 },
-    { "mode": "firm", "text": "Pysähdy. Ei lyödä. Kädet alas.", "pauseMs": 600 },
+    { "mode": "firm", "text": "Pysähdy. Ei lyödä. Kädet alas.", "pauseMs": 600, "bodyAction": "stopHands" },
     { "mode": "listening", "text": "Miltä sinusta tuntuu nyt?", "pauseMs": 600, "teacherHint": "Show emoji vote: surullinen/vihainen/pelokas/iloinen/en tiedä" },
     { "mode": "regulation", "text": "Otetaan pieni hengitys. Hengitä sisään… ja ulos.", "pauseMs": 800 },
     { "mode": "listening", "text": "Kun tunne on iso, mitä sinä tarvitset nyt?", "pauseMs": 600, "teacherHint": "Need cards: halaus/tila/aikuinen/vesi" },

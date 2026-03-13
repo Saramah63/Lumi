@@ -11,6 +11,8 @@ export type ScenarioStep = {
   pauseMs?: number;
   options?: ScenarioOption[];
   teacherHint?: string;
+  metaphor?: string;
+  bodyAction?: string;
 };
 
 export type Scenario = {

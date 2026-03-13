@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionReport, insertSessionReport, isDatabaseConfigured, listSessionReports } from "../../../../lib/db";
+import { dominantEmotion, sanitizeEmotionCounts } from "../../../../lib/lumi/emotions";
 
 type ReportPayload = {
   sessionId?: string | null;
@@ -24,29 +25,8 @@ type ReportPayload = {
   teacherNotes?: string | null;
 };
 
-const allowedEmotions = ["happy", "sad", "angry", "scared"];
 const safeText = (value: string | null | undefined, max = 4000) =>
   value ? value.toString().slice(0, max) : null;
-
-function sanitizeEmotions(obj: Record<string, number> | undefined) {
-  if (!obj) return {};
-  const out: Record<string, number> = {};
-  allowedEmotions.forEach((k) => {
-    const v = Number(obj[k] ?? 0);
-    out[k] = Number.isFinite(v) ? Math.max(0, v) : 0;
-  });
-  return out;
-}
-
-function dominantEmotion(counts: Record<string, number> | undefined) {
-  if (!counts) return null;
-  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const top = entries[0];
-  if (!top || top[1] === 0) return null;
-  const second = entries[1];
-  if (second && second[1] === top[1]) return null;
-  return allowedEmotions.includes(top[0]) ? top[0] : null;
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,8 +37,8 @@ export async function POST(req: NextRequest) {
     if (!body.sessionDate || !body.scenarioId || !body.scenarioTitle || !body.mode || !body.groupSize) {
       return NextResponse.json({ error: "missing_fields" }, { status: 400 });
     }
-    const emotionsBefore = sanitizeEmotions(body.emotionsBefore);
-    const emotionsAfter = sanitizeEmotions(body.emotionsAfter);
+    const emotionsBefore = sanitizeEmotionCounts(body.emotionsBefore);
+    const emotionsAfter = sanitizeEmotionCounts(body.emotionsAfter);
     const payload = {
       session_id: body.sessionId ?? null,
       session_date: new Date(body.sessionDate).toISOString(),

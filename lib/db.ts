@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { LUMI_EMOTIONS, type LumiEmotionCounts } from "./lumi/emotions";
 
 let pool: Pool | null = null;
 
@@ -185,8 +186,8 @@ export type InsightsData = {
     avgDurationSeconds: number;
   };
   scenarioUsage: Array<{ scenario_id: string; scenario_title: string; count: number }>;
-  emotionsBefore: Record<string, number>;
-  emotionsAfter: Record<string, number>;
+  emotionsBefore: LumiEmotionCounts;
+  emotionsAfter: LumiEmotionCounts;
   engagement: Array<{ level: string; count: number }>;
   recent: Array<{
     id: string;
@@ -228,9 +229,15 @@ export async function fetchInsights(): Promise<InsightsData> {
         ORDER BY count DESC, scenario_title ASC`
     );
 
-    const emotionKeys = ["happy", "sad", "angry", "scared"];
+    const emotionKeys = LUMI_EMOTIONS.map((emotion) => emotion.key);
     const emotionSelect = (col: string) =>
-      emotionKeys.map((k) => `COALESCE(SUM((${col} ->> '${k}')::int),0) AS ${k}`).join(", ");
+      emotionKeys
+        .map((k) =>
+          k === "afraid"
+            ? `COALESCE(SUM(COALESCE((${col} ->> 'afraid')::int, (${col} ->> 'scared')::int)),0) AS afraid`
+            : `COALESCE(SUM((${col} ->> '${k}')::int),0) AS ${k}`
+        )
+        .join(", ");
     const emotionsBeforeRes = await client.query(`SELECT ${emotionSelect("emotions_before")} FROM lumi_session_reports`);
     const emotionsAfterRes = await client.query(`SELECT ${emotionSelect("emotions_after")} FROM lumi_session_reports`);
 

@@ -1,3 +1,12 @@
+import {
+  LUMI_EMOTIONS,
+  emptyEmotionCounts,
+  emotionEmoji,
+  emotionLabelFi,
+  normalizeEmotionKey,
+  type LumiEmotionCounts,
+} from "./emotions";
+
 export const teacherActionTypes = ["next", "prev", "repeat", "calm_support", "firm_boundary", "reset", "start"] as const;
 export type TeacherActionType = (typeof teacherActionTypes)[number];
 
@@ -70,20 +79,13 @@ function uniq<T>(items: T[]): T[] {
   return Array.from(new Set(items));
 }
 
-const EMOTION_KEYS = ["happy", "sad", "angry", "scared"] as const;
-type EmotionKey = (typeof EMOTION_KEYS)[number];
-
-function emptyEmotionCounts(): Record<EmotionKey, number> {
-  return { happy: 0, sad: 0, angry: 0, scared: 0 };
-}
-
-function aggregateVotes(events: SessionLog["votingEvents"], range: "first" | "second"): Record<EmotionKey, number> {
+function aggregateVotes(events: SessionLog["votingEvents"], range: "first" | "second"): LumiEmotionCounts {
   if (!events.length) return emptyEmotionCounts();
   const mid = Math.max(1, Math.floor(events.length / 2));
   const slice = range === "first" ? events.slice(0, mid) : events.slice(mid);
   const counts = emptyEmotionCounts();
   slice.forEach((e) => {
-    const key = (e.emoji as EmotionKey) in counts ? (e.emoji as EmotionKey) : null;
+    const key = normalizeEmotionKey(e.emoji);
     if (key) counts[key] += e.countDelta;
   });
   return counts;
@@ -106,9 +108,10 @@ export function buildTeacherSummaryFi(log: SessionLog): TeacherSummaryFi {
 
   const votesTop = (() => {
     if (log.votingEvents.length === 0) return undefined;
-    const counts: Record<string, number> = {};
+    const counts = emptyEmotionCounts();
     log.votingEvents.forEach((v) => {
-      counts[v.emoji] = (counts[v.emoji] ?? 0) + v.countDelta;
+      const key = normalizeEmotionKey(v.emoji);
+      if (key) counts[key] += v.countDelta;
     });
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
@@ -171,10 +174,14 @@ export function formatTeacherSummaryText(summary: TeacherSummaryFi): string {
   if (summary.emotion.before || summary.emotion.after) {
     lines.push("Tunteet ennen istuntoa:");
     const before = summary.emotion.before ?? emptyEmotionCounts();
-    Object.entries(before).forEach(([k, v]) => lines.push(`- ${k}: ${v}`));
+    LUMI_EMOTIONS.forEach((emotion) => {
+      lines.push(`- ${emotionEmoji(emotion.key)} ${emotionLabelFi(emotion.key)}: ${before[emotion.key] ?? 0}`);
+    });
     lines.push("Tunteet jälkeen:");
     const after = summary.emotion.after ?? emptyEmotionCounts();
-    Object.entries(after).forEach(([k, v]) => lines.push(`- ${k}: ${v}`));
+    LUMI_EMOTIONS.forEach((emotion) => {
+      lines.push(`- ${emotionEmoji(emotion.key)} ${emotionLabelFi(emotion.key)}: ${after[emotion.key] ?? 0}`);
+    });
   }
   lines.push("");
   lines.push(`Mitä tapahtui: ${summary.whatHappened}`);

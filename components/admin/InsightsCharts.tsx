@@ -4,6 +4,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Legend,
   Pie,
   PieChart,
@@ -12,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { LUMI_EMOTIONS } from "../../lib/lumi/emotions";
 
 type ScenarioUsage = { scenario_id: string; scenario_title: string; count: number };
 
@@ -22,16 +24,24 @@ type Props = {
   engagement: Array<{ level: string; count: number }>;
 };
 
-const emotionOrder = [
-  { key: "happy", label: "🙂 Iloinen", color: "#2DD4BF" },
-  { key: "sad", label: "😢 Surullinen", color: "#60A5FA" },
-  { key: "angry", label: "😠 Vihainen", color: "#F87171" },
-  { key: "scared", label: "😨 Pelokas", color: "#A78BFA" },
-];
+const emotionColors: Record<string, string> = {
+  happy: "#2DD4BF",
+  sad: "#60A5FA",
+  angry: "#F87171",
+  afraid: "#A78BFA",
+};
 
 export function InsightsCharts({ scenarioUsage, emotionsBefore, emotionsAfter, engagement }: Props) {
-  const emotionDataBefore = emotionOrder.map((e) => ({ name: e.label, value: emotionsBefore?.[e.key] ?? 0, fill: e.color }));
-  const emotionDataAfter = emotionOrder.map((e) => ({ name: e.label, value: emotionsAfter?.[e.key] ?? 0, fill: e.color }));
+  const emotionDataBefore = LUMI_EMOTIONS.map((emotion) => ({
+    name: `${emotion.emoji} ${emotion.labelFi}`,
+    value: emotionsBefore?.[emotion.key] ?? 0,
+    fill: emotionColors[emotion.key],
+  }));
+  const emotionDataAfter = LUMI_EMOTIONS.map((emotion) => ({
+    name: `${emotion.emoji} ${emotion.labelFi}`,
+    value: emotionsAfter?.[emotion.key] ?? 0,
+    fill: emotionColors[emotion.key],
+  }));
   const engagementData = ["low", "medium", "high"].map((lvl) => ({
     level: lvl === "low" ? "Low" : lvl === "medium" ? "Medium" : "High",
     count: engagement.find((e) => e.level === lvl)?.count ?? 0,
@@ -79,7 +89,7 @@ export function InsightsCharts({ scenarioUsage, emotionsBefore, emotionsAfter, e
                 <Tooltip />
                 <Pie data={emotionDataBefore} dataKey="value" nameKey="name" outerRadius="85%">
                   {emotionDataBefore.map((entry, index) => (
-                    <cell key={index} fill={entry.fill} />
+                    <Cell key={index} fill={entry.fill} />
                   ))}
                 </Pie>
                 <Legend />
@@ -95,7 +105,7 @@ export function InsightsCharts({ scenarioUsage, emotionsBefore, emotionsAfter, e
                 <Tooltip />
                 <Pie data={emotionDataAfter} dataKey="value" nameKey="name" outerRadius="85%">
                   {emotionDataAfter.map((entry, index) => (
-                    <cell key={index} fill={entry.fill} />
+                    <Cell key={index} fill={entry.fill} />
                   ))}
                 </Pie>
                 <Legend />

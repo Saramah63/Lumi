@@ -1,28 +1,9 @@
-"use client";
+import { isDatabaseConfigured, listSessionReports } from "../../../lib/db";
 
-import useSWR from "swr";
+export const dynamic = "force-dynamic";
 
-type Report = {
-  id: string;
-  session_date: string;
-  scenario_title: string;
-  scenario_id: string;
-  group_size: number;
-  participants: number;
-  dominant_emotion_before?: string | null;
-  dominant_emotion_after?: string | null;
-  engagement_level?: string | null;
-  teacher_notes?: string | null;
-};
-
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
-export default function LumiReportsAdmin() {
-  const { data, isLoading } = useSWR<{ ok: boolean; reports: Report[] }>("/api/lumi/session-report", fetcher, {
-    revalidateOnFocus: false,
-  });
-
-  const reports = data?.reports ?? [];
+export default async function LumiReportsAdmin() {
+  const reports = isDatabaseConfigured() ? await listSessionReports(100) : [];
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 text-slate-100">
@@ -46,8 +27,9 @@ export default function LumiReportsAdmin() {
           </a>
         </div>
       </div>
-      {isLoading ? (
-        <p className="text-sm text-slate-300">Ladataan...</p>
+
+      {!isDatabaseConfigured() ? (
+        <p className="text-sm text-slate-300">Tietokantaa ei ole määritetty. Lisää `DATABASE_URL` nähdäksesi raportit.</p>
       ) : reports.length === 0 ? (
         <p className="text-sm text-slate-300">Ei tallennettuja raportteja.</p>
       ) : (
@@ -72,10 +54,7 @@ export default function LumiReportsAdmin() {
                   <div className="truncate" title={r.scenario_title}>
                     {r.scenario_title}
                   </div>
-                  <div>
-                    {r.group_size}
-                    {r.participants ? ` / ${r.participants}` : ""}
-                  </div>
+                  <div>{r.group_size}</div>
                   <div>{r.participants ?? "–"}</div>
                   <div className="truncate">{r.dominant_emotion_before ?? "–"}</div>
                   <div className="truncate">{r.dominant_emotion_after ?? "–"}</div>

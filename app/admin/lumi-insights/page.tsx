@@ -14,9 +14,9 @@ export default async function LumiInsightsPage() {
   const insights = await fetchInsights().catch(() => null);
   const totals = insights?.totals;
   const negativeBefore =
-    (insights?.emotionsBefore.sad ?? 0) + (insights?.emotionsBefore.angry ?? 0) + (insights?.emotionsBefore.scared ?? 0);
+    (insights?.emotionsBefore.sad ?? 0) + (insights?.emotionsBefore.angry ?? 0) + (insights?.emotionsBefore.afraid ?? 0);
   const negativeAfter =
-    (insights?.emotionsAfter.sad ?? 0) + (insights?.emotionsAfter.angry ?? 0) + (insights?.emotionsAfter.scared ?? 0);
+    (insights?.emotionsAfter.sad ?? 0) + (insights?.emotionsAfter.angry ?? 0) + (insights?.emotionsAfter.afraid ?? 0);
   const shift =
     negativeBefore > 0 ? Math.round(((negativeBefore - negativeAfter) / negativeBefore) * 100) : negativeAfter === 0 ? 0 : -100;
 

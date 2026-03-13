@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { LumiAvatar } from "./LumiAvatar";
 import { cancelLumiSpeak, lumiSpeak, type SpeakMode } from "../lib/lumi/speak";
 import { lumiSpeak as lumiSpeakFinnish } from "../lib/lumi/speakFinnish";
@@ -12,13 +13,19 @@ import { scenarios, type ScenarioStep } from "../data/scenarios";
 import type { GlowState, MouthState } from "../lib/lumi/types";
 import { modeToGlowState } from "../lib/lumi/glowState";
 import { askKidQuestion, type ConversationTurn } from "../lib/lumi/kidAssistant";
+import {
+  LUMI_EMOTIONS,
+  emptyEmotionCounts,
+  emotionLabelFi,
+  normalizeEmotionKey,
+  type LumiEmotionKey,
+} from "../lib/lumi/emotions";
 
-const emojis = [
-  { id: "happy", label: "🙂", text: "Iloinen" },
-  { id: "sad", label: "😢", text: "Surullinen" },
-  { id: "angry", label: "😠", text: "Vihainen" },
-  { id: "scared", label: "😨", text: "Pelokas" },
-];
+const emojis = LUMI_EMOTIONS.map((emotion) => ({
+  id: emotion.key,
+  label: emotion.emoji,
+  text: emotion.labelFi,
+}));
 
 const scenarioSkill: Record<string, string> = {
   hitting: "Pysähtyminen ja anteeksipyyntö",
@@ -51,12 +58,20 @@ type Theme = keyof typeof themeScenarioIds;
 type ScenarioMode = "random" | "manual";
 type SessionLength = "6-8" | "10-12";
 type SessionMode = "group_script" | "solo_personalized";
+type SessionPhase =
+  | "idle"
+  | "pre_checkin"
+  | "pre_reflection"
+  | "scenario"
+  | "post_checkin"
+  | "post_reflection"
+  | "complete";
 type SoloStage = "ask_name" | "ask_safe_adult" | "ready";
 type DetectedEmotion =
   | "happy"
   | "sad"
   | "angry"
-  | "scared"
+  | "afraid"
   | "ashamed"
   | "jealous"
   | "frustrated"
@@ -80,7 +95,7 @@ type SoloQuickButtons = {
   phrases: Array<{ id: string; label: string }>;
 };
 type VoteAction = {
-  dominant: "happy" | "sad" | "angry" | "scared" | "mixed";
+  dominant: "happy" | "sad" | "angry" | "afraid" | "mixed";
   responseText: string;
   responseMode: SpeakMode;
   calmSupport: boolean;
@@ -89,10 +104,103 @@ type VoteAction = {
   message: string;
 };
 
+type SupportCard = {
+  id: string;
+  icon: string;
+  title: string;
+  subtitle: string;
+};
+
+type InteractionCue = {
+  id: string;
+  icon: string;
+  title: string;
+  subtitle: string;
+  prompt: string;
+};
+
+function getInteractionCue(step: ScenarioStep | undefined): InteractionCue | null {
+  if (!step) return null;
+
+  const bodyAction = (step.bodyAction ?? "").trim();
+  const metaphor = (step.metaphor ?? "").trim();
+  const cueKey = bodyAction || metaphor;
+
+  switch (cueKey) {
+    case "stopHands":
+      return {
+        id: "stopHands",
+        icon: "✋",
+        title: "Stop-kädet",
+        subtitle: "Näytä avoimet kämmenet",
+        prompt: "Näytä stop-kädet.",
+      };
+    case "braveHeart":
+      return {
+        id: "braveHeart",
+        icon: "💛",
+        title: "Rohkea sydän",
+        subtitle: "Käsi sydämelle",
+        prompt: "Laita käsi sydämelle.",
+      };
+    case "trafficLight":
+      return {
+        id: "trafficLight",
+        icon: "🚦",
+        title: "Liikennevalo",
+        subtitle: "Pysähdy ja liiku",
+        prompt: "Pysähdy hetkeksi. Sitten jatketaan.",
+      };
+    default:
+      return null;
+  }
+}
+
 function isBreathingStep(step: ScenarioStep | undefined): boolean {
   if (!step) return false;
   if (step.mode !== "regulation") return false;
   return /(hengitä|hengitys|kolme hengitystä|sisään|ulos)/i.test(step.text);
+}
+
+function getSupportCardsForStep(step: ScenarioStep | undefined): SupportCard[] {
+  if (!step) return [];
+
+  const source = `${step.text ?? ""} ${step.teacherHint ?? ""}`.toLowerCase();
+  const cards: SupportCard[] = [];
+  const push = (card: SupportCard) => {
+    if (!cards.some((item) => item.id === card.id)) cards.push(card);
+  };
+
+  if (/hengitä|hengitys|sisään|ulos/.test(source)) {
+    push({ id: "breathing", icon: "🌬️", title: "Hengitys", subtitle: "Sisään ja ulos" });
+  }
+  if (/halaus/.test(source)) {
+    push({ id: "hug", icon: "🤗", title: "Halaus", subtitle: "Turvaa ja lohtua" });
+  }
+  if (/\btila\b|omaa tilaa|haluan tilaa/.test(source)) {
+    push({ id: "space", icon: "🫧", title: "Oma tila", subtitle: "Vähän rauhaa" });
+  }
+  if (/aikuinen|turva-aikuinen/.test(source)) {
+    push({ id: "adult", icon: "🧑", title: "Aikuinen", subtitle: "Pyydä lähelle" });
+  }
+  if (/vesi/.test(source)) {
+    push({ id: "water", icon: "💧", title: "Vesi", subtitle: "Pieni tauko" });
+  }
+  if (/kaveri/.test(source)) {
+    push({ id: "friend", icon: "🧒", title: "Kaveri", subtitle: "Yhdessä helpompi" });
+  }
+  if (/rauhallinen paikka|rauhallinen/.test(source)) {
+    push({ id: "calm_place", icon: "🛋️", title: "Rauhallinen paikka", subtitle: "Mennään hetkeksi" });
+  }
+  if (/anteeksi/.test(source)) {
+    push({ id: "apology", icon: "💛", title: "Anteeksi", subtitle: "Korjataan yhdessä" });
+  }
+
+  if ((step.teacherHint ?? "").toLowerCase().includes("need cards") && cards.length === 0) {
+    push({ id: "choice", icon: "🖼️", title: "Tunnekortit", subtitle: "Valitse mikä auttaa" });
+  }
+
+  return cards;
 }
 
 function decideAwarenessGlowState(
@@ -114,8 +222,8 @@ function decideAwarenessGlowState(
 
   const angry = (votes.angry ?? 0) / total;
   const sad = (votes.sad ?? 0) / total;
-  const scared = (votes.scared ?? 0) / total;
-  const distress = sad + scared;
+  const afraid = (votes.afraid ?? 0) / total;
+  const distress = sad + afraid;
 
   if (angry >= 0.35) return "strong";
   if (distress >= 0.4) return "calm";
@@ -237,7 +345,7 @@ function answerKidQuestion(question: string, kidName: string): string {
     return `${empathy} Voit sanoa: "Anteeksi." Voit kysyä: "Onko sinulla ok?"`;
   }
 
-  if (/(pelk|pelottaa|scared|jännittää)/i.test(q)) {
+  if (/(pelk|pelottaa|afraid|jännittää)/i.test(q)) {
     return `${empathy} Hengitetään sisään ja ulos. ${safeAdult}`;
   }
 
@@ -353,7 +461,7 @@ function countVotesMap(v: Record<string, number>): Record<string, number> {
     happy: v.happy ?? 0,
     sad: v.sad ?? 0,
     angry: v.angry ?? 0,
-    scared: v.scared ?? 0,
+    afraid: v.afraid ?? 0,
   };
 }
 
@@ -379,10 +487,10 @@ function selectGroupResponse(counts: Record<string, number>): string[] {
       case "happy":
         return ["Näen paljon iloisia tunteita.", "Se on ihanaa.", "Aloitetaan yhdessä."];
       case "sad":
-        return ["Näen, että joillakin on surullinen olo.", "Suru on sallittu tunne.", "Harjoitellaan yhdessä."];
+        return ["Näen surullisia tunteita.", "Olen tässä teitä varten.", "Harjoitellaan yhdessä lempeästi."];
       case "angry":
         return ["Näen, että monella on vihainen olo.", "Viha on iso tunne.", "Harjoitellaan yhdessä rauhoittumista."];
-      case "scared":
+      case "afraid":
         return ["Näen pelokkaita tunteita.", "Pelko on tärkeä tunne.", "Täällä on turvallista."];
       default:
         return ["Näen monta erilaista tunnetta.", "Jotkut ovat iloisia, jotkut surullisia tai vihaisia.", "Kaikki tunteet ovat sallittuja.", "Harjoitellaan yhdessä."];
@@ -397,9 +505,9 @@ function selectGroupResponse(counts: Record<string, number>): string[] {
 
   if (second && top[1] >= 1 && Math.abs(top[1] - second[1]) <= 1) {
     const pair = new Set([top[0], second[0]]);
-    if (pair.has("happy") && pair.has("sad")) return mixedTwo("happy", "sad", ["Näen iloisia ja surullisia tunteita.", "Ihmisillä voi olla eri tunteita.", "Kaikki tunteet ovat sallittuja."]);
-    if (pair.has("angry") && pair.has("sad")) return mixedTwo("angry", "sad", ["Näen vihaisia ja surullisia tunteita.", "Ne ovat isoja tunteita.", "Hengitetään yhdessä rauhassa."]);
-    if (pair.has("angry") && pair.has("scared")) return mixedTwo("angry", "scared", ["Näen vihaisia ja pelokkaita tunteita.", "Joskus vaikea tilanne tuntuu isona.", "Harjoitellaan yhdessä turvallisesti."]);
+    if (pair.has("happy") && pair.has("sad")) return mixedTwo("happy", "sad", ["Näen iloisia ja surullisia tunteita.", "Ryhmässä voi olla monta tunnetta.", "Kaikki tunteet ovat sallittuja."]);
+    if (pair.has("angry") && pair.has("sad")) return mixedTwo("angry", "sad", ["Näen vihaisia ja surullisia tunteita.", "Ne ovat isoja tunteita.", "Olen tässä. Otetaan rauhassa yhdessä."]);
+    if (pair.has("angry") && pair.has("afraid")) return mixedTwo("angry", "afraid", ["Näen vihaisia ja pelokkaita tunteita.", "Joskus vaikea tilanne tuntuu isona.", "Harjoitellaan yhdessä turvallisesti."]);
     if (pair.has("happy") && pair.has("angry")) return mixedTwo("happy", "angry", ["Näen iloisia ja vihaisia tunteita.", "Ryhmässä voi olla monta tunnetta.", "Harjoitellaan yhdessä."]);
   }
 
@@ -412,18 +520,19 @@ function selectGroupResponse(counts: Record<string, number>): string[] {
 }
 
 function aggregateBeforeAfter(events: SessionLog["votingEvents"], half: "first" | "second"): Record<string, number> {
-  if (!events.length) return { happy: 0, sad: 0, angry: 0, scared: 0 };
+  if (!events.length) return emptyEmotionCounts();
   const mid = Math.max(1, Math.floor(events.length / 2));
   const slice = half === "first" ? events.slice(0, mid) : events.slice(mid);
-  const counts: Record<string, number> = { happy: 0, sad: 0, angry: 0, scared: 0 };
+  const counts = emptyEmotionCounts();
   slice.forEach((e) => {
-    if (counts[e.emoji] !== undefined) counts[e.emoji] += e.countDelta;
+    const key = normalizeEmotionKey(e.emoji);
+    if (key) counts[key] += e.countDelta;
   });
   return counts;
 }
 
 function selectClosingResponse(before: Record<string, number>, after: Record<string, number>): string[] {
-  const negKeys = ["angry", "sad", "scared"];
+  const negKeys = ["angry", "sad", "afraid"];
   const negBefore = negKeys.reduce((s, k) => s + (before[k] ?? 0), 0);
   const negAfter = negKeys.reduce((s, k) => s + (after[k] ?? 0), 0);
   const happyBefore = before.happy ?? 0;
@@ -449,7 +558,7 @@ function decideVoteAction(votes: Record<string, number>): VoteAction | null {
     happy: votes.happy ?? 0,
     sad: votes.sad ?? 0,
     angry: votes.angry ?? 0,
-    scared: votes.scared ?? 0,
+    afraid: votes.afraid ?? 0,
   };
 
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
@@ -473,12 +582,12 @@ function decideVoteAction(votes: Record<string, number>): VoteAction | null {
   if (dominant === "sad") {
     return {
       dominant,
-      responseText: "Kuulen surua. Olen tässä. Hengitetään yhdessä.",
-      responseMode: "regulation",
+      responseText: "Kuulen surua. Olen tässä. Saat olla surullinen.",
+      responseMode: "warm",
       calmSupport: true,
       repeatStep: false,
-      jumpMode: "regulation",
-      message: "Surua huomattu, rauhoitutaan.",
+      jumpMode: "warm",
+      message: "Surua huomattu, tuetaan lempeästi.",
     };
   }
 
@@ -494,7 +603,7 @@ function decideVoteAction(votes: Record<string, number>): VoteAction | null {
     };
   }
 
-  if (dominant === "scared") {
+  if (dominant === "afraid") {
     return {
       dominant,
       responseText: "Kuulen pelkoa. Olet turvassa. Hengitetään yhdessä.",
@@ -518,20 +627,14 @@ function decideVoteAction(votes: Record<string, number>): VoteAction | null {
 }
 
 function EmotionList({ counts }: { counts?: Record<string, number> }) {
-  const data = counts ?? {};
-  const order: Array<{ key: string; label: string; icon: string }> = [
-    { key: "happy", label: "Iloinen", icon: "😊" },
-    { key: "sad", label: "Surullinen", icon: "😢" },
-    { key: "angry", label: "Vihainen", icon: "😡" },
-    { key: "scared", label: "Pelokas", icon: "😨" },
-  ];
+  const data = counts ?? emptyEmotionCounts();
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-200">
-      {order.map((item) => (
-        <div key={item.key} className="flex items-center gap-2">
-          <span className="text-sm">{item.icon}</span>
-          <span className="min-w-0 flex-1 break-words">{item.label}</span>
-          <span className="rounded bg-white/10 px-2 py-[1px] text-[11px] text-white">{data[item.key] ?? 0}</span>
+      {LUMI_EMOTIONS.map((emotion) => (
+        <div key={emotion.key} className="flex items-center gap-2">
+          <span className="text-sm">{emotion.emoji}</span>
+          <span className="min-w-0 flex-1 break-words">{emotion.labelFi}</span>
+          <span className="rounded bg-white/10 px-2 py-[1px] text-[11px] text-white">{data[emotion.key] ?? 0}</span>
         </div>
       ))}
     </div>
@@ -568,12 +671,15 @@ export function ScenarioRunner() {
   const [sessionLog, setSessionLog] = useState<SessionLog | null>(null);
   const [summary, setSummary] = useState<TeacherSummaryFi | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [isPrintingSummary, setIsPrintingSummary] = useState(false);
   const [teacherNotes, setTeacherNotes] = useState("");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const saveErrorRef = useRef<string | null>(null);
+  const printSummaryRef = useRef<HTMLDivElement | null>(null);
   const [engagement, setEngagement] = useState<"low" | "medium" | "high">("medium");
   const closingResponseSentRef = useRef(false);
   const votePromptStageRef = useRef<"before" | "after" | null>(null);
+  const autoVoteResolutionRef = useRef<"before" | "after" | null>(null);
 
   const sessionLogRef = useRef<SessionLog | null>(null);
 
@@ -631,18 +737,20 @@ export function ScenarioRunner() {
 
   const [votingMode, setVotingMode] = useState(true);
   const [sessionVoteStage, setSessionVoteStage] = useState<"before" | "after" | null>(null);
+  const [sessionPhase, setSessionPhase] = useState<SessionPhase>("idle");
   const [introVotePending, setIntroVotePending] = useState(false);
-  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
-  const [votes, setVotes] = useState<Record<string, number>>({});
+  const [selectedEmoji, setSelectedEmoji] = useState<LumiEmotionKey | null>(null);
+  const [votes, setVotes] = useState<Record<string, number>>(emptyEmotionCounts());
   const [emotionHistory, setEmotionHistory] = useState<string[]>([]);
-  const [emotionTrend, setEmotionTrend] = useState<"happy" | "sad" | "angry" | "scared" | null>(null);
+  const [emotionTrend, setEmotionTrend] = useState<"happy" | "sad" | "angry" | "afraid" | null>(null);
   const [calmUsed, setCalmUsed] = useState(false);
   const [lastVoteAppliedStep, setLastVoteAppliedStep] = useState(-1);
   const [voteEffect, setVoteEffect] = useState("Odotetaan tunteita.");
   const [runError, setRunError] = useState<string | null>(null);
   const supportSequenceRef = useRef(0);
   const [reactionTick, setReactionTick] = useState(0);
-  const lastGroupResponseRef = useRef<{ step: number; trend: "happy" | "sad" | "angry" | "scared" | null; total: number }>({
+  const [interactionCue, setInteractionCue] = useState<InteractionCue | null>(null);
+  const lastGroupResponseRef = useRef<{ step: number; trend: "happy" | "sad" | "angry" | "afraid" | null; total: number }>({
     step: -1,
     trend: null,
     total: 0,
@@ -827,6 +935,7 @@ export function ScenarioRunner() {
   const activeScenario = customScenario ?? scenario;
   const step = activeScenario?.steps[stepIndex];
   const stepTextClean = step?.text ? step.text.replace(/\)\}/g, "").trim() : step?.text;
+  const currentSupportCards = useMemo(() => getSupportCardsForStep(step), [step]);
   const awarenessGlowState = useMemo(
     () => decideAwarenessGlowState(step?.mode, votes, votingMode, theme),
     [step?.mode, votes, votingMode, theme]
@@ -944,7 +1053,7 @@ export function ScenarioRunner() {
   const performVoteResponse = useCallback(
     async (action: VoteAction, currentText: string | undefined) => {
       setVoteEffect(action.message);
-      const glow = action.dominant === "angry" ? "strong" : action.dominant === "scared" ? "alert" : "calm";
+      const glow = action.dominant === "angry" ? "strong" : action.dominant === "afraid" ? "alert" : "calm";
       setGlowPinned(glow);
       setGlowState(glow);
 
@@ -969,6 +1078,7 @@ export function ScenarioRunner() {
 
   const speakSupport = useCallback(
     async (text: string, mode: SpeakMode = "warm") => {
+      console.debug("[Lumi] support speech", { text, mode, stepIndex, sessionVoteStage, sessionPhase });
       setVoteEffect(text);
       if (!voiceEnabled) return;
       if (speechBusyRef.current) {
@@ -984,7 +1094,7 @@ export function ScenarioRunner() {
         speechBusyRef.current = false;
       }
     },
-    [speakLine, voiceEnabled]
+    [speakLine, voiceEnabled, stepIndex, sessionVoteStage, sessionPhase]
   );
 
   useEffect(() => {
@@ -994,10 +1104,18 @@ export function ScenarioRunner() {
     }
     if (votePromptStageRef.current === sessionVoteStage) return;
     votePromptStageRef.current = sessionVoteStage;
-    const prompt = sessionVoteStage === "after" ? "Entä nyt? Näytä tunne." : "Näytä tunne.";
-    setVoteEffect(prompt);
-    void speakSupport(prompt, "warm");
-  }, [sessionVoteStage, speakSupport]);
+    console.debug("[Lumi] vote stage entered", { sessionVoteStage, sessionPhase });
+    if (sessionVoteStage === "after") {
+      const prompt = "Entä nyt? Näytä tunne.";
+      setVoteEffect(prompt);
+      console.debug("[Lumi] post_checkin prompt spoken", { prompt });
+      void speakSupport(prompt, "warm");
+      return;
+    }
+    setVoteEffect("Näytä tunne.");
+    console.debug("[Lumi] pre_checkin prompt spoken", { prompt: "Näytä tunne." });
+    void speakSupport("Näytä tunne.", "warm");
+  }, [sessionVoteStage, speakSupport, sessionPhase]);
 
   const playCurrentStep = useCallback(
     async (index: number) => {
@@ -1005,6 +1123,11 @@ export function ScenarioRunner() {
       isPlayingStepRef.current = true;
       try {
         const current = activeScenario?.steps[index];
+        console.debug("[Lumi] playback step", {
+          scenarioId: activeScenario?.id,
+          index,
+          text: current?.text ?? null,
+        });
         if (!activeScenario || !current) {
           setIsRunning(false);
           setDone(true);
@@ -1029,6 +1152,7 @@ export function ScenarioRunner() {
       });
       setSessionLog({ ...log });
       const breathingMode = isBreathingStep(current);
+      const stepInteractionCue = getInteractionCue(current);
       let breathPhaseTimer: number | null = null;
       let breathRaf: number | null = null;
         const runGuidedBreathing = async () => {
@@ -1079,6 +1203,12 @@ export function ScenarioRunner() {
         setBreathGlow(0);
       }
 
+      setInteractionCue(stepInteractionCue);
+      if (stepInteractionCue) {
+        await speakLine(stepInteractionCue.prompt, "warm");
+        await new Promise((resolve) => window.setTimeout(resolve, 350));
+      }
+
       const spokenText = current.text ? current.text.replace(/\)\}/g, "").trim() : current.text;
       await speakLine(spokenText ?? current.text ?? "", current.mode as SpeakMode);
       if (breathingMode) {
@@ -1096,17 +1226,10 @@ export function ScenarioRunner() {
         setShowBreathCue(false);
         setBreathGlow(0);
       }
+      setInteractionCue(null);
 
       const pauseMs = current.pauseMs ?? 500;
       await new Promise((resolve) => window.setTimeout(resolve, pauseMs));
-
-      if (sessionMode === "group_script" && introVotePending && index === 0) {
-        setStepIndex(Math.min(1, activeScenario.steps.length - 1));
-        setIsRunning(false);
-        setSessionVoteStage("before");
-        setVotingMode(true);
-        return;
-      }
 
       if (current.options && current.options.length > 0) {
         setAwaitingChoice(true);
@@ -1116,9 +1239,11 @@ export function ScenarioRunner() {
 
       if (index >= activeScenario.steps.length - 1) {
         setIsRunning(false);
+        setSessionPhase("post_checkin");
         setSessionVoteStage("after");
         setVotingMode(true);
         setVoteEffect("Entä nyt? Näytä tunne.");
+        console.debug("[Lumi] post_checkin entered");
         return;
       }
 
@@ -1203,6 +1328,10 @@ export function ScenarioRunner() {
 
   const handleStartSession = useCallback(async () => {
     await cancelLumiSpeak();
+    speechBusyRef.current = false;
+    votePromptStageRef.current = null;
+    autoVoteResolutionRef.current = null;
+    console.debug("[Lumi] queue cleared before start");
     await unlockAudio();
     if (sessionMode === "solo_personalized") {
       setIsRunning(false);
@@ -1243,19 +1372,26 @@ export function ScenarioRunner() {
     }
 
     setRunError(null);
+    setSessionPhase("pre_checkin");
+    console.debug("[Lumi] session started");
+    console.debug("[Lumi] scenario selected", {
+      scenarioId: chosenScenario.id,
+      firstStep: chosenScenario.steps?.[0]?.text ?? null,
+    });
     setScenarioId(chosenScenario.id);
     setStepIndex(0);
     setElapsedSec(0);
     setDone(false);
-    setSessionVoteStage(null);
-    setIntroVotePending(sessionMode === "group_script");
+    setSessionVoteStage(sessionMode === "group_script" ? "before" : null);
+    setIntroVotePending(false);
     setVotingMode(true);
     setAwaitingChoice(false);
     setLastVoteAppliedStep(-1);
-    setVotes({});
+    setVotes(emptyEmotionCounts());
     setSelectedEmoji(null);
-    setVoteEffect(sessionMode === "group_script" ? "Hei. Olen Lumi." : "Näytä tunne.");
-    setIsRunning(true);
+    lastEmojiAtRef.current = 0;
+    setVoteEffect("Näytä tunne.");
+    setIsRunning(false);
     resetAvatarState();
   }, [
     availableScenarios,
@@ -1270,6 +1406,9 @@ export function ScenarioRunner() {
 
   const handleRestart = useCallback(async () => {
     await cancelLumiSpeak();
+    speechBusyRef.current = false;
+    votePromptStageRef.current = null;
+    autoVoteResolutionRef.current = null;
     if (sessionMode === "solo_personalized") {
       setIsRunning(false);
       return;
@@ -1280,23 +1419,26 @@ export function ScenarioRunner() {
     setStepIndex(0);
     setElapsedSec(0);
     setDone(false);
-    setSessionVoteStage(null);
-    setIntroVotePending(sessionMode === "group_script");
+    setSessionPhase("pre_checkin");
+    setSessionVoteStage(sessionMode === "group_script" ? "before" : null);
+    setIntroVotePending(false);
     setVotingMode(true);
     setAwaitingChoice(false);
     setCustomScenario(groupSize === 1 ? customScenario : null);
     setConversationHistory([]);
     setCustomAssistantStatus("");
     setLastVoteAppliedStep(-1);
-    setVotes({});
+    setVotes(emptyEmotionCounts());
     setSelectedEmoji(null);
-    setVoteEffect(sessionMode === "group_script" ? "Hei. Olen Lumi." : "Näytä tunne.");
+    lastEmojiAtRef.current = 0;
+    setVoteEffect("Näytä tunne.");
     setAwaitingTeacherContinue(false);
     teacherPendingStepRef.current = null;
-    setIsRunning(true);
+    setIsRunning(false);
     setRunError(null);
     resetAvatarState();
-  }, [resetAvatarState, groupSize, customScenario, sessionMode, ensureSessionLog, setCustomScenario, scenarioId, availableScenarios]);
+    console.debug("[Lumi] session restarted", { scenarioId: activeScenario?.id, firstStep: activeScenario?.steps?.[0]?.text ?? null });
+  }, [resetAvatarState, groupSize, customScenario, sessionMode, ensureSessionLog, setCustomScenario, scenarioId, availableScenarios, activeScenario]);
 
   const handleRepeatStep = useCallback(async () => {
     if (!step) return;
@@ -1330,22 +1472,23 @@ export function ScenarioRunner() {
 
   const empathyLines: Record<string, string[]> = {
     happy: ["Ihana kuulla!", "Sinä olet iloinen.", "Ilo tuntuu hyvältä."],
-    sad: ["Olen tässä.", "Saat olla surullinen.", "Se on ihan ok."],
+    sad: ["Olen tässä.", "Saat olla surullinen.", "Et ole yksin."],
     angry: ["Huomaan kiukun.", "Hengitetään yhdessä.", "Rauhassa nyt."],
-    scared: ["Olet turvassa.", "Minä olen täällä.", "Pidän sinusta huolta."],
+    afraid: ["Olet turvassa.", "Minä olen täällä.", "Pidän sinusta huolta."],
   };
 
   const encouragementLines: Record<string, string[]> = {
     happy: ["Hienoa!", "Jatketaan ilolla.", "Kiitos jakamisesta."],
-    sad: ["Hyvin sanoit.", "Olen kanssasi.", "Otetaan rauhassa."],
+    sad: ["Hyvin kerrottu.", "Olen kanssasi.", "Otetaan tämä rauhassa."],
     angry: ["Hyvä pysähdys.", "Kiitos kun kerroit.", "Hengitys auttaa."],
-    scared: ["Olet turvassa.", "Hyvin kerroit.", "Ollaan rauhassa."],
+    afraid: ["Olet turvassa.", "Hyvin kerroit.", "Ollaan rauhassa."],
   };
 
   const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0);
 
   const respondToGroupVotes = useCallback(async () => {
     const counts = countVotesMap(votes);
+    console.debug("[Lumi] votes collected", { stage: "before", counts });
     const lines = selectGroupResponse(counts);
     for (const line of lines) {
       await speakSupport(line, "warm");
@@ -1359,11 +1502,44 @@ export function ScenarioRunner() {
     if (!log || log.votingEvents.length === 0) return;
     const before = aggregateBeforeAfter(log.votingEvents, "first");
     const after = aggregateBeforeAfter(log.votingEvents, "second");
+    console.debug("[Lumi] votes collected", { stage: "after", before, after });
     const lines = selectClosingResponse(before, after);
     for (const line of lines) {
       await speakSupport(line, "warm");
     }
   }, [speakSupport]);
+
+  const finalizeBeforeVotes = useCallback(async () => {
+    setSessionPhase("pre_reflection");
+    console.debug("[Lumi] pre_reflection spoken");
+    await respondToGroupVotes();
+    setVotes(emptyEmotionCounts());
+    setSelectedEmoji(null);
+    setSessionVoteStage(null);
+    setIntroVotePending(false);
+    setAwaitingTeacherContinue(false);
+    teacherPendingStepRef.current = null;
+    lastEmojiAtRef.current = 0;
+    setStepIndex(0);
+    await unlockAudio();
+    setSessionPhase("scenario");
+    setIsRunning(true);
+    console.debug("[Lumi] scenario started");
+  }, [respondToGroupVotes, activeScenario]);
+
+  const finalizeAfterVotes = useCallback(async () => {
+    setSessionPhase("post_reflection");
+    console.debug("[Lumi] post_reflection spoken");
+    closingResponseSentRef.current = true;
+    await respondToClosingVotes();
+    setVotes(emptyEmotionCounts());
+    setSelectedEmoji(null);
+    setSessionVoteStage(null);
+    lastEmojiAtRef.current = 0;
+    setDone(true);
+    setSessionPhase("complete");
+    endSession();
+  }, [respondToClosingVotes, endSession]);
 
   useEffect(() => {
     if (done && summary) {
@@ -1375,9 +1551,38 @@ export function ScenarioRunner() {
     }
   }, [done, summary, respondToClosingVotes]);
 
+  useEffect(() => {
+    if (sessionVoteStage === null) {
+      autoVoteResolutionRef.current = null;
+      return;
+    }
+    if (isRunning || done || groupSize <= 0) return;
+    if (totalVotes < groupSize) {
+      autoVoteResolutionRef.current = null;
+      return;
+    }
+    if (autoVoteResolutionRef.current === sessionVoteStage) return;
+    autoVoteResolutionRef.current = sessionVoteStage;
+
+    const run = async () => {
+      if (sessionVoteStage === "before") {
+        await finalizeBeforeVotes();
+        return;
+      }
+      await finalizeAfterVotes();
+    };
+
+    void run();
+  }, [sessionVoteStage, totalVotes, groupSize, isRunning, done, finalizeBeforeVotes, finalizeAfterVotes]);
+
   const dominantFromCounts = (counts?: Record<string, number>) => {
     if (!counts) return null;
-    const entries = Object.entries(counts).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0));
+    const normalized = emptyEmotionCounts();
+    Object.entries(counts).forEach(([rawKey, value]) => {
+      const key = normalizeEmotionKey(rawKey);
+      if (key) normalized[key] += value ?? 0;
+    });
+    const entries = Object.entries(normalized).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0));
     if (!entries.length || entries[0][1] === 0) return null;
     const top = entries[0];
     const second = entries[1];
@@ -1385,12 +1590,14 @@ export function ScenarioRunner() {
     return top[0];
   };
 
-  const mapEmotionsForSave = (counts?: Record<string, number>) => ({
-    happy: counts?.happy ?? 0,
-    sad: counts?.sad ?? 0,
-    angry: counts?.angry ?? 0,
-    afraid: counts?.scared ?? 0,
-  });
+  const mapEmotionsForSave = (counts?: Record<string, number>) => {
+    const normalized = emptyEmotionCounts();
+    Object.entries(counts ?? {}).forEach(([rawKey, value]) => {
+      const key = normalizeEmotionKey(rawKey);
+      if (key) normalized[key] += value ?? 0;
+    });
+    return normalized;
+  };
 
   const handleNextStep = useCallback(async () => {
     if (sessionMode !== "group_script") return;
@@ -1406,13 +1613,7 @@ export function ScenarioRunner() {
         setVoteEffect("Näytä tunne ennen aloitusta.");
         return;
       }
-      await respondToGroupVotes();
-      setVotes({});
-      setSelectedEmoji(null);
-      setSessionVoteStage(null);
-      setIntroVotePending(false);
-      await unlockAudio();
-      setIsRunning(true);
+      await finalizeBeforeVotes();
       return;
     }
 
@@ -1421,13 +1622,7 @@ export function ScenarioRunner() {
         setVoteEffect("Näytä tunne vielä lopuksi.");
         return;
       }
-      closingResponseSentRef.current = true;
-      await respondToClosingVotes();
-      setVotes({});
-      setSelectedEmoji(null);
-      setSessionVoteStage(null);
-      setDone(true);
-      endSession();
+      await finalizeAfterVotes();
       return;
     }
 
@@ -1444,7 +1639,7 @@ export function ScenarioRunner() {
 
     if (awaitingChoice) {
       setAwaitingChoice(false);
-      setVotes({});
+      setVotes(emptyEmotionCounts());
       setSelectedEmoji(null);
       await unlockAudio();
       setStepIndex((prev) => Math.min(prev + 1, activeScenario?.steps.length ?? prev + 1));
@@ -1457,13 +1652,14 @@ export function ScenarioRunner() {
       setStepIndex((prev) => Math.min(prev + 1, activeScenario.steps.length - 1));
       setIsRunning(true);
     }
-  }, [sessionMode, awaitingChoice, done, awaitingTeacherContinue, activeScenario, ensureSessionLog, votingMode, votes, respondToGroupVotes, stepIndex, sessionVoteStage, respondToClosingVotes, endSession, isRunning]);
+  }, [sessionMode, awaitingChoice, done, awaitingTeacherContinue, activeScenario, ensureSessionLog, votingMode, votes, stepIndex, sessionVoteStage, isRunning, finalizeBeforeVotes, finalizeAfterVotes]);
 
   const handleStop = useCallback(async () => {
     await cancelLumiSpeak();
     setIsRunning(false);
     setAwaitingChoice(false);
     setSessionVoteStage(null);
+    setSessionPhase("complete");
     setSaveState("idle");
     saveErrorRef.current = null;
     if (sessionMode === "group_script") {
@@ -1483,6 +1679,9 @@ export function ScenarioRunner() {
 
   const handleReplayScenario = useCallback(async () => {
     await cancelLumiSpeak();
+    speechBusyRef.current = false;
+    votePromptStageRef.current = null;
+    autoVoteResolutionRef.current = null;
     setRunError(null);
     setDone(false);
     setSaveState("idle");
@@ -1492,12 +1691,19 @@ export function ScenarioRunner() {
     setAwaitingDiscussionNote(false);
     teacherPendingStepRef.current = null;
     setLastVoteAppliedStep(-1);
-    setVotes({});
+    setVotes(emptyEmotionCounts());
     setSelectedEmoji(null);
+    setSessionPhase("pre_checkin");
+    setSessionVoteStage(sessionMode === "group_script" ? "before" : null);
+    setIntroVotePending(false);
+    setVotingMode(true);
+    lastEmojiAtRef.current = 0;
+    setVoteEffect("Näytä tunne.");
     setStepIndex(0);
     setElapsedSec(0);
-    setIsRunning(true);
-  }, []);
+    setIsRunning(false);
+    console.debug("[Lumi] session replayed", { scenarioId: activeScenario?.id, firstStep: activeScenario?.steps?.[0]?.text ?? null });
+  }, [sessionMode, activeScenario]);
 
   const handleFirmBoundary = useCallback(async () => {
     if (sessionMode !== "group_script") return;
@@ -1592,7 +1798,7 @@ export function ScenarioRunner() {
         kind === "happy" ? 720 :
         kind === "sad" ? 420 :
         kind === "angry" ? 260 :
-        kind === "scared" ? 340 : 600;
+        kind === "afraid" ? 340 : 600;
       osc.frequency.setValueAtTime(base, now);
       osc.type = "sine";
       gain.gain.setValueAtTime(0.001, now);
@@ -1605,7 +1811,7 @@ export function ScenarioRunner() {
     []
   );
 
-  const handleVote = async (emojiId: string) => {
+  const handleVote = async (emojiId: LumiEmotionKey) => {
     if (!canCollectVotes) return;
     const now = Date.now();
     if (now - lastEmojiAtRef.current < 250) return;
@@ -1636,25 +1842,27 @@ export function ScenarioRunner() {
     setVoteEffect(empathyPick);
     lastGroupResponseRef.current = { step: stepIndex, trend: emojiId as any, total: totalVotes };
     if (!glowPinned) {
-      const glowMap: Record<string, GlowState> = { angry: "strong", scared: "alert", sad: "calm", happy: "calm" };
+      const glowMap: Record<string, GlowState> = { angry: "strong", afraid: "alert", sad: "calm", happy: "calm" };
       setGlowState(glowMap[emojiId] ?? "alert");
     }
     setAnimationSource("audio");
   };
 
   const elapsedLabel = `${String(Math.floor(elapsedSec / 60)).padStart(2, "0")}:${String(elapsedSec % 60).padStart(2, "0")}`;
-  const dominantEmotionText = emotionTrend ? (emojis.find((e) => e.id === emotionTrend)?.text ?? "—") : "—";
+  const dominantEmotionText = emotionTrend ? emotionLabelFi(emotionTrend) : "—";
   const skillHighlight = scenarioSkill[scenarioId] ?? "Tunnetaitojen harjoittelu";
   const reflectionList = reflectionPrompts[scenarioId] ?? ["Mikä auttoi Lumi-ystävää?", "Mitä teemme, kun tunne on iso?"];
-  const emotionTone: "happy" | "sad" | "angry" | "scared" | "idle" =
+  const emotionTone: "happy" | "sad" | "angry" | "afraid" | "idle" =
     (selectedEmoji as any) ??
     (emotionTrend as any) ??
     "idle";
+  const avatarEmotionTone: "idle" | "happy" | "sad" | "angry" | "scared" =
+    emotionTone === "afraid" ? "scared" : emotionTone;
   const haloTone: Record<typeof emotionTone, { glow: string; ring: string }> = {
     happy: { glow: "rgba(250,212,112,0.28)", ring: "rgba(250,212,112,0.18)" },
     sad: { glow: "rgba(126,187,255,0.26)", ring: "rgba(126,187,255,0.14)" },
     angry: { glow: "rgba(255,149,130,0.3)", ring: "rgba(255,149,130,0.18)" },
-    scared: { glow: "rgba(190,170,255,0.28)", ring: "rgba(190,170,255,0.16)" },
+    afraid: { glow: "rgba(190,170,255,0.28)", ring: "rgba(190,170,255,0.16)" },
     idle: { glow: "rgba(126,231,255,0.24)", ring: "rgba(126,231,255,0.14)" },
   };
   const halo = haloTone[emotionTone] ?? haloTone.idle;
@@ -1703,6 +1911,51 @@ export function ScenarioRunner() {
     },
     [summary, calmUsed, done, skillHighlight, teacherNotes]
   );
+
+  const handlePrintSummary = useCallback(() => {
+    console.debug("[Lumi] print button clicked", { hasSummary: Boolean(summary) });
+    if (!summary) return;
+    flushSync(() => {
+      setSummaryOpen(true);
+      setIsPrintingSummary(true);
+    });
+    const runPrint = () => {
+      const container = document.getElementById("lumi-session-summary-print") as HTMLDivElement | null;
+      const textLength = container?.textContent?.trim().length ?? 0;
+      console.debug("[Lumi] print container check", {
+        found: Boolean(container),
+        textLength,
+      });
+      if (!container || textLength === 0) {
+        window.setTimeout(() => {
+          const retryContainer = document.getElementById("lumi-session-summary-print") as HTMLDivElement | null;
+          const retryLength = retryContainer?.textContent?.trim().length ?? 0;
+          console.debug("[Lumi] print retry check", {
+            found: Boolean(retryContainer),
+            textLength: retryLength,
+          });
+          if (retryContainer && retryLength > 0) {
+            console.debug("[Lumi] print function called");
+            window.print();
+          } else {
+            setIsPrintingSummary(false);
+          }
+        }, 80);
+        return;
+      }
+      console.debug("[Lumi] print function called");
+      window.print();
+    };
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(runPrint);
+    });
+  }, [summary]);
+
+  useEffect(() => {
+    const handleAfterPrint = () => setIsPrintingSummary(false);
+    window.addEventListener("afterprint", handleAfterPrint);
+    return () => window.removeEventListener("afterprint", handleAfterPrint);
+  }, []);
 
   useEffect(() => {
     if (summary && done && saveState === "idle") {
@@ -2031,8 +2284,8 @@ export function ScenarioRunner() {
   }
 
   return (
-    <div className="mx-auto grid h-full min-h-0 w-full max-w-7xl gap-8 text-slate-100 lg:grid-cols-[1.2fr_1fr]">
-      <section className="relative flex min-h-0 flex-col items-center justify-center overflow-visible rounded-[34px] border border-transparent bg-transparent p-7 shadow-none md:min-h-[66vh] md:p-12">
+    <div className="print-page-root mx-auto grid h-full min-h-0 w-full max-w-7xl gap-8 text-slate-100 lg:grid-cols-[1.2fr_1fr]">
+      <section className="print-hide relative flex min-h-0 flex-col items-center justify-center overflow-visible rounded-[34px] border border-transparent bg-transparent p-7 shadow-none md:min-h-[66vh] md:p-12">
         <div
           className="pointer-events-none absolute inset-0 rounded-[34px]"
           style={{
@@ -2096,7 +2349,7 @@ export function ScenarioRunner() {
             debugOverlay={false}
             glowDisabled={false}
             regulationActive={animationSource === "breath"}
-            emotionTone={emotionTone}
+            emotionTone={avatarEmotionTone}
             reactionTick={reactionTick}
           />
         </div>
@@ -2108,7 +2361,7 @@ export function ScenarioRunner() {
         </div>
       </section>
 
-      <section className="flex min-h-0 min-w-0 flex-col gap-5 overflow-hidden rounded-[34px] border border-white/10 bg-[rgba(20,25,50,0.65)] p-6 shadow-[0_26px_80px_rgba(0,0,0,0.42)] backdrop-blur-[12px] md:min-h-[66vh] md:p-8">
+      <section className="print-report-shell flex min-h-0 min-w-0 flex-col gap-5 overflow-hidden rounded-[34px] border border-white/10 bg-[rgba(20,25,50,0.65)] p-6 shadow-[0_26px_80px_rgba(0,0,0,0.42)] backdrop-blur-[12px] md:min-h-[66vh] md:p-8">
             <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/12 bg-white/6 px-4 py-3 shadow-inner shadow-black/30">
               <div className="min-w-0">
                 <p className="break-words text-base font-semibold text-white drop-shadow-sm">Opettajan ohjaus</p>
@@ -2238,8 +2491,8 @@ export function ScenarioRunner() {
           </div>
 
         {groupSize === 1 && (
-          <div className="min-w-0 space-y-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="print-hide min-w-0 space-y-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/50 p-3 md:p-4">
+            <div className="print-controls flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-medium text-slate-200">Yksilötila (1:1)</p>
               <span className="rounded-full border border-cyan-200/30 bg-cyan-500/10 px-2 py-0.5 text-[11px] text-cyan-200">1:1</span>
             </div>
@@ -2300,7 +2553,7 @@ export function ScenarioRunner() {
                     { id: "happy", label: "Iloinen" },
                     { id: "sad", label: "Surullinen" },
                     { id: "angry", label: "Vihainen" },
-                    { id: "scared", label: "Pelkään" },
+                    { id: "afraid", label: "Pelkään" },
                     { id: "frustrated", label: "Turhautunut" },
                     { id: "calm", label: "Rauhallinen" },
                   ]).map((item) => (
@@ -2326,7 +2579,7 @@ export function ScenarioRunner() {
                     { label: "Hän otti leluni", id: "took_toy" },
                     { label: "Hän sanoi ilkeästi", id: "mean_words" },
                     { label: "Minä sanoin ei", id: "said_no" },
-                    { label: "Minua pelottaa", id: "scared" },
+                    { label: "Minua pelottaa", id: "afraid" },
                     { label: "Olen yksin", id: "alone" },
                     { label: "Haluan halauksen", id: "want_hug" },
                     { label: "Haluan tilaa", id: "want_space" },
@@ -2364,7 +2617,7 @@ export function ScenarioRunner() {
         )}
 
         {summary ? (
-          <div className="print-summary min-w-0 space-y-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/60 p-4">
+          <div className="print-summary print-hide min-w-0 space-y-3 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/60 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-medium text-slate-200">Opettajan yhteenveto</p>
               <button
@@ -2375,7 +2628,7 @@ export function ScenarioRunner() {
                 {summaryOpen ? "Piilota yhteenveto" : "Näytä yhteenveto"}
               </button>
             </div>
-            {summaryOpen ? (
+            {summaryOpen || isPrintingSummary ? (
               <div className="space-y-3">
                 <div className="text-xs text-slate-300">
                   <div>Päivämäärä: {summary.header.dateISO}</div>
@@ -2446,7 +2699,7 @@ export function ScenarioRunner() {
                       <li key={item} className="break-words">{item}</li>
                     ))}
                     {emotionTrend === "angry" ? <li className="break-words">Kokeile seuraavaksi rauhoittavaa tai vuorottelua tukevaa skenaariota.</li> : null}
-                    {emotionTrend === "scared" ? <li className="break-words">Kokeile turva- tai rohkaisuskenaariota.</li> : null}
+                    {emotionTrend === "afraid" ? <li className="break-words">Kokeile turva- tai rohkaisuskenaariota.</li> : null}
                     {emotionTrend === "sad" ? <li className="break-words">Valitse lohduttava tai ystävyysteemainen skenaario.</li> : null}
                   </ul>
                 </div>
@@ -2468,7 +2721,7 @@ export function ScenarioRunner() {
                     placeholder="Kirjoita omat muistiinpanot tähän"
                   />
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="print-controls flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => void persistSummary(false)}
@@ -2496,7 +2749,7 @@ export function ScenarioRunner() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => window.print()}
+                    onClick={handlePrintSummary}
                     className="rounded-lg bg-slate-800 px-3 py-1 text-xs text-slate-100"
                   >
                     Tulosta
@@ -2548,6 +2801,134 @@ export function ScenarioRunner() {
           </div>
         ) : null}
 
+        {summary ? (
+          <div
+            id="lumi-session-summary-print"
+            ref={printSummaryRef}
+            aria-hidden="true"
+            className="hidden print:block print-only-summary"
+          >
+            <div className="space-y-4">
+              <div>
+                <h1 className="text-2xl font-semibold">Lumi Classroom Session Report</h1>
+                <p className="mt-1 text-sm">Social-Emotional Learning Micro Session</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Session information</p>
+                <div className="mt-2 grid grid-cols-[160px_1fr] gap-x-6 gap-y-2 text-sm">
+                  <div>Date</div>
+                  <div>{summary.header.dateISO}</div>
+                  <div>Duration</div>
+                  <div>{summary.header.duration}</div>
+                  <div>Scenario</div>
+                  <div>{summary.header.scenarioTitle}</div>
+                  <div>Group size</div>
+                  <div>{summary.header.groupSize}</div>
+                  <div>Participants</div>
+                  <div>{summary.participants.count}</div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Emotional climate</p>
+                <table className="w-full border-collapse text-left text-sm">
+                  <thead>
+                    <tr>
+                      <th className="border border-slate-300 px-3 py-2 font-semibold">Emotion</th>
+                      <th className="border border-slate-300 px-3 py-2 font-semibold">Before</th>
+                      <th className="border border-slate-300 px-3 py-2 font-semibold">After</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border border-slate-300 px-3 py-2">🙂 Cheerful</td>
+                      <td className="border border-slate-300 px-3 py-2">{summary.emotion.before?.happy ?? 0}</td>
+                      <td className="border border-slate-300 px-3 py-2">{summary.emotion.after?.happy ?? 0}</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-slate-300 px-3 py-2">😢 Sad</td>
+                      <td className="border border-slate-300 px-3 py-2">{summary.emotion.before?.sad ?? 0}</td>
+                      <td className="border border-slate-300 px-3 py-2">{summary.emotion.after?.sad ?? 0}</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-slate-300 px-3 py-2">😠 Angry</td>
+                      <td className="border border-slate-300 px-3 py-2">{summary.emotion.before?.angry ?? 0}</td>
+                      <td className="border border-slate-300 px-3 py-2">{summary.emotion.after?.angry ?? 0}</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-slate-300 px-3 py-2">😨 Fearful</td>
+                      <td className="border border-slate-300 px-3 py-2">{summary.emotion.before?.afraid ?? 0}</td>
+                      <td className="border border-slate-300 px-3 py-2">{summary.emotion.after?.afraid ?? 0}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Classroom emotional climate shift</p>
+                <p className="mt-1 text-sm">
+                  {(summary.emotion.after?.happy ?? 0) > (summary.emotion.before?.happy ?? 0) ||
+                  ((summary.emotion.after?.sad ?? 0) + (summary.emotion.after?.angry ?? 0) + (summary.emotion.after?.afraid ?? 0)) <
+                    ((summary.emotion.before?.sad ?? 0) + (summary.emotion.before?.angry ?? 0) + (summary.emotion.before?.afraid ?? 0))
+                    ? "Positive shift observed"
+                    : "Mixed emotional shift observed"}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Scenario impact</p>
+                <p className="mt-1 text-sm">
+                  {summary.engagement === "high" ? "High engagement" : summary.engagement === "medium" ? "Moderate engagement" : "Low engagement"}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Practiced skill</p>
+                <p className="mt-1 text-sm">{skillHighlight}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Regulation practice</p>
+                <p className="mt-1 text-sm">{summary.whatWePracticed[0] ?? "3 calm breaths"}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Next steps</p>
+                <p className="mt-1 text-sm">{summary.nextSteps[0] ?? "Reinforce safety routine"}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Teacher usability</p>
+                <p className="mt-1 text-sm">Easy</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Teacher notes</p>
+                {teacherNotes.trim() ? (
+                  <p className="mt-1 whitespace-pre-wrap text-sm">{teacherNotes.trim()}</p>
+                ) : (
+                  <div className="mt-2 space-y-3 text-sm">
+                    <div className="border-b border-slate-400 pb-4" />
+                    <div className="border-b border-slate-400 pb-4" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Discussion questions</p>
+                <ul className="mt-1 list-disc pl-5 text-sm">
+                  {reflectionList.slice(0, 2).map((item) => (
+                    <li key={`print-reflection-${item}`} className="break-words">{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Lumi facilitation</p>
+                <ul className="mt-1 list-disc pl-5 text-sm">
+                  {summary.whatLumiDid.map((item) => (
+                    <li key={`print-lumi-${item}`} className="break-words">{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Privacy note</p>
+                <p className="mt-1 text-sm">No personal child data is stored. All observations are collected only at classroom group level.</p>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {sessionMode === "group_script" ? (
           <>
             <div className="min-w-0 overflow-hidden rounded-2xl border border-cyan-100/15 bg-slate-900/60 p-4">
@@ -2556,6 +2937,29 @@ export function ScenarioRunner() {
                 <p className="break-words text-base leading-relaxed md:text-lg">{stepTextClean ?? "-"}</p>
                 {step?.teacherHint ? (
                   <p className="mt-2 break-words text-xs text-cyan-200/80">{step.teacherHint}</p>
+                ) : null}
+                {currentSupportCards.length > 0 ? (
+                  <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+                    {currentSupportCards.map((card) => (
+                      <div
+                        key={card.id}
+                        className="rounded-2xl border border-cyan-200/20 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(12,22,45,0.5))] p-3 text-center shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
+                      >
+                        <div className="text-3xl" aria-hidden="true">
+                          {card.icon}
+                        </div>
+                        <p className="mt-2 text-xs font-semibold text-slate-100">{card.title}</p>
+                        <p className="mt-1 text-[11px] text-slate-300">{card.subtitle}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                {interactionCue ? (
+                  <div className="mt-3 rounded-2xl border border-cyan-200/25 bg-[linear-gradient(180deg,rgba(126,231,255,0.16),rgba(12,22,45,0.45))] p-3 text-center shadow-[0_12px_28px_rgba(0,0,0,0.16)]">
+                    <div className="text-3xl" aria-hidden="true">{interactionCue.icon}</div>
+                    <p className="mt-2 text-sm font-semibold text-white">{interactionCue.title}</p>
+                    <p className="mt-1 text-xs text-cyan-100">{interactionCue.subtitle}</p>
+                  </div>
                 ) : null}
               </div>
             </div>
@@ -2607,7 +3011,7 @@ export function ScenarioRunner() {
                   <button
                     type="button"
                     onClick={() => {
-                      setVotes({});
+                      setVotes(emptyEmotionCounts());
                       setSelectedEmoji(null);
                     }}
                     className="h-10 max-w-full whitespace-normal break-words rounded-xl bg-white/10 px-3 text-xs font-semibold leading-tight text-white border border-white/15 md:text-sm"

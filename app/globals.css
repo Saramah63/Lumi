@@ -18,27 +18,97 @@ body {
 }
 
 @media print {
+  @page {
+    size: auto;
+    margin: 14mm;
+  }
+
+  html,
   body {
     background: #ffffff;
     color: #000000;
+    height: auto;
+    overflow: visible !important;
   }
 
-  body * {
-    visibility: hidden;
+  .print-page-root {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    gap: 0 !important;
   }
 
-  .print-summary,
-  .print-summary * {
-    visibility: visible;
+  .print-report-shell {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
   }
 
-  .print-summary {
-    position: absolute;
-    left: 0;
-    top: 0;
+  #lumi-session-summary-print {
+    position: static !important;
+    display: block !important;
     width: 100%;
+    min-height: auto;
+    height: auto !important;
+    max-height: none !important;
     padding: 24px;
     background: #ffffff;
     color: #000000;
+    opacity: 1 !important;
+    pointer-events: none !important;
+    overflow: visible !important;
+    z-index: 9999;
+    margin: 0;
+    break-inside: auto;
+    page-break-inside: auto;
   }
+
+  #lumi-session-summary-print,
+  #lumi-session-summary-print * {
+    color: #000000 !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+  #lumi-session-summary-print * {
+    background: transparent !important;
+    border-color: #d1d5db !important;
+    overflow: visible !important;
+    max-height: none !important;
+    transform: none !important;
+  }
+
+  #lumi-session-summary-print table,
+  #lumi-session-summary-print tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-controls {
+    display: none !important;
+  }
+}
+
+.print-only-summary {
+  display: none;
+  position: absolute;
+  left: -100000px;
+  top: 0;
+  width: 800px;
+  opacity: 0;
+  pointer-events: none;
 }
